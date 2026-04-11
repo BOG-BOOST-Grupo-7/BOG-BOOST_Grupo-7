@@ -2,4 +2,4 @@ En este repositorio encontraras la presentación oficial del Proyecto titulado S
 
 Se puede acceder al archivo de la presentación directamente desde el repositorio o a traves del siguiente enlace para visualización en linea
 
-Enlace: [Presentacion BOG-BOOST] (https://www.canva.com/design/DAGzPOOjCCk/k5iWzlTVeFNllHEwqxxDxw/edit?utm_content=DAGzPOOjCCk&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton)
+[Presentación del proyecto](https://www.canva.com/design/DAGzPOOjCCk/k5iWzlTVeFNllHEwqxxDxw/edit?utm_content=DAGzPOOjCCk&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton)
