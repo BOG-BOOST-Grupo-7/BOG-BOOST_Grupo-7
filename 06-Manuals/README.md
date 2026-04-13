@@ -1,3 +1,3 @@
 # Manuals
 
-esta carpeta será para los manuales del proyecto.
+esta carpeta será para los manuales del proyecto BOG-BOOST.

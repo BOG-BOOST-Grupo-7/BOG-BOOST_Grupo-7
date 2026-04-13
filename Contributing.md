@@ -69,3 +69,4 @@ Por ejemplo:
 - [Conventional Commits](https://www.conventionalcommits.org/es/v1.0.0/)
 - [Semantic Versioning](https://semver.org/lang/es/)
 - [Guía de Git Commit Messages](https://chris.beams.io/posts/git-commit/)
+---
