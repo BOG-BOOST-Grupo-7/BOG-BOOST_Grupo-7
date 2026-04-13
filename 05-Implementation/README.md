@@ -1,3 +1,3 @@
 # Implementation
 
-esta carpeta será para las implementaciones del proyecto.
+esta carpeta será para las implementaciones del proyecto BOG-BOOST.
