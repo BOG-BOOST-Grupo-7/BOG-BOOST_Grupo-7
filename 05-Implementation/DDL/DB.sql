@@ -1,4 +1,3 @@
--- inserts
 create extension if not exists pgcrypto;
 
 create schema cliente;
