@@ -1,5 +1,5 @@
 .header {
-    background: #e7d29c;
+    background: #f8b94e;
     padding: 16px;
     display: flex;
     flex-direction: column;
@@ -35,7 +35,7 @@
 }
 
 .nav li:hover {
-    color: #ff9700;
+    color: white;
 }
 
 .actions {
