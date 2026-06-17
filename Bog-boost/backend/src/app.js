@@ -12,6 +12,10 @@ import puestoRoutes from "./routes/puesto.routes.js";
 import medioPagoRoutes from "./routes/medioPago.routes.js";
 import metodoEnvioRoutes from "./routes/metodoEnvio.routes.js";
 
+import ventaRoutes from "./routes/venta.routes.js";
+import detalleVentaRoutes from "./routes/detalleVenta.routes.js";
+import seguimientoRoutes from "./routes/seguimiento.routes.js";
+
 const app = express();
 
 app.use(cors());
@@ -28,5 +32,9 @@ app.use("/api/negocio", negocioRoutes);
 app.use("/api/puestos", puestoRoutes);
 app.use("/api/medios-pago", medioPagoRoutes);
 app.use("/api/metodos-envio", metodoEnvioRoutes);
+
+app.use("/api/ventas", ventaRoutes);
+app.use("/api/detalles-venta", detalleVentaRoutes);
+app.use("/api/seguimientos", seguimientoRoutes);
 
 export default app;
