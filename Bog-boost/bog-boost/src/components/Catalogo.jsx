@@ -17,8 +17,6 @@ function Catalogo() {
   return (
     <main className="catalogo-main">
 
-      <h1 className="catalogo-title">Catálogo de productos</h1>
-
       <section className="catalogo-section">
 
         {/* ACCESORIOS */}

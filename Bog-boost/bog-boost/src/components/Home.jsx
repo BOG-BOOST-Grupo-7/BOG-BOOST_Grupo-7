@@ -1,14 +1,12 @@
 
 import Carrusel from "./Carrusel"
-import Emprendimientos from "./Emprendimientos"
-import Productos from "./Productos"
+import Catalogo from "./Catalogo"
 
 function Home(){
     return (
     <>
     <Carrusel />
-    <Productos />
-    <Emprendimientos />
+    <Catalogo />
     </>
 
     )
