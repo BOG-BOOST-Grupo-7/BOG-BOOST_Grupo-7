@@ -1,0 +1,88 @@
+body {
+  margin: 0;
+  font-family: 'Open Sans', sans-serif;
+  background: white;
+}
+
+.center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 80vh;
+}
+
+.card-form {
+  background: #f4eadc;
+  padding: 30px;
+  border-radius: 20px;
+  width: 300px;
+  text-align: center;
+}
+
+.card-form h1 {
+  margin-bottom: 20px;
+  font-size: 28px;
+}
+
+/* inputs */
+.card-form input {
+  width: 100%;
+  padding: 12px;
+  margin: 10px 0;
+  border-radius: 15px;
+  border: none;
+  background: white;
+  box-sizing: border-box;
+}
+
+/* password */
+.input-password {
+  display: flex;
+  align-items: center;
+  background: white;
+  border-radius: 15px;
+  margin: 10px 0;
+  padding-right: 10px;
+}
+
+.input-password input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  padding: 12px;
+}
+
+.input-password span {
+  cursor: pointer;
+}
+
+button {
+  background: #f4a940;
+  font-size: 15px;
+  border: none;
+  padding: 12px 22px;
+  border-radius: 20px;
+  margin-top: 15px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+button:hover {
+  background: #ff9800;
+}
+
+/* LINKS */
+.card-form a {
+  display: block;
+  margin-top: 15px;
+  font-size: 14px;
+  color: black;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.error {
+  color: crimson;
+  margin-top: 10px;
+  font-size: 14px;
+}
