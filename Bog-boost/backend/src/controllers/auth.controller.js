@@ -37,54 +37,82 @@ export const register = async (req, res) => {
   };
 
 export const login = async (req, res) => {
-    try {
-      const {
-        email,
-        password
-      } = req.body;
+  try {
+    const {
+      email,
+      password
+    } = req.body;
 
-      const {
-        data,
-        error
-      } = await supabase.auth.signInWithPassword({
-            email,
-            password
-        });
+    const {
+      data,
+      error
+    } = await supabase.auth.signInWithPassword({
+      email,
+      password
+    });
 
-      if (error) {
-        return res.status(401).json(error);
-      }
-
-      const {
-        data: perfil
-      } = await supabase
-          .schema("cliente")
-          .from("perfil")
-          .select("estado_usuario")
-          .eq(
-            "id_perfil",
-            data.user.id
-          )
-          .single();
-
-      if (perfil.estado_usuario === "INACTIVO") {
-
-        return res.status(403).json({
-            mensaje: "La cuenta está desactivada",
-            puede_reactivar: true
-          });
-      }
-      res.json({
-        mensaje: "Login exitoso",
-        session: data.session,
-        user: data.user
-      });
-    
-    } catch (error) {
-      res.status(500).json(error);
+    if (error) {
+      return res.status(401).json(error);
     }
 
-  };
+    // OBTENER PERFIL + ROL
+    const {
+      data: perfil,
+      error: errorPerfil
+    } = await supabase
+      .schema("cliente")
+      .from("perfil")
+      .select(`
+        *,
+        rol(
+          nombre_rol
+        )
+      `)
+      .eq(
+        "id_perfil",
+        data.user.id
+      )
+      .single();
+
+    if (
+      errorPerfil ||
+      !perfil
+    ) {
+      return res.status(404).json({
+        mensaje: "Perfil no encontrado"
+      });
+    }
+
+    // VALIDAR ESTADO DEL USUARIO
+    if (
+      perfil.estado_usuario ===
+      "INACTIVO"
+    ) {
+      return res.status(403).json({
+        mensaje: "La cuenta está desactivada",
+        puede_reactivar: true
+      });
+    }
+
+    res.json({
+      mensaje: "Login exitoso",
+      session: data.session,
+      user: data.user,
+      perfil: {
+        id_perfil: perfil.id_perfil,
+        primer_nombre: perfil.primer_nombre,
+        segundo_nombre: perfil.segundo_nombre,
+        primer_apellido: perfil.primer_apellido,
+        segundo_apellido: perfil.segundo_apellido,
+        estado_usuario: perfil.estado_usuario,
+        rol: perfil.rol
+      }
+    });
+
+  } catch (error) {
+    res.status(500).json(error);
+  }
+};
 
 /* Usuario autenticado*/
 export const me = async (req, res) => {
