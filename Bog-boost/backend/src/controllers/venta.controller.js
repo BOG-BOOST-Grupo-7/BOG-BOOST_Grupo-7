@@ -17,29 +17,211 @@ export const listarVentas = async (req, res) => {
     res.status(500).json(error);
   }
 };
+
 export const obtenerVentaPorId = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const { data, error } = await supabase
+    // Con esta única consulta traes TODO: venta, detalle, productos y envíos
+    const { data: venta, error } = await supabase
       .schema("ventas")
       .from("venta")
       .select(`
-            *,
-            detalle_venta(*),
-            seguimiento(*)
-          `)
+        *,
+        seguimiento(*),
+        medio_pago:id_medio_pago(nombre_medio),
+        metodo_envio:id_metodo_envio(nombre_metodo, costo_envio),
+        detalle_venta (
+          *,
+          producto:id_producto (nombre_producto, descripcion, imagen)
+        )
+      `)
       .eq("id_venta", id)
+      .eq("id_perfil", req.user.id)
       .single();
 
-    if (error) {
-      return res.status(404).json(error);
+    if (error || !venta) {
+      return res.status(404).json({
+        mensaje: "Venta no encontrada"
+      });
     }
 
-    res.json(data);
+    // Ya no necesitas hacer los otros fetch manuales ni el bucle for, 
+    // porque "venta" ya contiene todo estructurado.
+    return res.json(venta);
 
   } catch (error) {
-    res.status(500).json(error);
+    console.error(error);
+    return res.status(500).json({
+      mensaje: "Error interno del servidor"
+    });
+  }
+};
+
+export const confirmarCarrito = async (req, res) => {
+  try {
+    const {
+      id_medio_pago,
+      id_metodo_envio,
+      telefono,
+      direccion,
+      carrito
+    } = req.body;
+
+    if (!carrito || carrito.length === 0) {
+      return res.status(400).json({ mensaje: "El carrito está vacío" });
+    }
+
+    let total = 0;
+    const detallesDB = []; // Para insertar en la tabla detalle_venta
+    const detallesRespuesta = []; // Para enviar al frontend con nombres de productos
+
+    // 1. Obtener ID Negocio del primer producto
+    const { data: primerProducto, error: errorPrimerProducto } = await supabase
+      .schema("catalogo")
+      .from("producto")
+      .select("id_negocio")
+      .eq("id_producto", carrito[0].id_producto)
+      .single();
+
+    if (errorPrimerProducto || !primerProducto) {
+      return res.status(404).json({ mensaje: "Producto no encontrado" });
+    }
+
+    const id_negocio = primerProducto.id_negocio;
+
+    // 2. Validar productos, calcular total y preparar estructuras
+    for (const item of carrito) {
+      const { data: producto, error } = await supabase
+        .schema("catalogo")
+        .from("producto")
+        .select("*")
+        .eq("id_producto", item.id_producto)
+        .single();
+
+      if (error || !producto) {
+        return res.status(404).json({ mensaje: `Producto ${item.id_producto} no encontrado` });
+      }
+
+      if (producto.id_negocio !== id_negocio) {
+        return res.status(400).json({ mensaje: "Todos los productos deben pertenecer al mismo negocio." });
+      }
+
+      if (producto.stock < item.cantidad) {
+        return res.status(400).json({ mensaje: `Stock insuficiente para ${producto.nombre_producto}` });
+      }
+
+      const subtotal = Number(producto.precio) * Number(item.cantidad);
+      total += subtotal;
+
+      // Datos para insertar en la DB
+      detallesDB.push({
+        id_producto: producto.id_producto,
+        cantidad: item.cantidad,
+        precio_unitario: producto.precio,
+        subtotal
+      });
+
+      // Datos con nombre de producto para el frontend
+      detallesRespuesta.push({
+        cantidad: item.cantidad,
+        subtotal,
+        producto: { nombre_producto: producto.nombre_producto }
+      });
+    }
+
+    // 3. Validar medio de pago
+    const { data: medioPago, error: errorMedioPago } = await supabase
+      .schema("negocio")
+      .from("medio_pago")
+      .select("*")
+      .eq("id_medio_pago", id_medio_pago)
+      .eq("id_negocio", id_negocio)
+      .single();
+
+    if (errorMedioPago || !medioPago) {
+      return res.status(400).json({ mensaje: "El medio de pago no pertenece al negocio." });
+    }
+
+    // 4. Validar método de envío
+    const { data: metodoEnvio, error: errorEnvio } = await supabase
+      .schema("negocio")
+      .from("metodo_envio")
+      .select("*")
+      .eq("id_metodo_envio", id_metodo_envio)
+      .eq("id_negocio", id_negocio)
+      .single();
+
+    if (errorEnvio || !metodoEnvio) {
+      return res.status(400).json({ mensaje: "El método de envío no pertenece al negocio." });
+    }
+
+    total += Number(metodoEnvio.costo_envio);
+
+    // 5. Crear Venta
+    const { data: ventaData, error: errorVenta } = await supabase
+      .schema("ventas")
+      .from("venta")
+      .insert([{
+        id_perfil: req.user.id,
+        id_negocio,
+        id_medio_pago,
+        id_metodo_envio,
+        telefono,
+        direccion,
+        total
+      }])
+      .select();
+
+    if (errorVenta) return res.status(400).json(errorVenta);
+    const venta = ventaData[0];
+
+    // 6. Insertar Detalles y actualizar Stock
+    for (const detalle of detallesDB) {
+      await supabase
+        .schema("ventas")
+        .from("detalle_venta")
+        .insert([{ id_venta: venta.id_venta, ...detalle }]);
+
+      const { data: prod } = await supabase
+        .schema("catalogo")
+        .from("producto")
+        .select("stock")
+        .eq("id_producto", detalle.id_producto)
+        .single();
+
+      const nuevoStock = prod.stock - detalle.cantidad;
+
+      await supabase
+        .schema("catalogo")
+        .from("producto")
+        .update({
+          stock: nuevoStock,
+          estado_producto: nuevoStock === 0 ? "AGOTADO" : "DISPONIBLE"
+        })
+        .eq("id_producto", detalle.id_producto);
+    }
+
+    // 7. Crear Seguimiento
+    await supabase
+      .schema("ventas")
+      .from("seguimiento")
+      .insert([{ id_venta: venta.id_venta, estado_seguimiento: "PENDIENTE", fecha_entrega: null }]);
+
+    // 8. Respuesta enriquecida
+    return res.status(201).json({
+      mensaje: "Compra realizada correctamente.",
+      venta: {
+        ...venta,
+        detalle_venta: detallesRespuesta, // Ahora el frontend puede hacer .map() sin error
+        medio_pago: medioPago,            // Enviamos el objeto completo para evitar undefined
+        metodo_envio: metodoEnvio
+      }
+    });
+
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ mensaje: "Error interno del servidor" });
   }
 };
 

@@ -8,13 +8,15 @@ import {
   obtenerRolPorId,
   crearRol,
   actualizarRol,
-  eliminarRol
+  eliminarRol,
+  cambiarRolUsuario
 }
 from "../controllers/rol.controller.js";
 
 const router = Router();
 
 router.get("/", authMiddleware, superAdminMiddleware, listarRoles);
+router.put("/usuario", authMiddleware, superAdminMiddleware, cambiarRolUsuario);
 router.get("/:id", authMiddleware, superAdminMiddleware, obtenerRolPorId);
 router.post("/crear", authMiddleware, superAdminMiddleware, crearRol);
 router.put("/actualizar/:id", authMiddleware, superAdminMiddleware, actualizarRol);

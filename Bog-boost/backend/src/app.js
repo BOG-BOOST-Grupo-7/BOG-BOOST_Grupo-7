@@ -18,6 +18,7 @@ import comentarioRoutes from "./routes/comentario.routes.js";
 import ventaRoutes from "./routes/venta.routes.js";
 import detalleVentaRoutes from "./routes/detalleVenta.routes.js";
 import seguimientoRoutes from "./routes/seguimiento.routes.js";
+import uploadRoutes from "./routes/upload.routes.js";
 
 const app = express();
 
@@ -42,5 +43,6 @@ app.use("/api/comentarios", comentarioRoutes);
 app.use("/api/ventas", ventaRoutes);
 app.use("/api/detalles-venta", detalleVentaRoutes);
 app.use("/api/seguimientos", seguimientoRoutes);
+app.use("/api/upload", uploadRoutes);
 
 export default app;

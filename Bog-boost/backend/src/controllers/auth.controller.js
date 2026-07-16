@@ -1,61 +1,83 @@
 import supabase from "../services/supabase.js";
 
 export const register = async (req, res) => {
-    try {
-      const {
-        email,
-        password,
-        primer_nombre
-      } = req.body;
-
-      const {
-        data,
-        error
-      } = await supabase.auth.admin.createUser({
-            email,
-            password,
-            email_confirm: true,
-            user_metadata: {
-              primer_nombre
-            }
-          });
-
-      if (error) {
-        return res.status(400)
-          .json(error);
-      }
-
-      res.status(201)
-        .json({
-          mensaje:"Usuario registrado correctamente",
-          usuario: data.user
-        });
-
-    } catch (error) {
-      res.status(500).json(error);
-    }
-  };
-
-export const login = async (req, res) => {
   try {
+
     const {
       email,
-      password
+      password,
+      primer_nombre
     } = req.body;
 
     const {
       data,
       error
-    } = await supabase.auth.signInWithPassword({
+    } = await supabase.auth.admin.createUser({
+      email,
+      password,
+      email_confirm: true,
+      user_metadata: {
+        primer_nombre
+      }
+    });
+
+     if (error?.code === "email_exists") {
+      return res.status(409).json({
+        mensaje: "Ya existe una cuenta con este correo electrónico"
+      });
+    }
+
+    if (error) {
+      return res.status(400).json(error);
+    }
+
+    res.status(201).json({
+      mensaje: "Usuario registrado correctamente",
+      usuario: data.user
+    });
+
+  } catch (error) {
+    res.status(500).json(error);
+  }
+};
+
+export const login = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    // ===== VERIFICAR SI EL CORREO EXISTE =====
+    const { data: usuarios, error: errorUsuarios } =
+      await supabase.auth.admin.listUsers();
+
+    if (errorUsuarios) {
+      return res.status(500).json({
+        mensaje: "Error al validar el usuario"
+      });
+    }
+
+    const usuario = usuarios.users.find(
+      (u) => u.email.toLowerCase() === email.toLowerCase()
+    );
+
+    if (!usuario) {
+      return res.status(404).json({
+        mensaje: "El correo electrónico no está registrado."
+      });
+    }
+
+    // ===== INTENTAR INICIAR SESIÓN =====
+    const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password
     });
 
     if (error) {
-      return res.status(401).json(error);
+      return res.status(401).json({
+        mensaje: "La contraseña es incorrecta."
+      });
     }
 
-    // OBTENER PERFIL + ROL
+    // ===== OBTENER PERFIL =====
     const {
       data: perfil,
       error: errorPerfil
@@ -68,26 +90,17 @@ export const login = async (req, res) => {
           nombre_rol
         )
       `)
-      .eq(
-        "id_perfil",
-        data.user.id
-      )
+      .eq("id_perfil", data.user.id)
       .single();
 
-    if (
-      errorPerfil ||
-      !perfil
-    ) {
+    if (errorPerfil || !perfil) {
       return res.status(404).json({
         mensaje: "Perfil no encontrado"
       });
     }
 
-    // VALIDAR ESTADO DEL USUARIO
-    if (
-      perfil.estado_usuario ===
-      "INACTIVO"
-    ) {
+    // ===== VALIDAR ESTADO =====
+    if (perfil.estado_usuario === "INACTIVO") {
       return res.status(403).json({
         mensaje: "La cuenta está desactivada",
         puede_reactivar: true
@@ -136,23 +149,28 @@ export const logout = async (req, res) => {
   };
 
 export const listarUsuarios = async (req, res) => {
-    try {
-      const {
-        data,
-        error
-      } = await supabase.auth.admin.listUsers();
+  try {
 
-      if (error) {
-        return res.status(400).json(error);
-      }
-      res.json(
-        data.users
-      );
+    const { data, error } = await supabase
+      .schema("cliente")
+      .from("perfil")
+      .select(`
+        *,
+        rol(
+          nombre_rol
+        )
+      `);
 
-    } catch (error) {
-      res.status(500).json(error);
+    if (error) {
+      return res.status(400).json(error);
     }
-  };
+
+    res.json(data);
+
+  } catch (error) {
+    res.status(500).json(error);
+  }
+};
 
 export const obtenerUsuarioPorId = async (req, res) => {
     try {

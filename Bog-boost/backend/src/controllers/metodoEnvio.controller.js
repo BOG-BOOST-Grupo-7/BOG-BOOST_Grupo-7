@@ -44,6 +44,61 @@ export const obtenerMetodoEnvioPorId = async (req, res) => {
     }
 };
 
+
+export const obtenerMisMetodosEnvio = async (req, res) => {
+
+  try {
+
+    const { data: negocio } = await supabase
+      .schema("negocio")
+      .from("negocio")
+      .select("id_negocio")
+      .eq(
+        "id_perfil",
+        req.user.id
+      )
+      .single();
+
+    if (!negocio) {
+
+      return res.status(404).json({
+        mensaje: "No tienes un negocio registrado."
+      });
+
+    }
+
+    const {
+      data,
+      error
+    } = await supabase
+      .schema("negocio")
+      .from("metodo_envio")
+      .select("*")
+      .eq(
+        "id_negocio",
+        negocio.id_negocio
+      );
+
+    if (error) {
+
+      return res.status(400).json(error);
+
+    }
+
+    res.json(data);
+
+  } catch (error) {
+
+    console.error(error);
+
+    res.status(500).json({
+      mensaje: "Error interno del servidor."
+    });
+
+  }
+
+};
+
 export const crearMetodoEnvio = async (req, res) => {
   try {
     const {
@@ -192,6 +247,29 @@ export const eliminarMetodoEnvio = async (req, res) => {
       mensaje: "Método de envío eliminado"
     });
 
+  } catch (error) {
+    res.status(500).json(error);
+  }
+};
+
+export const obtenerMetodosEnvioPorNegocio = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // --- AGREGA ESTO ---
+    if (!id || id === 'undefined' || id === 'null') {
+      return res.status(400).json({ error: "ID de negocio inválido" });
+    }
+    // ------------------
+
+    const { data, error } = await supabase
+      .schema("negocio")
+      .from("metodo_envio")
+      .select(`id_metodo_envio, nombre_metodo, costo_envio`)
+      .eq("id_negocio", id);
+
+    if (error) return res.status(400).json(error);
+    res.json(data || []);
   } catch (error) {
     res.status(500).json(error);
   }

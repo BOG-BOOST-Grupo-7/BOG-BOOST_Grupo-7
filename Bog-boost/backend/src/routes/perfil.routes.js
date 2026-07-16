@@ -16,9 +16,9 @@ import {
 
 const router = Router();
 
+router.get("/me", authMiddleware, obtenerMiPerfil);
 router.get("/", authMiddleware, superAdminMiddleware, listarPerfiles);
 router.get("/:id", authMiddleware, superAdminMiddleware, obtenerPerfilPorId);
-router.get("/me", authMiddleware, superAdminMiddleware, obtenerMiPerfil);
 router.put("/completar", authMiddleware, completarPerfil);
 router.put("/foto", authMiddleware, actualizarFoto);
 router.put("/desactivar-cuenta", authMiddleware, desactivarCuenta);
