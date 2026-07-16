@@ -1,0 +1,367 @@
+/* ===================================
+   CONTENEDOR GENERAL
+=================================== */
+
+.perfil-container {
+    max-width: 800px;
+    margin: 50px auto;
+    padding: 20px;
+}
+
+.perfil-title {
+    text-align: center;
+    font-size: 2rem;
+    margin-bottom: 30px;
+    font-family: Georgia, serif;
+    color: #000;
+}
+
+/* ===================================
+   TARJETA DEL PERFIL
+=================================== */
+
+.perfil-card {
+    background: #f4eadc;
+    border: 2px solid #000;
+    border-radius: 24px;
+
+    padding: 25px;
+
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 30px;
+
+    max-width: 700px;
+    margin: 0 auto;
+}
+
+/* ===================================
+   AVATAR
+=================================== */
+
+.avatar-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    min-width: 180px;
+}
+
+.avatar-container {
+    position: relative;
+
+    width: 170px;
+    height: 170px;
+
+    border: 3px dashed #f8b94e;
+    border-radius: 50%;
+
+    overflow: hidden;
+    cursor: pointer;
+    background: white;
+}
+
+.avatar-image,
+.avatar-circle {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+}
+
+.avatar-overlay {
+    position: absolute;
+    inset: 0;
+
+    background: rgba(0, 0, 0, 0.55);
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+
+    color: white;
+
+    opacity: 0;
+    transition: 0.3s;
+}
+
+.avatar-container:hover .avatar-overlay {
+    opacity: 1;
+}
+
+.avatar-overlay i {
+    font-size: 38px;
+    margin-bottom: 10px;
+}
+
+.avatar-overlay p {
+    font-size: 14px;
+    text-align: center;
+    padding: 0 10px;
+}
+
+.avatar-texto {
+    margin-top: 15px;
+    font-size: 14px;
+    color: #666;
+    text-align: center;
+}
+
+/* ===================================
+   INFORMACIÓN DEL PERFIL
+=================================== */
+
+.perfil-info {
+    width: 350px;
+}
+
+.info-field,
+.campo {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.info-field label,
+.campo label {
+    font-weight: bold;
+    font-size: 14px;
+    color: #000;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.info-field label i,
+.campo label i {
+    color: #f8b94e;
+    font-size: 15px;
+    width: 20px;
+}
+
+/* ===================================
+   CAMPOS
+=================================== */
+
+.field-value,
+.campo-contenido {
+    padding: 10px 16px;
+    background-color: #fff;
+
+    border: 2px solid #000;
+    border-radius: 12px;
+
+    min-height: 48px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    transition: all 0.3s;
+}
+
+.field-value:hover,
+.campo-contenido:hover {
+    border-color: #f8b94e;
+}
+
+.field-text,
+.campo-contenido span {
+    flex: 1;
+    color: #1a1a1a;
+    word-break: break-word;
+}
+
+.field-input-edit,
+.campo-contenido input {
+    flex: 1;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 15px;
+    color: #1a1a1a;
+}
+
+/* ===================================
+   BOTÓN EDITAR
+=================================== */
+
+.btn-edit-field,
+.btn-editar,
+.campo-contenido button {
+    background: none;
+    border: none;
+
+    cursor: pointer;
+
+    padding: 6px 10px;
+    border-radius: 8px;
+
+    opacity: 0.5;
+
+    transition: all 0.3s;
+}
+
+.btn-edit-field:hover,
+.btn-editar:hover,
+.campo-contenido button:hover {
+    opacity: 1;
+    background-color: #f8b94e;
+    transform: scale(1.1);
+}
+
+/* ===================================
+   DIVISORES
+=================================== */
+
+.field-divider {
+    border: none;
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+    margin: 12px 0;
+}
+
+/* ===================================
+   BOTONES DE ACCIÓN
+=================================== */
+
+.perfil-actions {
+    display: flex;
+    gap: 15px;
+    margin-top: 20px;
+    flex-wrap: wrap;
+}
+
+.btn-guardar {
+    background-color: #f8b94e;
+    border: 2px solid #000;
+
+    border-radius: 25px;
+
+    padding: 12px 30px;
+
+    font-weight: bold;
+    font-size: 14px;
+
+    cursor: pointer;
+
+    transition: all 0.3s;
+
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+
+    color: #000;
+}
+
+.btn-guardar:hover {
+    background-color: #e6a73a;
+    transform: scale(1.03);
+    box-shadow: 0 4px 12px rgba(248, 185, 78, 0.3);
+}
+
+.btn-guardar:active {
+    transform: scale(0.97);
+}
+
+.btn-eliminar {
+    background-color: #ff6b6b;
+    border: 2px solid #000;
+
+    border-radius: 25px;
+
+    padding: 12px 30px;
+
+    font-weight: bold;
+    font-size: 14px;
+
+    cursor: pointer;
+
+    transition: all 0.3s;
+
+    color: #000;
+}
+
+.btn-eliminar:hover {
+    background-color: #e55555;
+    transform: scale(1.03);
+    box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3);
+}
+
+.btn-eliminar:active {
+    transform: scale(0.97);
+}
+
+.btn-danger {
+  background-color: #ff6b6b;
+  border: 2px solid #000;
+  border-radius: 25px;
+  padding: 10px 30px;
+  font-weight: bold;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #000;
+}
+
+.btn-danger:hover {
+  background-color: #e55555;
+  transform: scale(1.03);
+  box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3);
+}
+
+.btn-danger:active {
+  transform: scale(0.97);
+}
+
+/* ===================================
+   RESPONSIVE
+=================================== */
+
+@media (max-width: 900px) {
+
+    .perfil-card {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .avatar-section {
+        width: 100%;
+    }
+
+    .perfil-info {
+        width: 100%;
+    }
+}
+
+@media (max-width: 768px) {
+
+    .perfil-container {
+        padding: 10px;
+    }
+
+    .perfil-card {
+        padding: 20px;
+    }
+
+    .avatar-container {
+        width: 180px;
+        height: 180px;
+    }
+
+    .avatar-circle {
+        font-size: 60px;
+    }
+
+    .perfil-actions {
+        flex-direction: column;
+    }
+
+    .perfil-actions button {
+        width: 100%;
+        justify-content: center;
+    }
+}

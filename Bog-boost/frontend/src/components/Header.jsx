@@ -1,127 +1,382 @@
-import "./css/Header.css"
-import { useState, useEffect } from "react"
-import logo from "../assets/logo.png"
-import campana from "../assets/campana.png"
-import menu from "../assets/menu.png"
+import "../styles/Header.css";
+import { useEffect, useState } from "react";
+import { obtenerNotificaciones } from "../api/notificacionApi";
+import { useNavigate } from "react-router-dom";
+import logo from "../assets/logo.png";
+import { obtenerCategorias } from "../api/categoriaApi";
+import { useAuth } from "../context/AuthContext";
 
-function Header({ setPagina }) {
-  const [open, setOpen] = useState(false)
-  const [user, setUser] = useState(null)
+function Header() {
+  const navigate = useNavigate();
 
-  useEffect(() => {
-    const storedUser = localStorage.getItem("user")
-    if (storedUser) {
-      setUser(JSON.parse(storedUser))
-    }
-  }, [])
+  const { user, rol, logout, isAuthenticated } = useAuth();
+
+  const [catalogoOpen, setCatalogoOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [pendientes, setPendientes] = useState(0);
+  const [categorias, setCategorias] = useState([]);
+
+  const go = (path) => {
+    navigate(path);
+    setCatalogoOpen(false);
+    setMobileMenuOpen(false);
+  };
 
   const handleLogout = () => {
-    localStorage.removeItem("accessToken")
-    localStorage.removeItem("user")
+    logout();
+    setMobileMenuOpen(false);
+    navigate("/");
+  };
 
-    setUser(null)
-    setOpen(false)
-    setPagina("home")
+  const avatarLetter =
+    user?.primer_nombre?.charAt(0)?.toUpperCase() ||
+    user?.email?.charAt(0)?.toUpperCase() ||
+    "U";
 
-    window.location.reload()
-  }
+  useEffect(() => {
+
+    cargarCategorias();
+
+    if (isAuthenticated) {
+      cargarNotificaciones();
+    }
+
+  }, [isAuthenticated]);
+
+  const cargarNotificaciones = async () => {
+    try {
+      const data = await obtenerNotificaciones();
+
+      setPendientes(data.filter(n => !n.estado_notificacion).length);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const cargarCategorias = async () => {
+    try {
+      const data = await obtenerCategorias();
+      setCategorias(data);
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   return (
-    <header className="header">
-      <div className="top">
-        <img src={logo} className="logo" />
+    <header className="navbar">
 
-        <ul className="nav">
-          <li onClick={() => setPagina("home")}>Inicio</li>
-          <li onClick={() => setPagina("catalogo")}>Catalogo</li>
-          <li onClick={() => setPagina("negocios")}>Negocios</li>
-        </ul>
+      {/* LOGO */}
+      <div className="logo-container">
+        <img src={logo} alt="Logo" className="logo" />
       </div>
 
-      <div className="actions">
-        <input className="search" placeholder="Buscar" />
+      {/* MENU DESKTOP */}
+      <nav className="menu">
 
-        {/* 🔥 usuario */}
-        {user && (
-          <p className="user-name">
-            Hola, {user?.nombre || user?.name || user?.email}
-          </p>
-        )}
+        {rol === "SUPER_ADMIN" ? (
 
-        <img src={campana} className="icon" />
+          <a onClick={() => go("/admin")}>Inicio</a>
 
-        <div className="menu-container">
-          <img
-            src={menu}
-            className="icon"
-            onClick={() => setOpen(!open)}
-          />
+        ) : rol === "VENDEDOR" ? (
 
-          {open && (
-            <div className="menu-dropdown">
+          <>
+            <a onClick={() => go("/vendedor")}>Inicio</a>
+            <a onClick={() => go("/ventas")}>Ventas</a>
+            <a onClick={() => go("/stock")}>Stock</a>
+          </>
 
-              {/* menú sin iniciar sesión */}
-              {!user && (
-                <>
-                  <p onClick={() => {
-                    setPagina("registro")
-                    setOpen(false)
-                  }}>
-                    Registro
-                  </p>
+        ) : (
 
-                  <p onClick={() => {
-                    setPagina("login")
-                    setOpen(false)
-                  }}>
-                    Iniciar sesión
-                  </p>
-                </>
-              )}
+          <>
+            <a onClick={() => go("/")}>Inicio</a>
 
-              {/* menú al iniciar sesión */}
-              {user && (
-                <>
-                  <p onClick={() => {
-                    setPagina("negocioscrud")
-                    setOpen(false)
-                  }}>
-                    Negocios CRUD
-                  </p>
+            {/* CATEGORÍAS DINÁMICAS */}
+            <div className="catalogo-container">
 
-                  <p onClick={() => {
-                    setPagina("productoscrud")
-                    setOpen(false)
-                  }}>
-                    Productos CRUD
-                  </p>
+              <a
+                className="catalogo-link"
+                onClick={(e) => {
+                  e.preventDefault();
+                  setCatalogoOpen(!catalogoOpen);
+                }}
+              >
+                Categorías <i className="fas fa-chevron-down"></i>
+              </a>
 
-                  <p onClick={() => {
-                    setPagina("tipodocumentoscrud")
-                    setOpen(false)
-                  }}>
-                    Tipo Documentos CRUD
-                  </p>
+              <div className={`catalogo-dropdown ${catalogoOpen ? "show" : ""}`}>
 
-                  <p onClick={() => {
-                    setPagina("usuarioscrud")
-                    setOpen(false)
-                  }}>
-                    Usuarios CRUD
-                  </p>
+                {categorias.length > 0 ? (
+                  categorias.map((cat) => (
+                    <a
+                      key={cat.id_categoria}
+                      onClick={() => go(`/catalogo/${cat.id_categoria}`)}
+                    >
+                      {cat.nombre_categoria}
+                    </a>
+                  ))
+                ) : (
+                  <span className="dropdown-empty">
+                    Cargando...
+                  </span>
+                )}
 
-                  <p onClick={handleLogout}>
-                    Cerrar sesión
-                  </p>
-                </>
-              )}
+                <div className="dropdown-divider"></div>
+
+                <a onClick={() => go("/catalogo")}>
+                  Ver todos
+                </a>
+
+              </div>
 
             </div>
-          )}
+
+            <a onClick={() => go("/negocios")}>Negocios</a>
+          </>
+
+        )}
+
+      </nav>
+
+      {/* SEARCH */}
+      {rol !== "SUPER_ADMIN" && rol !== "VENDEDOR" && (
+        <div className="search-box">
+          <input placeholder="Buscar..." />
+          <i className="fas fa-search"></i>
         </div>
+      )}
+
+      {/* ICONOS */}
+      <div className="user-icons">
+
+        {isAuthenticated && (
+          <div className="user-profile" onClick={() => go("/perfil")}>
+            <div className="user-avatar">{avatarLetter}</div>
+          </div>
+        )}
+
+        {rol !== "SUPER_ADMIN" && rol !== "VENDEDOR" && (
+          <div className="cart-icon" onClick={() => go("/carrito")}>
+            <i className="fas fa-shopping-cart"></i>
+          </div>
+        )}
+
+        {isAuthenticated && (
+          <div className="bell-container" onClick={() => go("/notificaciones")}>
+            <i className="fas fa-bell"></i>
+            {pendientes > 0 && <span className="badge">{pendientes}</span>}
+          </div>
+        )}
+
+        {/* MENU MOBILE BOTÓN */}
+        <div
+          className="mobile-toggle"
+          onClick={() => setMobileMenuOpen(true)}
+        >
+          <i className="fas fa-bars"></i>
+        </div>
+
       </div>
+
+      {/* OVERLAY */}
+      <div
+        className={`mobile-overlay ${mobileMenuOpen ? "show" : ""}`}
+        onClick={() => setMobileMenuOpen(false)}
+      />
+
+      {/* ========================= */}
+      {/* MENÚ LATERAL (RESTAURADO) */}
+      {/* ========================= */}
+      <div className={`mobile-menu ${mobileMenuOpen ? "show" : ""}`}>
+
+        <div className="mobile-header">
+
+          {isAuthenticated ? (
+            <>
+              <div className="mobile-avatar">
+                {avatarLetter}
+              </div>
+
+              <h3>
+                {user?.primer_nombre}
+              </h3>
+            </>
+          ) : (
+            <h3>Menú</h3>
+          )}
+
+        </div>
+
+        {rol === "SUPER_ADMIN" ? (
+
+          <a onClick={() => go("/admin")}>
+            Inicio
+          </a>
+
+        ) : rol === "VENDEDOR" ? (
+
+          <>
+            <a onClick={() => go("/vendedor")}>
+              Inicio
+            </a>
+
+            <a onClick={() => go("/ventas")}>
+              Ventas
+            </a>
+
+            <a onClick={() => go("/stock")}>
+              Stock
+            </a>
+          </>
+
+        ) : (
+
+          <>
+            <a onClick={() => go("/")}>
+              Inicio
+            </a>
+
+            <div className="catalogo-container">
+
+              <a
+                className="catalogo-link"
+                onClick={(e) => {
+                  e.preventDefault();
+                  setCatalogoOpen(!catalogoOpen);
+                }}
+              >
+                Categorías
+              </a>
+
+              <div
+                className={`catalogo-dropdown ${catalogoOpen ? "show" : ""}`}
+              >
+
+                {categorias.length > 0 ? (
+                  categorias.map((cat) => (
+                    <a
+                      key={cat.id_categoria}
+                      onClick={() =>
+                        go(`/catalogo/${cat.id_categoria}`)
+                      }
+                    >
+                      {cat.nombre_categoria}
+                    </a>
+                  ))
+                ) : (
+                  <span className="dropdown-empty">
+                    No hay categorías
+                  </span>
+                )}
+
+                <div className="dropdown-divider"></div>
+
+                <a onClick={() => go("/catalogo")}>
+                  Ver todos
+                </a>
+
+              </div>
+
+            </div>
+
+            <a onClick={() => go("/negocios")}>
+              Negocios
+            </a>
+
+          </>
+
+        )}
+
+        {!isAuthenticated ? (
+
+          <>
+            <a onClick={() => go("/login")}>
+              Iniciar Sesión
+            </a>
+
+            <a onClick={() => go("/registro")}>
+              Registro
+            </a>
+          </>
+
+        ) : rol === "CLIENTE" ? (
+
+          <>
+            <a onClick={() => go("/perfil")}>
+              Mi Perfil
+            </a>
+
+            <a onClick={() => go("/historial")}>
+              Historial
+            </a>
+
+            <a onClick={() => go("/comentarios")}>
+              Comentarios
+            </a>
+
+            <a onClick={() => go("/contacto")}>
+              Contáctenos
+            </a>
+          </>
+
+        ) : rol === "SUPER_ADMIN" ? (
+
+          <>
+            <a onClick={() => go("/perfil")}>
+              Perfil
+            </a>
+
+            <a onClick={() => go("/admin/negocios")}>
+              Negocios
+            </a>
+
+            <a onClick={() => go("/admin/usuarios")}>
+              Usuarios
+            </a>
+
+            <a onClick={() => go("/admin/solicitudes")}>
+              Solicitudes
+            </a>
+
+            <a onClick={() => go("/admin/pqrs")}>
+              PQRS
+            </a>
+
+            <a onClick={() => go("/ventas")}>
+              Ventas
+            </a>
+          </>
+
+        ) : rol === "VENDEDOR" ? (
+
+          <>
+            <a onClick={() => go("/perfil")}>
+              Perfil
+            </a>
+
+            <a onClick={() => go("/productos")}>
+              Productos
+            </a>
+
+            <a onClick={() => go("/contacto")}>
+              Contáctenos
+            </a>
+          </>
+
+        ) : null}
+
+        {isAuthenticated && (
+          <a
+            className="logout"
+            onClick={handleLogout}
+          >
+            Cerrar Sesión
+          </a>
+        )}
+
+      </div>
+
     </header>
-  )
+  );
 }
 
-export default Header
+export default Header;

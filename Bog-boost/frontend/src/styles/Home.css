@@ -1,0 +1,413 @@
+.container-home {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 30px;
+}
+
+.view-title {
+  text-align: center;
+  font-size: 40px;
+  margin-bottom: 30px;
+}
+
+.main-content {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 30px;
+}
+
+.carruseles-column {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.carrusel-container {
+  background: white;
+  border-radius: 16px;
+  padding: 20px;
+  border: 2px solid #ddd;
+}
+
+.carrusel-title {
+  margin-bottom: 15px;
+}
+
+.carrusel-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.carrusel-track {
+  flex: 1;
+  display: flex;
+  gap: 12px;
+}
+
+.carrusel-item{
+    width:150px;
+    height:290px;
+    display:flex;
+    flex-direction:column;
+    background:#fafafa;
+    border-radius:12px;
+    overflow:hidden;
+    cursor:pointer;
+    transition:.3s;
+    flex-shrink:0;
+}
+
+.carrusel-item:hover {
+  transform: translateY(-5px);
+}
+
+.producto-imagen{
+    width:100%;
+    height:130px;
+    overflow:hidden;
+    background:#f4f4f4;
+}
+
+.producto-img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+}
+
+.producto-info-carrusel{
+    display:flex;
+    flex-direction:column;
+    flex:1;
+    padding:14px;
+}
+
+.sin-imagen{
+
+    color:#777;
+    font-size:14px;
+
+}
+
+.descripcion-producto{
+    height:40px;
+    overflow:hidden;
+    font-size:13px;
+    line-height:20px;
+}
+
+.categoria-producto{
+    font-size:13px;
+    color:#777;
+    margin-bottom:8px;
+    height:18px;
+}
+
+.producto-info-carrusel h4{
+    font-size:16px;
+    height:40px;
+    overflow:hidden;
+    margin-bottom:8px;
+}
+
+.producto-info-carrusel p {
+  font-size: 12px;
+  color: #666;
+}
+
+.producto-precio-carrusel{
+    margin-top:auto;
+    font-size:18px;
+    font-weight:bold;
+    color:#f5b952;
+}
+
+.carrusel-btn {
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  background: #f5b952;
+  font-size: 18px;
+}
+
+.mapa-card{
+    background:white;
+    border-radius:16px;
+    border:2px solid #ddd;
+    padding:20px;
+}
+
+.mapa-placeholder{
+    height:300px;
+    border:2px dashed #f5b952;
+    border-radius:12px;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+    gap:15px;
+}
+
+.mapa-title {
+  margin-bottom: 10px;
+}
+
+.mapa-subtitle {
+  margin-bottom: 20px;
+}
+
+
+.mapa-icono {
+  font-size: 60px;
+}
+
+.mapa-leyenda {
+  color: gray;
+}
+
+/* ===============================
+   TARJETA REGISTRAR NEGOCIO
+================================= */
+
+.negocio-card{
+    background:#fff;
+    border:2px solid #ddd;
+    border-radius:16px;
+    padding:25px;
+}
+
+.negocio-title{
+    margin-bottom:10px;
+    text-align:center;
+}
+
+.negocio-subtitle{
+    text-align:center;
+    color:#555;
+    margin-bottom:25px;
+}
+
+.negocio-placeholder{
+    height: 330px;
+    border:2px dashed #f5b952;
+    border-radius:12px;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+    gap:20px;
+    padding:25px;
+    text-align:center;
+}
+
+.negocio-icono{
+    font-size:70px;
+}
+
+.negocio-texto{
+    max-width:320px;
+    line-height:1.6;
+    color:#444;
+}
+
+.btn-registrar-negocio{
+    margin-top:10px;
+
+    background:#f5b952;
+    color:#000;
+
+    border:none;
+    border-radius:30px;
+
+    padding:14px 28px;
+
+    font-size:16px;
+    font-weight:bold;
+
+    cursor:pointer;
+    transition:.3s;
+}
+
+.btn-registrar-negocio:hover{
+    background:#e7a92e;
+    transform:translateY(-2px);
+}
+
+.right-column{
+    display:flex;
+    flex-direction:column;
+    gap:20px;
+}
+
+.negocio-info{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:8px;
+
+    margin-top:12px;
+
+    padding-top:10px;
+
+    border-top:1px solid #ececec;
+
+}
+
+.logo-negocio-card{
+
+    width:30px;
+
+    height:30px;
+
+    border-radius:50%;
+
+    object-fit:cover;
+
+    border:1px solid #ddd;
+
+}
+
+.categoria-producto{
+
+    font-size:13px;
+
+    color:#777;
+
+    margin-bottom:6px;
+
+}
+
+.btn-carrito{
+    width:100%;
+    border:none;
+    background:#f5b952;
+    color:#000;
+    padding:12px;
+    border-radius:10px;
+    font-weight:bold;
+    cursor:pointer;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    gap:8px;
+    transition:.25s;
+}
+
+.btn-carrito:hover{
+    background:#e3a82d;
+}
+
+@media (max-width: 1024px) {
+  .main-content {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ===============================
+   TABLETS
+================================= */
+
+@media (max-width:1024px){
+
+    .main-content{
+
+        grid-template-columns:1fr;
+
+    }
+
+    .right-column{
+
+        flex-direction:row;
+
+        align-items:flex-start;
+
+    }
+
+    .mapa-card,
+    .negocio-card{
+
+        flex:1;
+
+    }
+
+    .carrusel-item{
+
+        width:180px;
+        height:300px;
+
+    }
+
+}
+
+@media (max-width:768px){
+
+    .container-home{
+
+        padding:15px;
+
+    }
+
+    .view-title{
+
+        font-size:30px;
+
+    }
+
+    .carrusel-wrapper{
+
+        gap:8px;
+
+    }
+
+    .carrusel-track{
+
+        display:flex;
+
+        flex-direction:row;
+
+        gap:10px;
+
+        overflow-x:auto;
+
+        scroll-behavior:smooth;
+
+        scrollbar-width:none;
+
+    }
+
+    .carrusel-track::-webkit-scrollbar{
+
+        display:none;
+
+    }
+
+    .carrusel-item{
+
+        width:170px;
+
+        height:290px;
+
+        flex-shrink:0;
+
+    }
+
+    .carrusel-btn{
+
+        width:35px;
+        height:35px;
+
+        font-size:16px;
+
+    }
+
+    .right-column{
+
+        flex-direction:column;
+
+    }
+
+}

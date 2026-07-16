@@ -1,0 +1,218 @@
+* {
+    box-sizing: border-box;
+}
+/* ========== CONTENEDOR PRINCIPAL ========== */
+.registro-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 30px 20px;
+    width: 100%;
+}
+
+/* ========== TARJETA DE REGISTRO ========== */
+.registro-card {
+    background-color: #ffffff;
+    border: 2px solid #000;
+    border-radius: 20px;
+    padding: 35px 40px;
+    max-width: 440px;
+    width: 100%;
+    box-shadow: 8px 8px 0 rgba(0, 0, 0, 0.08);
+}
+
+.registro-title {
+    text-align: center;
+    font-family: 'Georgia', serif;
+    font-size: 28px;
+    font-weight: bold;
+    color: #1a1a1a;
+    margin-bottom: 25px;
+}
+
+/* ========== FORMULARIO ========== */
+.registro-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.form-group label {
+    font-weight: bold;
+    font-size: 14px;
+    color: #333;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.form-group label i {
+    color: #F5B952;
+    width: 18px;
+}
+
+.form-group input {
+    padding: 11px 14px;
+    border: 2px solid #ddd;
+    border-radius: 12px;
+    font-size: 15px;
+    transition: all 0.3s;
+    background-color: #fafaf8;
+    font-family: 'Arial', sans-serif;
+}
+
+.form-group input:focus {
+    border-color: #F5B952;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(245, 185, 82, 0.2);
+    background-color: #fff;
+}
+
+.form-group input:hover {
+    border-color: #bbb;
+}
+
+/* ========== CONTRASEÑA CON OJO ========== */
+.password-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.password-wrapper input {
+    width: 100%;
+    height: 48px;
+    padding-right: 50px; /* espacio para el ojo */
+    box-sizing: border-box;
+}
+
+.toggle-password {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: #999;
+    cursor: pointer;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 24px;
+    height: 24px;
+
+    font-size: 16px;
+    padding: 0;
+    margin: 0;
+    transition: color 0.3s;
+}
+
+.toggle-password:hover {
+    color: #555;
+}
+
+/* ========== BOTÓN REGISTRARSE ========== */
+.btn-registrar {
+    background-color: #F5B952;
+    border: 2px solid #000;
+    border-radius: 25px;
+    padding: 14px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s;
+    color: #1a1a1a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 5px;
+}
+
+.btn-registrar:hover {
+    background-color: #E8A83E;
+    transform: scale(1.02);
+    box-shadow: 0 4px 12px rgba(245, 185, 82, 0.3);
+}
+
+.btn-registrar:active {
+    transform: scale(0.97);
+}
+
+/* ========== ENLACE A LOGIN ========== */
+.registro-links {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #eee;
+}
+
+.registro-links a {
+    text-decoration: none;
+    font-size: 14px;
+    color: #2c1810;
+    font-weight: 600;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.registro-links a:hover {
+    color: #F5B952;
+}
+
+.registro-links a i {
+    width: 18px;
+    font-size: 14px;
+}
+
+.link-login {
+    text-decoration: none;
+    color: #2c1810;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.link-login:hover {
+    color: #F5B952;
+}
+
+.password-rules {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+    margin-top: 8px;
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.password-rules div {
+    flex: 1;
+}
+
+.password-rules p {
+    margin: 2px 0;
+}
+
+.password-valid {
+    color: green;
+}
+
+.password-invalid {
+    color: rgb(255, 123, 0);
+}

@@ -1,0 +1,201 @@
+/* ===================================
+   CONTENEDOR GENERAL
+=================================== */
+
+.registro-negocio-container{
+    max-width: 900px;
+    margin: 50px auto;
+    padding:20px;
+}
+
+.registro-negocio-title{
+    text-align:center;
+    font-size:2rem;
+    margin-bottom:30px;
+    font-family:Georgia, serif;
+}
+
+/* ===================================
+   TARJETA
+=================================== */
+
+.registro-negocio-card{
+    background:#f4eadc;
+    border:2px solid #000;
+    border-radius:24px;
+    padding:30px;
+    max-width:700px;
+    margin:auto;
+}
+
+.registro-negocio-card h1{
+    text-align:center;
+    margin-bottom:10px;
+}
+
+.registro-negocio-card p{
+    text-align:center;
+    color:#555;
+    margin-bottom:30px;
+    line-height:1.5;
+}
+
+/* ===================================
+   FORMULARIO
+=================================== */
+
+.registro-negocio-card form{
+    display:flex;
+    flex-direction:column;
+    gap:18px;
+}
+
+.registro-negocio-card label{
+    font-weight:bold;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    color:#000;
+}
+
+.registro-negocio-card label i{
+    color:#f8b94e;
+}
+
+/* ===================================
+   INPUTS
+=================================== */
+
+.registro-negocio-card input,
+.registro-negocio-card textarea{
+    padding:12px 16px;
+    border:2px solid #000;
+    border-radius:12px;
+    font-size:15px;
+    background:white;
+    transition:.3s;
+}
+
+.registro-negocio-card textarea{
+    resize:vertical;
+    min-height:130px;
+}
+
+.registro-negocio-card input:focus,
+.registro-negocio-card textarea:focus{
+    outline:none;
+    border-color:#f8b94e;
+}
+
+.registro-negocio-card input:hover,
+.registro-negocio-card textarea:hover{
+    border-color:#f8b94e;
+}
+
+/* ===================================
+   ÁREA DEL LOGO
+=================================== */
+
+.logo-upload{
+    width:200px;
+    height:200px;
+    margin:0 auto;
+    border:3px dashed #f8b94e;
+    border-radius:50%;
+    overflow:hidden;
+    background:white;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+    cursor:pointer;
+    transition:.3s;
+}
+
+.logo-upload:hover{
+    background:#fff8eb;
+    border-color:#e8a935;
+}
+
+.logo-icon{
+    font-size:60px;
+}
+
+.logo-upload span{
+    font-size:14px;
+    color:#555;
+}
+
+.preview-logo{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    border-radius:50%;
+}
+
+/* ===================================
+   MENSAJE SUBIENDO
+=================================== */
+
+.uploading{
+    text-align:center;
+    font-weight:bold;
+    color:#c88d19;
+}
+
+/* ===================================
+   BOTÓN ELIMINAR LOGO
+=================================== */
+
+.btn-eliminar-logo{
+    background:#ff6b6b;
+    border:2px solid #000;
+    border-radius:25px;
+    padding:12px;
+    color:#000;
+    font-weight:bold;
+    cursor:pointer;
+    transition:.3s;
+}
+
+.btn-eliminar-logo:hover{
+    background:#e55555;
+    transform:scale(1.03);
+}
+
+/* ===================================
+   BOTÓN ENVIAR
+=================================== */
+
+.btn-registrar{
+    background:#f8b94e;
+    border:2px solid #000;
+    border-radius:25px;
+    padding:14px;
+    font-weight:bold;
+    font-size:15px;
+    cursor:pointer;
+    transition:.3s;
+}
+
+.btn-registrar:hover{
+    background:#e6a73a;
+    transform:scale(1.03);
+    box-shadow:0 4px 12px rgba(248,185,78,.35);
+}
+
+/* ===================================
+   RESPONSIVE
+=================================== */
+
+@media(max-width:768px){
+
+    .registro-negocio-card{
+        padding:20px;
+    }
+
+    .logo-upload{
+        height:200px;
+    }
+
+}
