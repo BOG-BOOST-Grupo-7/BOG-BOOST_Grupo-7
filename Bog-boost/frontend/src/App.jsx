@@ -1,4 +1,5 @@
 import { Routes, Route } from "react-router-dom";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 // Layouts
 import ClienteLayout from "./layouts/ClienteLayout";
@@ -39,21 +40,21 @@ function App() {
         <Route index element={<Home />} />
         <Route path="login" element={<Login />} />
         <Route path="registro" element={<Registro />} />
-        <Route path="perfil" element={<Perfil />} />
-        <Route path="registrar-negocio" element={<RegistrarNegocio />} />
-        <Route path="/admin" element={<AdminHome />} />
-        <Route path="admin/solicitudes" element={<SolicitudesAdmin />} />
-        <Route path="admin/negocios" element={<ListaNegociosAdmin />} />
-        <Route path="admin/usuarios" element={<ListaUsuariosAdmin />} />
-        <Route path="/notificaciones" element={<Notificaciones />} />
-        <Route path="/vendedor" element={<PerfilNegocio />} />
+        <Route path="perfil" element={<ProtectedRoute> <Perfil /> </ProtectedRoute>} />
+        <Route path="registrar-negocio" element={<ProtectedRoute> <RegistrarNegocio /> </ProtectedRoute>} />
+        <Route path="/admin" element={<ProtectedRoute allowedRoles={["SUPER_ADMIN"]}> <AdminHome /> </ProtectedRoute>} />
+        <Route path="admin/solicitudes" element={<ProtectedRoute allowedRoles={["SUPER_ADMIN"]}> <SolicitudesAdmin /> </ProtectedRoute>} />
+        <Route path="admin/negocios" element={<ProtectedRoute allowedRoles={["SUPER_ADMIN"]}> <ListaNegociosAdmin /> </ProtectedRoute>} />
+        <Route path="admin/usuarios" element={<ProtectedRoute allowedRoles={["SUPER_ADMIN"]}> <ListaUsuariosAdmin /> </ProtectedRoute>} />
+        <Route path="/notificaciones" element={<ProtectedRoute> <Notificaciones /> </ProtectedRoute>} />
+        <Route path="/vendedor" element={<ProtectedRoute allowedRoles={["VENDEDOR"]}> <PerfilNegocio /> </ProtectedRoute>} />
         <Route path="/producto/:id" element={<DetalleProducto />} />
         <Route path="/carrito" element={<Carrito />} />
         <Route path="/negocios" element={<Negocios />} />
         <Route path="/negocios/:id" element={<NegocioDetalle />} />
-        <Route path="/contacto" element={<PQRS />} />
-        <Route path="/admin/pqrs" element={<AdminPQRS />} />
-        <Route path="/stock" element={<AdminMovimientoStock />} />
+        <Route path="/contacto" element={<PQRS /> } />
+        <Route path="/admin/pqrs" element={<ProtectedRoute allowedRoles={["SUPER_ADMIN"]}> <AdminPQRS /> </ProtectedRoute>} />
+        <Route path="/stock" element={<ProtectedRoute allowedRoles={["VENDEDOR"]}> <AdminMovimientoStock /> </ProtectedRoute>} />
       </Route>
 
     </Routes>

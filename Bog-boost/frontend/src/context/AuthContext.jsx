@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { me } from "../api/auth";
 
 const AuthContext = createContext(null);
 
@@ -6,62 +7,53 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [perfil, setPerfil] = useState(null);
   const [rol, setRol] = useState(null);
-  const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(true);
 
   // Restaurar sesión al abrir la aplicación
   useEffect(() => {
-    try {
-      const storedToken = localStorage.getItem("accessToken");
-      const storedUser = localStorage.getItem("user");
-      const storedPerfil = localStorage.getItem("perfil");
-      const storedRol = localStorage.getItem("rol");
+    const restaurarSesion = async () => {
+      try {
 
-      if (storedToken) {
-        setToken(storedToken);
-      }
+        const res = await me();
 
-      if (storedUser) {
-        setUser(JSON.parse(storedUser));
-      }
+        setUser(res.data.user);
+        setPerfil(res.data.perfil);
 
-      if (storedPerfil) {
-        setPerfil(JSON.parse(storedPerfil));
-      }
+        setRol(
+          res.data.perfil?.rol?.nombre_rol
+        );
 
-      if (storedRol) {
-        setRol(storedRol);
+      } catch (error) {
+
+        setUser(null);
+        setPerfil(null);
+        setRol(null);
+
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error(error);
-      localStorage.clear();
-    } finally {
-      setLoading(false);
-    }
+    };
+
+    restaurarSesion();
   }, []);
 
-  const login = (session, userData, perfilData) => {
-    const accessToken = session.access_token;
+  const login = (userData, perfilData) => {
     const rolNombre = perfilData?.rol?.nombre_rol ?? null;
 
-    setToken(accessToken);
     setUser(userData);
     setPerfil(perfilData);
     setRol(rolNombre);
 
-    localStorage.setItem("accessToken", accessToken);
     localStorage.setItem("user", JSON.stringify(userData));
     localStorage.setItem("perfil", JSON.stringify(perfilData));
     localStorage.setItem("rol", rolNombre);
   };
 
   const logout = () => {
-    setToken(null);
     setUser(null);
     setPerfil(null);
     setRol(null);
 
-    localStorage.removeItem("accessToken");
     localStorage.removeItem("user");
     localStorage.removeItem("perfil");
     localStorage.removeItem("rol");
@@ -72,13 +64,12 @@ export function AuthProvider({ children }) {
       user,
       perfil,
       rol,
-      token,
       loading,
-      isAuthenticated: !!token,
+      isAuthenticated: !!user,
       login,
       logout,
     }),
-    [user, perfil, rol, token, loading]
+    [user, perfil, rol, loading]
   );
 
   return (

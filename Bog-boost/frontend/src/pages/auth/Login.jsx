@@ -1,4 +1,4 @@
-import "../../styles/Registro.css"; // 👈 reutilizamos el mismo CSS
+import "../../styles/Registro.css";
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { loginUser } from "../../api/auth";
@@ -25,9 +25,9 @@ function Login() {
     try {
       const res = await loginUser({ email, password });
 
-      const { session, user, perfil } = res.data;
+      const {user, perfil } = res.data;
 
-      login(session, user, perfil);
+      login(user, perfil);
 
       const rol = perfil?.rol?.nombre_rol;
 

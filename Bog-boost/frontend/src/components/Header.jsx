@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import logo from "../assets/logo.png";
 import { obtenerCategorias } from "../api/categoriaApi";
 import { useAuth } from "../context/AuthContext";
+import { logoutUser } from "../api/auth";
 
 function Header() {
   const navigate = useNavigate();
@@ -22,10 +23,19 @@ function Header() {
     setMobileMenuOpen(false);
   };
 
-  const handleLogout = () => {
-    logout();
-    setMobileMenuOpen(false);
-    navigate("/");
+  const handleLogout = async () => {
+    try {
+      await logoutUser();
+
+      logout();
+
+      navigate("/");
+
+      setMobileMenuOpen(false);
+
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   const avatarLetter =
