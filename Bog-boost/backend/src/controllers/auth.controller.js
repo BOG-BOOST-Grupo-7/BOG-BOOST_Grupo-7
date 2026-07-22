@@ -106,18 +106,19 @@ export const login = async (req, res) => {
         puede_reactivar: true
       });
     }
+    
+    res.cookie("token", data.session.access_token, {
+      httpOnly: true,
+      secure: false,
+      sameSite: "lax",
+      maxAge: 60 * 60 * 1000
+    });
 
     res.json({
       mensaje: "Login exitoso",
-      session: data.session,
       user: data.user,
       perfil: {
         id_perfil: perfil.id_perfil,
-        primer_nombre: perfil.primer_nombre,
-        segundo_nombre: perfil.segundo_nombre,
-        primer_apellido: perfil.primer_apellido,
-        segundo_apellido: perfil.segundo_apellido,
-        estado_usuario: perfil.estado_usuario,
         rol: perfil.rol
       }
     });
@@ -129,11 +130,49 @@ export const login = async (req, res) => {
 
 /* Usuario autenticado*/
 export const me = async (req, res) => {
-    res.json(req.user);
-  };
+  try {
+
+    const { data: perfil, error } =
+      await supabase
+        .schema("cliente")
+        .from("perfil")
+        .select(`
+          *,
+          rol(
+            nombre_rol
+          )
+        `)
+        .eq(
+          "id_perfil",
+          req.user.id
+        )
+        .single();
+
+    if (error) {
+      return res.status(404).json({
+        mensaje: "Perfil no encontrado"
+      });
+    }
+
+    res.json({
+      user: req.user,
+      perfil
+    });
+
+  } catch (error) {
+    res.status(500).json(error);
+  }
+};
 
 export const logout = async (req, res) => {
     try {
+
+      res.clearCookie("token", {
+        httpOnly: true,
+        secure: false,
+        sameSite: "lax"
+      });
+
       const { error } = await supabase.auth.signOut();
 
       if (error) {

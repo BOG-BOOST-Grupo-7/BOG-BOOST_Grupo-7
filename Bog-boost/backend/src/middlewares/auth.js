@@ -3,20 +3,13 @@ import supabase from "../services/supabase.js";
 const authMiddleware = async ( req, res, next) => {
   try {
 
-    const authHeader =
-      req.headers.authorization;
+    const token = req.cookies.token;
 
-    if (!authHeader) {
+    if (!token) {
       return res.status(401).json({
         mensaje: "Token requerido"
       });
     }
-
-    const token =
-      authHeader.replace(
-        "Bearer ",
-        ""
-      );
 
     const {
       data,
