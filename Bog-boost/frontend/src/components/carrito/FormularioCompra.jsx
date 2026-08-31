@@ -37,20 +37,26 @@ function FormularioCompra({
     const [showComprobante, setShowComprobante] = useState(false);
     const [ventaConfirmada, setVentaConfirmada] = useState(null);
 
-    useEffect(() => {
-        if (carrito && carrito.length > 0) {
-            const id = carrito[0].id_negocio;
-            if (id !== undefined && id !== null) {
-                cargarDatos(id);
-            }
+   useEffect(() => {
+    console.log("Carrito actual en FormularioCompra:", carrito); // <-- ¿Aquí sí imprime algo?
+
+    if (carrito && carrito.length > 0) {
+        const id = carrito[0].id_negocio;
+        
+        if (id !== undefined && id !== null) {
+            cargarDatos(id);
+        } else {
+            console.warn("El producto en el carrito no tiene id_negocio");
         }
-        cargarPerfil();
-    }, [carrito]);
+    }
+    cargarPerfil();
+}, [carrito]);
 
     const cargarDatos = async (id) => {
         try {
             const pagos = await obtenerMediosPagoPorNegocio(id);
             const envios = await obtenerMetodosEnvioPorNegocio(id);
+            console.log("Lo que devuelve obtenerMetodosEnvioPorNegocio:", envios);
             setMediosPago(pagos);
             setMetodosEnvio(envios);
         } catch (error) {
@@ -127,9 +133,10 @@ function FormularioCompra({
         }
     };
 
-    const metodoSeleccionado = metodosEnvio.find((m) => m.id_metodo_envio === Number(idMetodoEnvio));
+
+    const metodoSeleccionado = metodosEnvio.find((m) => m.id_metodo_envio == idMetodoEnvio);
     const costoEnvio = Number(metodoSeleccionado?.costo_envio || 0);
-    const totalCompra = total + costoEnvio;
+    const totalCompra = Number(total || 0) + costoEnvio;
 
     return (
         <div className="modal-overlay">

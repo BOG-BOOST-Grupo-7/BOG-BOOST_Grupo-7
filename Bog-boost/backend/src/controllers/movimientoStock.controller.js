@@ -14,7 +14,7 @@ export const listarMovimientos = async (req, res) => {
       .from("movimiento_stock")
       .select(`
         *,
-        producto:fk_producto_movimiento ( // QUITAMOS EL !INNER AQUÍ
+        producto:fk_producto_movimiento (
           id_producto,
           nombre_producto,
           stock,
@@ -22,12 +22,11 @@ export const listarMovimientos = async (req, res) => {
           id_negocio
         )
       `)
-      // Filtramos explicitamente por el negocio en la tabla de productos relacionada
       .eq("producto.id_negocio", id_negocio)
-      .order("fecha_movimiento", { ascending: false }); // Importante: ordenar por fecha descendente
+      .order("fecha_movimiento", { ascending: false });
 
     if (error) {
-      console.error("Error al obtener movimientos:", error);
+      console.error("Error DETALLADO de Supabase:", error);
       return res.status(400).json(error);
     }
 

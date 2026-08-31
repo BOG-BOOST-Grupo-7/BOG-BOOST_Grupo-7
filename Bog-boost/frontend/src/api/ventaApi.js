@@ -65,10 +65,7 @@ export const eliminarVenta = async (id) => {
 // VENDEDOR
 // =========================
 
-export const obtenerMisVentas = async () => {
-    const { data } = await axiosClient.get(
-        "/ventas/mis-ventas"
-    );
-
-    return data;
+export const listarVentasNegocio = async () => {
+  const response = await axiosClient.get("/ventas/mis-ventas");
+  return response.data;
 };
