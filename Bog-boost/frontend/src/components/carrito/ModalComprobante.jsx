@@ -3,12 +3,12 @@ import { crearComentarioApi } from "../../api/comentarioApi"; // Ajusta la ruta 
 import "../../styles/PerfilNegocio.css"; 
 import "../../styles/ModalComprobante.css"; 
 
-const ModalComprobante = ({ venta, onClose }) => {
+const ModalComprobante = ({ venta, onClose, esVendedor = false }) => {
   if (!venta) return null;
 
   const detalles = venta.detalle_venta || venta.detalles || venta.items || [];
 
-  // 1. Extraer el estado del seguimiento (igual que en el Historial)
+  // 1. Extraer el estado del seguimiento
   const seguimientoData = Array.isArray(venta.seguimiento) 
     ? venta.seguimiento[0] 
     : venta.seguimiento;
@@ -17,7 +17,7 @@ const ModalComprobante = ({ venta, onClose }) => {
   const esEntregado = estado === 'ENTREGADO';
 
   // 2. Estados locales para manejar los comentarios por cada producto
-  const [comentarios, setComentarios] = useState({}); // { [id_producto]: { texto, calificacion } }
+  const [comentarios, setComentarios] = useState({}); 
   const [mensajeExito, setMensajeExito] = useState("");
 
   const handleInputChange = (id_producto, campo, valor) => {
@@ -56,23 +56,36 @@ const ModalComprobante = ({ venta, onClose }) => {
       <div className="modal-content">
         
         <div className="modal-header">
-          <h2>Comprobante de Compra</h2>
+          <h2>{esVendedor ? `Comprobante de Venta #${venta.id_venta}` : "Comprobante de Compra"}</h2>
           <button className="modal-close" onClick={onClose}>&times;</button>
         </div>
 
         <div className="modal-body">
+          {/* Tarjeta de información adaptada */}
           <div className="card-medio">
-            <h4>Detalles del pedido #{venta.id_venta}</h4>
-            <p><strong>Fecha:</strong> {new Date(venta.fecha_venta).toLocaleDateString()}</p>
-            <p><strong>Dirección:</strong> {venta.direccion}</p>
-            <p><strong>Método de pago:</strong> {venta.medio_pago?.nombre_medio || "No especificado"}</p>
-            <p><strong>Envío:</strong> {venta.metodo_envio?.nombre_metodo || "No especificado"}</p>
-            <p><strong>Estado del pedido:</strong> <span className={`badge-estado ${estado.toLowerCase()}`}>{estado}</span></p>
+            <h4>{esVendedor ? `Detalles de la Venta #${venta.id_venta}` : `Detalles del pedido #${venta.id_venta}`}</h4>
+            
+            {/* Si NO es vendedor, mostramos fecha y dirección */}
+            {!esVendedor && (
+              <>
+                <p><strong>Fecha:</strong> {new Date(venta.fecha_venta).toLocaleDateString()}</p>
+                <p><strong>Dirección:</strong> {venta.direccion}</p>
+              </>
+            )}
+
+            {/* Datos que verá tanto el comprador como el vendedor */}
+            <p><strong>Método de pago:</strong> {venta.medio_pago?.nombre_medio || venta.metodo_pago || "No especificado"}</p>
+            <p><strong>Envío:</strong> {venta.metodo_envio?.nombre_metodo || venta.envio || "No especificado"}</p>
+
+            {/* Estado del pedido solo para el comprador (el vendedor ya lo ve en su tabla principal) */}
+            {!esVendedor && (
+              <p><strong>Estado del pedido:</strong> <span className={`badge-estado ${estado.toLowerCase()}`}>{estado}</span></p>
+            )}
           </div>
 
           {mensajeExito && <div className="alerta-exito" style={{ color: 'green', margin: '10px 0', fontWeight: 'bold' }}>{mensajeExito}</div>}
 
-          <table className="tabla-comprobante">
+          <table className="tabla-comprobante" style={{ marginTop: '15px' }}>
             <thead>
               <tr>
                 <th>Producto</th>
@@ -95,8 +108,8 @@ const ModalComprobante = ({ venta, onClose }) => {
                       </td>
                     </tr>
 
-                    {/* 3. Renderizar la sección de comentarios SOLO si el estado es ENTREGADO */}
-                    {esEntregado && (
+                    {/* La sección de comentarios solo se muestra si NO es vendedor y está ENTREGADO */}
+                    {!esVendedor && esEntregado && (
                       <tr>
                         <td colSpan="3" style={{ background: '#f9f9f9', padding: '10px' }}>
                           <div className="seccion-comentario-producto" style={{ border: '1px dashed #ccc', padding: '10px', borderRadius: '5px' }}>
@@ -144,18 +157,21 @@ const ModalComprobante = ({ venta, onClose }) => {
             </tbody>
           </table>
 
-          <div className="total-seccion">
+          <div className="total-seccion" style={{ marginTop: '15px' }}>
             Total: {Number(venta.total || 0).toLocaleString("es-CO", { style: "currency", currency: "COP" })}
           </div>
         </div>
 
+        {/* Footer adaptativo */}
         <div className="modal-footer">
           <button className="btn-orange" onClick={onClose}>
             Cerrar
           </button>
-          <button className="btn-green" onClick={() => window.print()}>
-            Imprimir
-          </button>
+          {!esVendedor && (
+            <button className="btn-green" onClick={() => window.print()}>
+              Imprimir
+            </button>
+          )}
         </div>
       </div>
     </div>

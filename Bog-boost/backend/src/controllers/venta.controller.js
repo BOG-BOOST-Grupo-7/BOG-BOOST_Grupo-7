@@ -715,8 +715,7 @@ export const misVentas = async (req, res) => {
     const idsNegocios = negocios.map(n => n.id_negocio);
 
     // 2. Consultar desde la tabla venta filtrando por los negocios del vendedor
-    // y trayendo el seguimiento de manera segura
-    const { data, error } = await supabase
+    const { data: ventas, error } = await supabase
       .schema("ventas")
       .from("venta")
       .select(`
@@ -734,8 +733,72 @@ export const misVentas = async (req, res) => {
       return res.status(400).json(error);
     }
 
-    res.json(data);
+    // 3. Enriquecer cada venta con sus detalles, productos, medio de pago y método de envío (igual que misCompras)
+    const ventasEnriquecidas = await Promise.all(
+      ventas.map(async (venta) => {
+        // A. Buscar medio de pago
+        let medio_pago = null;
+        if (venta.id_medio_pago) {
+          const { data: mp } = await supabase
+            .schema("negocio")
+            .from("medio_pago")
+            .select("nombre_medio")
+            .eq("id_medio_pago", venta.id_medio_pago)
+            .single();
+          medio_pago = mp;
+        }
+
+        // B. Buscar método de envío
+        let metodo_envio = null;
+        if (venta.id_metodo_envio) {
+          const { data: me } = await supabase
+            .schema("negocio")
+            .from("metodo_envio")
+            .select("nombre_metodo, costo_envio")
+            .eq("id_metodo_envio", venta.id_metodo_envio)
+            .single();
+          metodo_envio = me;
+        }
+
+        // C. Traer los detalles de la venta
+        const { data: detalles } = await supabase
+          .schema("ventas")
+          .from("detalle_venta")
+          .select("*")
+          .eq("id_venta", venta.id_venta);
+
+        // D. Para cada detalle, traer la información del producto
+        const detalle_venta = await Promise.all(
+          (detalles || []).map(async (detalle) => {
+            let producto = null;
+            if (detalle.id_producto) {
+              const { data: prod } = await supabase
+                .schema("catalogo")
+                .from("producto")
+                .select("nombre_producto, descripcion, imagen")
+                .eq("id_producto", detalle.id_producto)
+                .single();
+              producto = prod;
+            }
+            return {
+              ...detalle,
+              producto
+            };
+          })
+        );
+
+        return {
+          ...venta,
+          medio_pago,
+          metodo_envio,
+          detalle_venta
+        };
+      })
+    );
+
+    res.json(ventasEnriquecidas);
   } catch (error) {
+    console.error("Error en servidor (misVentas):", error);
     res.status(500).json(error);
   }
 };

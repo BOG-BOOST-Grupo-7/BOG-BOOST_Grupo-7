@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { listarVentasNegocio } from "../../api/ventaApi";
 import { actualizarSeguimientoApi } from "../../api/seguimientoApi";
+import ModalComprobante from "../../components/carrito/ModalComprobante";
 import { 
   FaShoppingBag, 
   FaClock, 
@@ -9,14 +10,26 @@ import {
   FaCheckCircle, 
   FaFilter, 
   FaPhone, 
-  FaMapMarkerAlt 
+  FaMapMarkerAlt,
+  FaEye,
+  FaTimes,
+  FaBoxOpen,
+  FaReceipt
 } from "react-icons/fa";
 import "../../styles/VentasNegocio.css";
+import "../../styles/ModalComprobante.css";
 
 const AdminVentasYSeguimiento = () => {
   const [ventas, setVentas] = useState([]);
   const [filtroEstado, setFiltroEstado] = useState("TODOS");
   const [loading, setLoading] = useState(true);
+  
+  // Estados para los Modales
+  const [modalClienteAbierto, setModalClienteAbierto] = useState(false);
+  const [clienteSeleccionado, setClienteSeleccionado] = useState(null);
+
+  const [modalComprobanteAbierto, setModalComprobanteAbierto] = useState(false);
+  const [ventaSeleccionada, setVentaSeleccionada] = useState(null);
 
   useEffect(() => {
     cargarVentasConSeguimiento();
@@ -35,53 +48,80 @@ const AdminVentasYSeguimiento = () => {
   };
 
   const handleCambiarEstado = async (id_seguimiento, id_venta, nuevoEstado) => {
-    const idParaActualizar = id_seguimiento || id_venta;
-    
-    if (!idParaActualizar) {
-      alert("Error: Este registro no tiene un ID de seguimiento ni de venta asociado.");
+    // Si la tabla no tiene un seguimiento creado, el ID para actualizar debe ser el de la venta 
+    // o el id_seguimiento si ya existe. Vamos a pasar directamente el id_venta si tu backend lo soporta, 
+    // o el id_seguimiento. Con el controlador robusto que hicimos antes, ambos funcionan.
+    const idParaEnviar = id_seguimiento || id_venta;
+
+    if (!idParaEnviar) {
+      alert("Error: No se encontró un identificador para este pedido.");
       return;
     }
 
     try {
-      const respuesta = await actualizarSeguimientoApi(idParaActualizar, nuevoEstado);
+      console.log(`Cambiando estado de ${idParaEnviar} a ${nuevoEstado}`);
+      
+      await actualizarSeguimientoApi(idParaEnviar, nuevoEstado);
 
-      // Actualizar el estado localmente de inmediato
-      setVentas(prev =>
-        prev.map(v => {
-          if (v.id_venta === id_venta) {
-            const segActual = v.seguimiento?.[0] || {};
+      // Actualizamos inmediatamente el estado local en la tabla
+      setVentas(prevVentas =>
+        prevVentas.map(venta => {
+          if (venta.id_venta === id_venta) {
+            const seguimientoActual = Array.isArray(venta.seguimiento) ? venta.seguimiento[0] : (venta.seguimiento || {});
             return {
-              ...v,
-              seguimiento: [{ 
-                ...segActual, 
-                id_seguimiento: segActual.id_seguimiento || idParaActualizar,
-                estado_seguimiento: nuevoEstado, 
-                fecha_entrega: nuevoEstado === 'ENTREGADO' ? new Date().toISOString() : segActual.fecha_entrega 
+              ...venta,
+              seguimiento: [{
+                ...seguimientoActual,
+                estado_seguimiento: nuevoEstado,
+                fecha_entrega: nuevoEstado === 'ENTREGADO' ? new Date().toISOString() : seguimientoActual.fecha_entrega
               }]
             };
           }
-          return v;
+          return venta;
         })
       );
+
     } catch (error) {
-      console.error("Error detallado al actualizar el estado:", error.response?.data || error.message);
-      alert(`No se pudo actualizar el estado: ${error.response?.data?.mensaje || error.message}`);
+      console.error("Error al actualizar:", error.response?.data || error.message);
+      alert("No se pudo actualizar el estado del pedido.");
     }
+  };
+
+      // Opcional: recargar desde la API para asegurar sincronización total con la base de datos
+
+  const abrirModalCliente = (venta) => {
+    setClienteSeleccionado(venta);
+    setModalClienteAbierto(true);
+  };
+
+  const cerrarModalCliente = () => {
+    setModalClienteAbierto(false);
+    setClienteSeleccionado(null);
+  };
+
+  const abrirModalComprobante = (venta) => {
+    setVentaSeleccionada(venta);
+    setModalComprobanteAbierto(true);
+  };
+
+  const cerrarModalComprobante = () => {
+    setModalComprobanteAbierto(false);
+    setVentaSeleccionada(null);
   };
 
   // Filtrar ventas por el estado de su seguimiento de forma segura
   const ventasFiltradas = ventas.filter((venta) => {
     const estadoSeg = venta.seguimiento?.[0]?.estado_seguimiento || "PENDIENTE";
     if (filtroEstado === "TODOS") return true;
-    return estadoSeg === filtroEstado;
+    return estadoSeg.toUpperCase() === filtroEstado.toUpperCase();
   });
 
   // Métricas para tarjetas de resumen
   const totalCount = ventas.length;
-  const pendientesCount = ventas.filter(v => (v.seguimiento?.[0]?.estado_seguimiento || "PENDIENTE") === "PENDIENTE").length;
-  const preparandoCount = ventas.filter(v => v.seguimiento?.[0]?.estado_seguimiento === "PREPARANDO").length;
-  const enviadosCount = ventas.filter(v => v.seguimiento?.[0]?.estado_seguimiento === "ENVIADO").length;
-  const entregadosCount = ventas.filter(v => v.seguimiento?.[0]?.estado_seguimiento === "ENTREGADO").length;
+  const pendientesCount = ventas.filter(v => (v.seguimiento?.[0]?.estado_seguimiento || "PENDIENTE").toUpperCase() === "PENDIENTE").length;
+  const preparandoCount = ventas.filter(v => (v.seguimiento?.[0]?.estado_seguimiento || "").toUpperCase() === "PREPARANDO").length;
+  const enviadosCount = ventas.filter(v => (v.seguimiento?.[0]?.estado_seguimiento || "").toUpperCase() === "ENVIADO").length;
+  const entregadosCount = ventas.filter(v => (v.seguimiento?.[0]?.estado_seguimiento || "").toUpperCase() === "ENTREGADO").length;
 
   return (
     <div className="movimientos-container">
@@ -142,8 +182,8 @@ const AdminVentasYSeguimiento = () => {
             <thead>
               <tr>
                 <th>Venta #</th>
-                <th>Cliente / Contacto</th>
-                <th>Dirección</th>
+                <th>Cliente</th>
+                <th>Producto(s) / Detalle</th>
                 <th>Total</th>
                 <th>Estado Actual</th>
                 <th>Acción / Cambiar Estado</th>
@@ -153,26 +193,44 @@ const AdminVentasYSeguimiento = () => {
             <tbody>
               {ventasFiltradas.map((venta) => {
                 const seguimiento = venta.seguimiento?.[0] || {};
-                const estadoActual = seguimiento.estado_seguimiento || "PENDIENTE";
+                const estadoActual = (seguimiento.estado_seguimiento || "PENDIENTE").toUpperCase();
+                
+                const detalles = venta.detalle_venta || venta.detalles || venta.items || [];
+                const productosTexto = detalles.length > 0 
+                  ? detalles.map(d => `${d.cantidad || 1}x ${d.producto?.nombre_producto || d.nombre_producto || "Producto"}`).join(", ")
+                  : venta.producto || "Ver comprobante";
 
                 return (
                   <tr key={venta.id_venta}>
                     <td>
                       <strong>#{venta.id_venta}</strong>
                     </td>
+                    <td style={{ textAlign: "center" }}>
+                      <button 
+                        className="btn-icono-ojo" 
+                        onClick={() => abrirModalCliente(venta)}
+                        title="Ver información del cliente"
+                        style={{ background: "none", border: "none", cursor: "pointer", fontSize: "1.1rem", color: "#1976d2" }}
+                      >
+                        <FaEye />
+                      </button>
+                    </td>
                     <td>
-                      <div className="nombre-producto">
-                        <strong>ID: {venta.id_perfil?.slice(0, 8)}...</strong>
-                        <small><FaPhone /> {venta.telefono}</small>
+                      <div className="nombre-producto" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px" }}>
+                        <small style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "180px" }}>
+                          <FaBoxOpen /> {productosTexto}
+                        </small>
+                        <button 
+                          onClick={() => abrirModalComprobante(venta)}
+                          title="Ver detalle completo"
+                          style={{ background: "#e3f2fd", border: "none", borderRadius: "4px", padding: "4px 8px", cursor: "pointer", color: "#ffa530", display: "flex", alignItems: "center", gap: "4px", fontSize: "0.8rem" }}
+                        >
+                          <FaReceipt /> Ver
+                        </button>
                       </div>
                     </td>
                     <td>
-                      <div className="nombre-producto">
-                        <small><FaMapMarkerAlt /> {venta.direccion}</small>
-                      </div>
-                    </td>
-                    <td>
-                      <strong>${Number(venta.total).toLocaleString()}</strong>
+                      <strong>{Number(venta.total || 0).toLocaleString("es-CO", { style: "currency", currency: "COP" })}</strong>
                     </td>
                     <td>
                       <span className={`movimiento-badge ${estadoActual.toLowerCase()}`}>
@@ -181,15 +239,15 @@ const AdminVentasYSeguimiento = () => {
                     </td>
                     <td>
                       <select
-                        className="filter-select"
-                        value={estadoActual}
-                        onChange={(e) => handleCambiarEstado(seguimiento.id_seguimiento, venta.id_venta, e.target.value)}
-                      >
-                        <option value="PENDIENTE">PENDIENTE</option>
-                        <option value="PREPARANDO">PREPARANDO</option>
-                        <option value="ENVIADO">ENVIADO</option>
-                        <option value="ENTREGADO">ENTREGADO</option>
-                      </select>
+  className="filter-select"
+  value={estadoActual}
+  onChange={(e) => handleCambiarEstado(seguimiento.id_seguimiento, venta.id_venta, e.target.value)}
+>
+  <option value="PENDIENTE">PENDIENTE</option>
+  <option value="PREPARANDO">PREPARANDO</option>
+  <option value="ENVIADO">ENVIADO</option>
+  <option value="ENTREGADO">ENTREGADO</option>
+</select>
                     </td>
                     <td>
                       <small>{new Date(venta.fecha_venta).toLocaleString()}</small>
@@ -201,6 +259,46 @@ const AdminVentasYSeguimiento = () => {
           </table>
         )}
       </div>
+
+      {/* Modal de Información del Cliente */}
+      {modalClienteAbierto && clienteSeleccionado && (
+        <div className="modal-overlay" style={{
+          position: "fixed", top: 0, left: 0, width: "100%", height: "100%",
+          backgroundColor: "rgba(0,0,0,0.5)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 1000
+        }}>
+          <div className="modal-content" style={{
+            background: "#fff", padding: "25px", borderRadius: "8px", width: "400px", maxWidth: "90%", position: "relative", boxShadow: "0 4px 12px rgba(0,0,0,0.15)"
+          }}>
+            <button 
+              onClick={cerrarModalCliente}
+              style={{ position: "absolute", top: "15px", right: "15px", background: "none", border: "none", fontSize: "1.2rem", cursor: "pointer" }}
+            >
+              <FaTimes />
+            </button>
+            <h3 style={{ marginBottom: "20px", color: "#333" }}>Información del Cliente</h3>
+            <div style={{ display: "flex", flexDirection: "column", gap: "12px", textAlign: "left" }}>
+              <p><strong>ID de Perfil:</strong> {clienteSeleccionado.id_perfil || "No registrado"}</p>
+              <p><strong>Teléfono / Contacto:</strong> <FaPhone /> {clienteSeleccionado.telefono || "No especificado"}</p>
+              <p><strong>Dirección de Envío:</strong> <FaMapMarkerAlt /> {clienteSeleccionado.direccion || "No especificada"}</p>
+            </div>
+            <button 
+              onClick={cerrarModalCliente}
+              style={{ marginTop: "20px", padding: "8px 16px", backgroundColor: "#1976d2", color: "#fff", border: "none", borderRadius: "4px", cursor: "pointer", width: "100%" }}
+            >
+              Cerrar
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Comprobante Reutilizado para el Vendedor / Administrador */}
+      {modalComprobanteAbierto && ventaSeleccionada && (
+        <ModalComprobante 
+          venta={ventaSeleccionada} 
+          onClose={cerrarModalComprobante} 
+          esVendedor={true} 
+        />
+      )}
     </div>
   );
 };

@@ -130,71 +130,88 @@ export const obtenerSeguimientoPorId = async (req, res) => {
 
 export const actualizarSeguimiento = async (req, res) => {
   try {
-    const { id } = req.params; // Puede ser id_seguimiento o id_venta si se usó el fallback
+    const { id } = req.params; // Aquí asumimos que 'id' es el id_venta o id_seguimiento
     const { estado_seguimiento } = req.body;
 
-    // 1. Intentar buscar por id_seguimiento
-    let { data: seguimiento, error: errorSeguimiento } = await supabase
+    let idVenta = id;
+    let idSeguimiento = null;
+
+    // 1. Verificar si el 'id' enviado es un id_seguimiento existente o un id_venta
+    const { data: segExistente } = await supabase
       .schema("ventas")
       .from("seguimiento")
-      .select(`*, venta:id_venta(id_negocio)`)
+      .select("id_seguimiento, id_venta")
       .eq("id_seguimiento", id)
-      .single();
+      .maybeSingle();
 
-    // Si no se encontró por id_seguimiento, asumimos que 'id' es el id_venta y creamos el seguimiento
-    if (errorSeguimiento || !seguimiento) {
-      const { data: nuevaSeg, error: errorCrear } = await supabase
-        .schema("ventas")
-        .from("seguimiento")
-        .insert({
-          id_venta: id,
-          estado_seguimiento: estado_seguimiento,
-          fecha_entrega: estado_seguimiento === "ENTREGADO" ? new Date() : null
-        })
-        .select(`*, venta:id_venta(id_negocio)`)
-        .single();
-
-      if (errorCrear) {
-        return res.status(404).json({ mensaje: "Seguimiento no encontrado y no se pudo crear automáticamente", error: errorCrear });
-      }
-      seguimiento = nuevaSeg;
+    if (segExistente) {
+      idSeguimiento = segExistente.id_seguimiento;
+      idVenta = segExistente.id_venta;
     }
 
-    // 2. Verificar que el negocio pertenezca al vendedor autenticado
-    const idNegocio = seguimiento.venta?.id_negocio;
-    const { data: negocio } = await supabase
+    // 2. Obtener la venta para saber a qué negocio pertenece y validar propiedad
+    const { data: venta, error: errorVenta } = await supabase
+      .schema("ventas")
+      .from("venta")
+      .select("id_venta, id_negocio")
+      .eq("id_venta", idVenta)
+      .single();
+
+    if (errorVenta || !venta) {
+      return res.status(404).json({ mensaje: "Venta no encontrada" });
+    }
+
+    // 3. Validar que el negocio pertenezca al vendedor autenticado (req.user.id)
+    const { data: negocio, error: errorNegocio } = await supabase
       .schema("negocio")
       .from("negocio")
       .select("id_negocio")
-      .eq("id_negocio", idNegocio)
+      .eq("id_negocio", venta.id_negocio)
       .eq("id_perfil", req.user.id)
-      .single();
+      .maybeSingle();
 
-    if (!negocio) {
+    if (errorNegocio || !negocio) {
       return res.status(403).json({ mensaje: "No puedes modificar seguimientos de otros negocios" });
     }
 
-    // 3. Preparar datos a actualizar
-    const datosActualizar = { estado_seguimiento };
-    if (estado_seguimiento === "ENTREGADO") {
-      datosActualizar.fecha_entrega = new Date();
+    // 4. Preparar los datos a actualizar / insertar
+    const datosActualizar = { 
+      estado_seguimiento,
+      fecha_entrega: estado_seguimiento === "ENTREGADO" ? new Date() : null
+    };
+
+    let resultado;
+
+    if (idSeguimiento) {
+      // Si ya existía el seguimiento, lo actualizamos por su ID
+      const { data, error } = await supabase
+        .schema("ventas")
+        .from("seguimiento")
+        .update(datosActualizar)
+        .eq("id_seguimiento", idSeguimiento)
+        .select();
+
+      if (error) return res.status(400).json(error);
+      resultado = data;
+    } else {
+      // Si no existía seguimiento previo para esta venta, lo creamos
+      const { data, error } = await supabase
+        .schema("ventas")
+        .from("seguimiento")
+        .insert({
+          id_venta: idVenta,
+          ...datosActualizar
+        })
+        .select();
+
+      if (error) return res.status(400).json(error);
+      resultado = data;
     }
 
-    // 4. Actualizar el estado
-    const { data, error } = await supabase
-      .schema("ventas")
-      .from("seguimiento")
-      .update(datosActualizar)
-      .eq("id_seguimiento", seguimiento.id_seguimiento)
-      .select();
-
-    if (error) {
-      return res.status(400).json(error);
-    }
-
-    res.json(data);
+    return res.json(resultado);
 
   } catch (error) {
-    res.status(500).json(error);
+    console.error("Error crítico en actualizarSeguimiento:", error);
+    return res.status(500).json({ mensaje: "Error interno del servidor", error: error.message });
   }
 };

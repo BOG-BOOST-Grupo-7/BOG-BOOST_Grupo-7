@@ -2,7 +2,7 @@ import { axiosClient } from "./axiosClient";
 
 // Obtener los pedidos de los negocios del vendedor (para el panel de administración)
 export const listarPedidosVendedor = async () => {
-  const response = await axiosClient.get("/seguimiento/mis-pedidos");
+  const response = await axiosClient.get("/seguimientos/mis-pedidos");
   return response.data;
 };
 

@@ -13,6 +13,7 @@ import NegocioDetalle from "./pages/cliente/NegocioDetalle";
 import PQRS from "./pages/cliente/PQRS";
 import Historial from "./pages/cliente/Historial";
 import ComentariosProducto from "./pages/cliente/ComentariosProducto";
+import ResultadosBusqueda from "./components/home/ResultadosBusqueda";
 
 
 // Auth
@@ -62,6 +63,7 @@ function App() {
         <Route path="/historial" element={<Historial />} />
         <Route path="/producto/:idProducto/comentarios" element={<ComentariosProducto />} />
         <Route path="/ventas" element={<ProtectedRoute allowedRoles={["VENDEDOR"]}> <AdminVentasYSeguimiento /> </ProtectedRoute>} />
+        <Route path="buscar" element={<ResultadosBusqueda />} />
       </Route>
 
     </Routes>
