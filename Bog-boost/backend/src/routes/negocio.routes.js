@@ -22,7 +22,7 @@ const router = Router();
 router.get("/", authMiddleware, adminMiddleware, listarNegocios);
 router.get("/publicos", obtenerNegociosPublicos);
 router.get("/mi-negocio", authMiddleware, vendedorMiddleware, obtenerMiNegocio);
-router.get("/:id", authMiddleware, adminMiddleware, obtenerNegocioPorId);
+router.get("/:id", obtenerNegocioPorId);
 router.post("/solicitud", authMiddleware, crearNegocio);
 router.put("/aprobar", authMiddleware, adminMiddleware, aprobarNegocio);
 router.put("/rechazar",authMiddleware,adminMiddleware, rechazarNegocio);

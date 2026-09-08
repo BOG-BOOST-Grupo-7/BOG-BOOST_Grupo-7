@@ -446,3 +446,26 @@ export const eliminarProducto = async (req, res) => {
   }
 
 };
+
+export const obtenerProductosPorNegocioId = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const { data, error } = await supabase
+            .schema("catalogo")
+            .from("producto")
+            .select(`
+                *,
+                categoria(nombre_categoria)
+            `)
+            .eq("id_negocio", id);
+
+        if (error) {
+            return res.status(400).json(error);
+        }
+
+        res.json(data);
+    } catch (error) {
+        res.status(500).json({ mensaje: "Error interno del servidor", error });
+    }
+};

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { FaArrowLeft, FaShoppingCart, FaStar } from "react-icons/fa"; // Añadimos FaStar
+import { FaArrowLeft, FaShoppingCart, FaStar } from "react-icons/fa";
 import { useCarrito } from "../../context/CarritoContext";
 import { useAuth } from "../../context/AuthContext";
 import toast from "react-hot-toast";
@@ -157,12 +157,17 @@ function DetalleProducto() {
                         Agregar al carrito
                     </button>
 
-                    <div className="info-negocio">
+                    {/* 👈 Sección del negocio clickeable */}
+                    <div 
+                        className="info-negocio"
+                        onClick={() => navigate(`/negocios/${producto.id_negocio}`)}
+                        style={{ cursor: "pointer" }}
+                    >
                         {
                             producto.negocio?.logo &&
                             <img
                                 src={producto.negocio.logo}
-                                className="logo-negocio"
+                                className="logo-negocioo"
                                 alt={producto.negocio.nombre_negocio}
                             />
                         }
