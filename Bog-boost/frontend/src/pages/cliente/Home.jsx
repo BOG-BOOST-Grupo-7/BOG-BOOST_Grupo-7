@@ -1,3 +1,4 @@
+import React from 'react';
 import "../../styles/Home.css";
 
 import { useEffect, useState } from "react";
@@ -92,4 +93,4 @@ function Home() {
 
 }
 
-export default Home;
+export default Home; 

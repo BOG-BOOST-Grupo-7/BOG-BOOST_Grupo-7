@@ -1,7 +1,8 @@
 import { Router } from "express";
 
-import authMiddleware from "../middlewares/auth.js";
-import superAdminMiddleware from "../middlewares/superAdmin.js";
+// Estos middleware para la utorizacion de proyecto
+//import authMiddleware from "../middlewares/auth.js";
+//import superAdminMiddleware from "../middlewares/superAdmin.js";
 
 import {
   listarPuestos,
@@ -11,7 +12,7 @@ from "../controllers/puesto.controller.js";
 
 const router = Router();
 
-router.get("/", authMiddleware, superAdminMiddleware, listarPuestos);
-router.get("/:id", authMiddleware, superAdminMiddleware, obtenerPuestoPorId);
+router.get("/",  listarPuestos);
+router.get("/:id", obtenerPuestoPorId);
 
 export default router;

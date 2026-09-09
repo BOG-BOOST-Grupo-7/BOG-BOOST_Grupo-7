@@ -8,7 +8,7 @@ import { obtenerMisProductos } from "../../api/productoApi";
 import ModalEditarNegocio from "../../components/ModalEditarNegocio";
 import ModalMediosPago from "../../components/ModalMediosPago";
 import ModalMetodosEnvio from "../../components/ModalMetodosEnvio";
-import ModalProductos from "../../components/ModalProductos";
+import ModalProductos from "../../components/home/ModalProductos";
 
 import "../../styles/PerfilNegocio.css";
 

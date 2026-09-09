@@ -1,0 +1,170 @@
+/* ============================================
+   ESTILOS DEL MARCADOR DE PUESTO
+   ============================================ */
+
+.stand-marker {
+  position: absolute;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  z-index: 2;
+  transform: translate(-50%, -50%);
+  user-select: none;
+  border: 2px solid white;
+}
+
+@keyframes standAppear {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.3) rotate(-30deg);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1) rotate(0deg);
+  }
+}
+
+.stand-marker {
+  animation: standAppear 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.stand-marker:hover {
+  z-index: 5;
+  transform: translate(-50%, -50%) scale(1.2);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+}
+
+.stand-marker.hovered {
+  z-index: 5;
+  transform: translate(-50%, -50%) scale(1.15);
+  box-shadow: 0 4px 25px rgba(0, 0, 0, 0.3);
+}
+
+.stand-marker.grouped {
+  border: 2.5px solid #fff;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+}
+
+.stand-marker.user-stand {
+  border: 3px solid #8e44ad;
+  animation: userPulse 2s ease-in-out infinite;
+}
+
+@keyframes userPulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(142, 68, 173, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 10px rgba(142, 68, 173, 0);
+  }
+}
+
+.stand-icon {
+  font-size: 0.7rem;
+  line-height: 1;
+}
+
+.stand-number {
+  font-size: 0.5rem;
+  font-weight: 700;
+  color: white;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  line-height: 1;
+  margin-top: -2px;
+}
+
+.group-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  background: #e74c3c;
+  color: white;
+  border-radius: 50%;
+  width: 16px;
+  height: 16px;
+  font-size: 0.45rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  border: 2px solid white;
+}
+
+.stand-tooltip {
+  position: absolute;
+  bottom: calc(100% + 12px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.92);
+  color: white;
+  padding: 10px 14px;
+  border-radius: 8px;
+  white-space: nowrap;
+  min-width: 160px;
+  max-width: 250px;
+  font-size: 0.75rem;
+  pointer-events: none;
+  backdrop-filter: blur(4px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  z-index: 100;
+}
+
+.stand-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: rgba(0, 0, 0, 0.92);
+}
+
+.tooltip-content {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  text-align: center;
+}
+
+.tooltip-content strong {
+  font-size: 0.85rem;
+  color: #fff;
+}
+
+.tooltip-owner {
+  color: #a8d8ea;
+  font-size: 0.7rem;
+}
+
+.tooltip-products {
+  color: #ccc;
+  font-size: 0.65rem;
+}
+
+.tooltip-user {
+  color: #9b59b6;
+  font-size: 0.65rem;
+  font-weight: 600;
+  margin-top: 2px;
+}
+
+@media (max-width: 768px) {
+  .stand-marker {
+    width: 32px !important;
+    height: 32px !important;
+  }
+  
+  .stand-marker.hovered {
+    width: 42px !important;
+    height: 42px !important;
+  }
+  
+  .stand-icon {
+    font-size: 0.55rem;
+  }
+}

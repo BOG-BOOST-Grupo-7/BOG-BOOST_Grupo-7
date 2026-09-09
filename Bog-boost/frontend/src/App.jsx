@@ -4,6 +4,10 @@ import ProtectedRoute from "./components/ProtectedRoute";
 // Layouts
 import ClienteLayout from "./layouts/ClienteLayout";
 
+// Mapa
+import Mapa from "./pages/cliente/Mapa";
+
+
 // Cliente
 import Home from "./pages/cliente/Home";
 import Perfil from "./pages/cliente/Perfil";
@@ -40,6 +44,7 @@ function App() {
   return (
     <Routes>
 
+
       {/* CLIENTE */}
       <Route path="/" element={<ClienteLayout />}>
         <Route index element={<Home />} />
@@ -60,10 +65,15 @@ function App() {
         <Route path="/contacto" element={<PQRS /> } />
         <Route path="/admin/pqrs" element={<ProtectedRoute allowedRoles={["SUPER_ADMIN"]}> <AdminPQRS /> </ProtectedRoute>} />
         <Route path="/stock" element={<ProtectedRoute allowedRoles={["VENDEDOR"]}> <AdminMovimientoStock /> </ProtectedRoute>} />
+<<<<<<< Updated upstream
         <Route path="/historial" element={<Historial />} />
         <Route path="/producto/:idProducto/comentarios" element={<ComentariosProducto />} />
         <Route path="/ventas" element={<ProtectedRoute allowedRoles={["VENDEDOR"]}> <AdminVentasYSeguimiento /> </ProtectedRoute>} />
         <Route path="buscar" element={<ResultadosBusqueda />} />
+=======
+        <Route path="/mapa" element={<Mapa />} />
+        
+>>>>>>> Stashed changes
       </Route>
 
     </Routes>
