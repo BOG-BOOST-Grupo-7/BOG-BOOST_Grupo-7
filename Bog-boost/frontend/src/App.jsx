@@ -11,6 +11,10 @@ import RegistrarNegocio from "./pages/cliente/RegistrarNegocio";
 import Negocios from "./pages/cliente/Negocios";
 import NegocioDetalle from "./pages/cliente/NegocioDetalle";
 import PQRS from "./pages/cliente/PQRS";
+import Historial from "./pages/cliente/Historial";
+import ComentariosProducto from "./pages/cliente/ComentariosProducto";
+import ResultadosBusqueda from "./components/home/ResultadosBusqueda";
+
 
 // Auth
 import Login from "./pages/auth/Login";
@@ -29,6 +33,7 @@ import PerfilNegocio from "./pages/vendedor/PerfilNegocio";
 import DetalleProducto from "./components/home/DetalleProducto";
 import Carrito from "./pages/cliente/Carrito";
 import AdminMovimientoStock from "./pages/vendedor/MovimientoStock";
+import AdminVentasYSeguimiento from "./pages/vendedor/AdminVentasYSeguimiento";
 
 
 function App() {
@@ -55,6 +60,10 @@ function App() {
         <Route path="/contacto" element={<PQRS /> } />
         <Route path="/admin/pqrs" element={<ProtectedRoute allowedRoles={["SUPER_ADMIN"]}> <AdminPQRS /> </ProtectedRoute>} />
         <Route path="/stock" element={<ProtectedRoute allowedRoles={["VENDEDOR"]}> <AdminMovimientoStock /> </ProtectedRoute>} />
+        <Route path="/historial" element={<Historial />} />
+        <Route path="/producto/:idProducto/comentarios" element={<ComentariosProducto />} />
+        <Route path="/ventas" element={<ProtectedRoute allowedRoles={["VENDEDOR"]}> <AdminVentasYSeguimiento /> </ProtectedRoute>} />
+        <Route path="buscar" element={<ResultadosBusqueda />} />
       </Route>
 
     </Routes>

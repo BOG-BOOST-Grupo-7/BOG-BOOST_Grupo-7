@@ -16,6 +16,9 @@ function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [pendientes, setPendientes] = useState(0);
   const [categorias, setCategorias] = useState([]);
+  
+  // 1. Estado para almacenar lo que el usuario escribe en el buscador
+  const [searchTerm, setSearchTerm] = useState("");
 
   const go = (path) => {
     navigate(path);
@@ -23,16 +26,23 @@ function Header() {
     setMobileMenuOpen(false);
   };
 
+  // 2. Función para manejar la búsqueda al presionar Enter o hacer clic en la lupa
+  const handleSearch = (e) => {
+    if (e.key === "Enter" || e.type === "click") {
+      if (searchTerm.trim() !== "") {
+        navigate(`/buscar?q=${encodeURIComponent(searchTerm.trim())}`);
+        setSearchTerm(""); // Limpia el input tras buscar
+        setMobileMenuOpen(false);
+      }
+    }
+  };
+
   const handleLogout = async () => {
     try {
       await logoutUser();
-
       logout();
-
       navigate("/");
-
       setMobileMenuOpen(false);
-
     } catch (error) {
       console.error(error);
     }
@@ -44,19 +54,16 @@ function Header() {
     "U";
 
   useEffect(() => {
-
     cargarCategorias();
 
     if (isAuthenticated) {
       cargarNotificaciones();
     }
-
   }, [isAuthenticated]);
 
   const cargarNotificaciones = async () => {
     try {
       const data = await obtenerNotificaciones();
-
       setPendientes(data.filter(n => !n.estado_notificacion).length);
     } catch (error) {
       console.error(error);
@@ -76,7 +83,7 @@ function Header() {
     <header className="navbar">
 
       {/* LOGO */}
-      <div className="logo-container">
+      <div className="logo-container" onClick={() => go("/")} style={{ cursor: "pointer" }}>
         <img src={logo} alt="Logo" className="logo" />
       </div>
 
@@ -147,11 +154,17 @@ function Header() {
 
       </nav>
 
-      {/* SEARCH */}
+      {/* SEARCH CONECTADO */}
       {rol !== "SUPER_ADMIN" && rol !== "VENDEDOR" && (
         <div className="search-box">
-          <input placeholder="Buscar..." />
-          <i className="fas fa-search"></i>
+          <input
+            type="text"
+            placeholder="Buscar productos o negocios..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            onKeyDown={handleSearch}
+          />
+          <i className="fas fa-search" onClick={handleSearch} style={{ cursor: "pointer" }}></i>
         </div>
       )}
 
@@ -194,7 +207,7 @@ function Header() {
       />
 
       {/* ========================= */}
-      {/* MENÚ LATERAL (RESTAURADO) */}
+      {/* MENÚ LATERAL */}
       {/* ========================= */}
       <div className={`mobile-menu ${mobileMenuOpen ? "show" : ""}`}>
 

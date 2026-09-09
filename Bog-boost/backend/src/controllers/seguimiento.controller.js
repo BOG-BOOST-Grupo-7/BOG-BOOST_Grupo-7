@@ -130,104 +130,88 @@ export const obtenerSeguimientoPorId = async (req, res) => {
 
 export const actualizarSeguimiento = async (req, res) => {
   try {
+    const { id } = req.params; // Aquí asumimos que 'id' es el id_venta o id_seguimiento
+    const { estado_seguimiento } = req.body;
 
-    const { id } = req.params;
+    let idVenta = id;
+    let idSeguimiento = null;
 
-    const {
-      estado_seguimiento
-    } = req.body;
-
-    const {
-      data: seguimiento,
-      error: errorSeguimiento
-    } = await supabase
+    // 1. Verificar si el 'id' enviado es un id_seguimiento existente o un id_venta
+    const { data: segExistente } = await supabase
       .schema("ventas")
       .from("seguimiento")
-      .select(`
-        *,
-        venta!inner(
-          id_negocio
-        )
-      `)
-      .eq(
-        "id_seguimiento",
-        id
-      )
-      .single();
+      .select("id_seguimiento, id_venta")
+      .eq("id_seguimiento", id)
+      .maybeSingle();
 
-    if (
-      errorSeguimiento ||
-      !seguimiento
-    ) {
-
-      return res.status(404).json({
-        mensaje:
-          "Seguimiento no encontrado"
-      });
-
+    if (segExistente) {
+      idSeguimiento = segExistente.id_seguimiento;
+      idVenta = segExistente.id_venta;
     }
 
-    const {
-      data: negocio
-    } = await supabase
+    // 2. Obtener la venta para saber a qué negocio pertenece y validar propiedad
+    const { data: venta, error: errorVenta } = await supabase
+      .schema("ventas")
+      .from("venta")
+      .select("id_venta, id_negocio")
+      .eq("id_venta", idVenta)
+      .single();
+
+    if (errorVenta || !venta) {
+      return res.status(404).json({ mensaje: "Venta no encontrada" });
+    }
+
+    // 3. Validar que el negocio pertenezca al vendedor autenticado (req.user.id)
+    const { data: negocio, error: errorNegocio } = await supabase
       .schema("negocio")
       .from("negocio")
       .select("id_negocio")
-      .eq(
-        "id_negocio",
-        seguimiento.venta.id_negocio
-      )
-      .eq(
-        "id_perfil",
-        req.user.id
-      )
-      .single();
+      .eq("id_negocio", venta.id_negocio)
+      .eq("id_perfil", req.user.id)
+      .maybeSingle();
 
-    if (!negocio) {
-
-      return res.status(403).json({
-        mensaje:
-          "No puedes modificar seguimientos de otros negocios"
-      });
-
+    if (errorNegocio || !negocio) {
+      return res.status(403).json({ mensaje: "No puedes modificar seguimientos de otros negocios" });
     }
 
-    const datosActualizar = {
-      estado_seguimiento
+    // 4. Preparar los datos a actualizar / insertar
+    const datosActualizar = { 
+      estado_seguimiento,
+      fecha_entrega: estado_seguimiento === "ENTREGADO" ? new Date() : null
     };
 
-    if (
-      estado_seguimiento ===
-      "ENTREGADO"
-    ) {
-      datosActualizar.fecha_entrega =
-        new Date();
+    let resultado;
+
+    if (idSeguimiento) {
+      // Si ya existía el seguimiento, lo actualizamos por su ID
+      const { data, error } = await supabase
+        .schema("ventas")
+        .from("seguimiento")
+        .update(datosActualizar)
+        .eq("id_seguimiento", idSeguimiento)
+        .select();
+
+      if (error) return res.status(400).json(error);
+      resultado = data;
+    } else {
+      // Si no existía seguimiento previo para esta venta, lo creamos
+      const { data, error } = await supabase
+        .schema("ventas")
+        .from("seguimiento")
+        .insert({
+          id_venta: idVenta,
+          ...datosActualizar
+        })
+        .select();
+
+      if (error) return res.status(400).json(error);
+      resultado = data;
     }
 
-    const {
-      data,
-      error
-    } = await supabase
-      .schema("ventas")
-      .from("seguimiento")
-      .update(
-        datosActualizar
-      )
-      .eq(
-        "id_seguimiento",
-        id
-      )
-      .select();
-
-    if (error) {
-      return res.status(400).json(error);
-    }
-
-    res.json(data);
+    return res.json(resultado);
 
   } catch (error) {
-
-    res.status(500).json(error);
-
+    console.error("Error crítico en actualizarSeguimiento:", error);
+    return res.status(500).json({ mensaje: "Error interno del servidor", error: error.message });
   }
 };
