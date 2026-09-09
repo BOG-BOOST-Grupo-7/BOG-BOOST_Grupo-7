@@ -1,14 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch';
 import { getAllStands, getStandById } from '../../api/api';
-import StandMarker from "./StandMarker";
-import ModalProductos from "./ModalProductos";
-import "./HomeMap.css";
+import { StandMarker } from './StandMarker';
+import ModalProductos from './ModalProductos';
 import { useAuth } from '../../context/AuthContext';
-
 import { MAPA_PUESTOS } from '../../data/mapaRefencia';
+import './HomeMap.css';
 
-const HomeMap = () => {
+export const HomeMap = () => {
   const [stands, setStands] = useState([]);
   const [selectedStand, setSelectedStand] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -19,6 +18,10 @@ const HomeMap = () => {
   const { user } = useAuth();
   const containerRef = useRef(null);
 
+  // ============================================
+  // CARGAR PUESTOS
+  // ============================================
+
   useEffect(() => {
     loadStands();
   }, []);
@@ -27,7 +30,17 @@ const HomeMap = () => {
     try {
       setLoading(true);
       const data = await getAllStands();
-      setStands(data);
+      
+      // Enriquecer los puestos con coordenadas del mapa de referencia
+      const standsConPosiciones = data.map((stand) => {
+        const posicion = calcularPosicion(stand.numero_puesto);
+        return {
+          ...stand,
+          coordinates: posicion || { x: 0, y: 0 }
+        };
+      });
+      
+      setStands(standsConPosiciones);
       setError(null);
     } catch (err) {
       setError('Error al cargar los puestos del mercado');
@@ -37,12 +50,51 @@ const HomeMap = () => {
     }
   };
 
+  // ============================================
+  // CALCULAR POSICIONES CON MAPA DE REFERENCIA
+  // ============================================
+
+  const calcularPosicion = (numeroPuesto) => {
+    if (!numeroPuesto) return null;
+
+    // Buscar el puesto en el mapa de referencia
+    const filaEncontrada = MAPA_PUESTOS.find(fila => 
+      fila.numeros && fila.numeros.includes(numeroPuesto)
+    );
+
+    // Separación entre puestos
+    const separacionX = 35;
+    const separacionY = 30;
+    const margen = 20;
+
+    let posX, posY;
+
+    if (filaEncontrada) {
+      const indiceEnFila = filaEncontrada.numeros.indexOf(numeroPuesto);
+      posX = margen + (indiceEnFila * separacionX);
+      posY = margen + (filaEncontrada.fila * separacionY);
+    } else {
+      // Si no está en la referencia, calcular automáticamente
+      const index = MAPA_PUESTOS.reduce((acc, fila) => acc + fila.numeros.length, 0);
+      const columna = index % 15;
+      const filaAuto = Math.floor(index / 15) + 1;
+      posX = margen + (columna * separacionX);
+      posY = margen + (filaAuto * separacionY);
+    }
+
+    return { x: posX, y: posY };
+  };
+
+  // ============================================
+  // MANEJADORES DE EVENTOS
+  // ============================================
+
   const handleStandClick = async (stand) => {
     try {
-      const details = await getStandById(stand.id_puesto); // <--- CORREGIDO (usaba stand.id)
+      const details = await getStandById(stand.id_puesto || stand.id);
       setSelectedStand(details);
       setShowModal(true);
-      setIdNegocio(details.id_negocio || null);
+      setIdNegocio(details.negocioId || details.id_negocio || null);
     } catch (err) {
       console.error('Error al cargar detalles del puesto:', err);
     }
@@ -61,6 +113,10 @@ const HomeMap = () => {
   const handleStandLeave = () => {
     setHoveredStand(null);
   };
+
+  // ============================================
+  // RENDER - ESTADOS DE CARGA Y ERROR
+  // ============================================
 
   if (loading) {
     return (
@@ -82,152 +138,176 @@ const HomeMap = () => {
     );
   }
 
-  //  CALCULAR POSICIONES
-  const calcularPosicion = (numeroPuesto, index) => {
-     if (!numeroPuesto || index === undefined) {
-      return null; // Si no hay número, no calcula posición
-    }
-    // Buscamos si el puesto existe en nuestra referencia
-    const filaEncontrada = MAPA_PUESTOS.find(fila => fila.numeros.includes(numeroPuesto));
-
-    // Separación entre puestos 
-    const separacionX = 35; // Distancia horizontal entre puestos
-    const separacionY = 30; // Distancia vertical entre filas
-    const margen = 20; // Margen desde el borde
-
-    let posX, posY;
-
-    // Si lo encontramos en la referencia, usamos esa posición
-    if (filaEncontrada) {
-      const indiceEnFila = filaEncontrada.numeros.indexOf(numeroPuesto);
-      posX = margen + (indiceEnFila * separacionX);
-      posY = margen + (filaEncontrada.fila * separacionY);
-    } 
-    // Si NO está en la referencia, lo ponemos en una fila automática al final
-    else {
-      const columna = index % 15; // 15 puestos por fila
-      const filaAuto = Math.floor(index / 15) + 1; // Fila extra
-      posX = margen + (columna * separacionX);
-      posY = margen + (filaAuto * separacionY);
-    }
-
-    return { x: posX, y: posY };
-  };
+  // ============================================
+  // CALCULAR DIMENSIONES DEL MAPA
+  // ============================================
 
   const mapHeight = 700;
+  const mapWidth = 1200;
+
+  // ============================================
+  // RENDER PRINCIPAL
+  // ============================================
 
   return (
     <div className="home-map-container" ref={containerRef}>
+      {/* ===== HEADER ===== */}
       <div className="map-header">
         <div className="map-title-section">
           <h2>📍 Mercado de Pulgas San Alejo</h2>
           <p className="map-subtitle">
-            Haz clic en cualquier puesto para ver su información
+            {stands.length} puestos • {stands.filter(s => s.isAvailable !== false).length} disponibles
           </p>
+        </div>
+        <div className="map-legend">
+          <div className="legend-item">
+            <span className="legend-color available"></span>
+            <span>Disponible</span>
+          </div>
+          <div className="legend-item">
+            <span className="legend-color occupied"></span>
+            <span>Ocupado</span>
+          </div>
+          <div className="legend-item">
+            <span className="legend-color museum"></span>
+            <span>Museo de Arte</span>
+          </div>
+          {user && (
+            <div className="legend-item">
+              <span className="legend-color owner"></span>
+              <span>Tu puesto</span>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* ================== ESTRUCTURA CORREGIDA DEL MAPA ================== */}
+      {/* ===== MAPA CON ZOOM ===== */}
       <TransformWrapper
-       initialScale={0.6}
-       minScale={0.4}
-       maxScale={3}
-       centerOnInit={true}
-       wheel={{ step: 0.1 }}
-       doubleClick={{ step: 0.5 }}
-       pan={{ velocity: true }}
+        initialScale={0.6}
+        minScale={0.3}
+        maxScale={3}
+        centerOnInit={true}
+        wheel={{ step: 0.1 }}
+        doubleClick={{ step: 0.5 }}
+        pan={{ velocity: true }}
       >
         {({ zoomIn, zoomOut, resetTransform }) => (
-          /* El div con class map-wrapper envuelve todo */
-          <div className="map-wrapper"> 
-            
-            {/* BOTONES DE ZOOM (Flotando en la esquina) */}
+          <div className="map-wrapper">
+            {/* ===== CONTROLES DE ZOOM ===== */}
             <div className="map-controls">
-              <button onClick={() => zoomIn(0.2)} className="control-btn" title="Acercar" > + </button>
-              <button onClick={() => zoomOut(0.2)} className="control-btn" title="Alejar" > - </button>
-              <button onClick={() => resetTransform()} className="control-btn" title="Reiniciar" > ⟲ </button>
+              <button onClick={() => zoomIn(0.2)} className="control-btn" title="Acercar">
+                +
+              </button>
+              <button onClick={() => zoomOut(0.2)} className="control-btn" title="Alejar">
+                −
+              </button>
+              <button onClick={() => resetTransform()} className="control-btn" title="Reiniciar">
+                ⟲
+              </button>
             </div>
 
-            {/* Contenido del mapa que hace zoom */}
+            {/* ===== CONTENIDO DEL MAPA ===== */}
             <TransformComponent
-              wrapperStyle={{ 
-                width: '100%', 
-                height: '100%' 
+              wrapperStyle={{
+                width: '100%',
+                height: '100%'
               }}
-              contentStyle={{ 
-                width: `100%`, 
+              contentStyle={{
+                width: `${mapWidth}px`,
                 height: `${mapHeight}px`
-             }}
+              }}
             >
               <div
                 className="map-grid"
                 style={{
-                  width: '100%',        // <--- CAMBIO AQUÍ (Usa el 100% del padre)
-                  height: `${mapHeight}px`,      // Mantén la altura fija si quieres
+                  width: `${mapWidth}px`,
+                  height: `${mapHeight}px`,
                   position: 'relative',
                   background: '#f0f2f5',
                   borderRadius: '12px',
                   boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
-
                 }}
               >
+                {/* ===== FONDO CON CUADRÍCULA ===== */}
+                <div className="map-background">
+                  {Array.from({ length: Math.ceil(mapWidth / 35) }).map((_, i) => (
+                    <div
+                      key={`v-${i}`}
+                      className="grid-line vertical"
+                      style={{ left: `${i * 35}px` }}
+                    />
+                  ))}
+                  {Array.from({ length: Math.ceil(mapHeight / 30) }).map((_, i) => (
+                    <div
+                      key={`h-${i}`}
+                      className="grid-line horizontal"
+                      style={{ top: `${i * 30}px` }}
+                    />
+                  ))}
+                </div>
+
+                {/* ===== RENDERIZAR PUESTOS ===== */}
                 {stands.map((stand, index) => {
-                  // Buscamos su posición usando la referencia (o generamos automática si no existe)
-                  const pos = calcularPosicion(stand.numero_puesto, index);
+                  // Usar coordenadas del mapa de referencia
+                  const pos = stand.coordinates || calcularPosicion(stand.numero_puesto);
                   
-                  // Si no tiene posición, no lo dibujamos
                   if (!pos) return null;
 
-                  // Colores según estado
-                  const isHovered = hoveredStand?.id_puesto === stand.id_puesto;
+                  const isHovered = hoveredStand?.id_puesto === stand.id_puesto || 
+                                   hoveredStand?.id === stand.id;
+                  const isUserStand = user && (stand.userId === user.id || stand.usuario_id === user.id);
+                  const isAvailable = stand.isAvailable !== false;
 
                   return (
-                    <div
-                      key={stand.id_puesto}
-                      onClick={() => handleStandClick(stand)}
-                      onMouseEnter={() => handleStandHover(stand)}
-                      onMouseLeave={handleStandLeave}
-                      style={{
-                        position: 'absolute',
-                        left: `${pos.x}px`,
-                        top: `${pos.y}px`,
-                        width: '32px',
-                        height: '22px',
-                        backgroundColor: isHovered ? '#2ecc71' : '#3498db', // Verde al pasar, azul normal
-                        border: '1px solid white',
-                        borderRadius: '3px',
-                        color: 'white',
-                        fontSize: '10px',
-                        fontWeight: 'bold',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        cursor: 'pointer',
-                        zIndex: 10,
-                        transition: 'all 0.2s ease',
-                        boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                    <StandMarker
+                      key={stand.id_puesto || stand.id || index}
+                      stand={{
+                        ...stand,
+                        id: stand.id_puesto || stand.id,
+                        coordinates: pos,
+                        isAvailable: isAvailable,
+                        userId: stand.userId || stand.usuario_id
                       }}
-                      title={stand.negocio?.nombre_negocio || `Puesto ${stand.numero_puesto}`}
-                    >
-                      {stand.numero_puesto}
-                    </div>
+                      standsAtPosition={[stand]}
+                      onClick={() => handleStandClick(stand)}
+                      onHover={() => handleStandHover(stand)}
+                      onLeave={handleStandLeave}
+                      isHovered={isHovered}
+                      isUserStand={isUserStand}
+                    />
                   );
                 })}
+
+                {/* ===== ETIQUETAS DE SECCIONES ===== */}
+                <div className="section-label" style={{ top: '10px', left: '10px' }}>
+                  🎨 Museo de Arte Moderno
+                </div>
+                <div className="section-label" style={{ top: '80px', left: '200px' }}>
+                  📚 Sección Principal
+                </div>
+                <div className="section-label" style={{ top: '300px', left: '20px' }}>
+                  🛍️ Sección Oeste
+                </div>
+                <div className="section-label" style={{ top: '50px', right: '20px' }}>
+                  💿 Sección Norte
+                </div>
+                <div className="section-label" style={{ bottom: '50px', left: '150px' }}>
+                  🌿 Sección Sur
+                </div>
               </div>
             </TransformComponent>
           </div>
         )}
       </TransformWrapper>
-      {/* ================== FIN ESTRUCTURA DEL MAPA ================== */}
 
-      {/* Modal de detalles del puesto */}
+      {/* ===== MODAL DE DETALLES ===== */}
       {selectedStand && (
         <ModalProductos
           abierto={showModal}
           onClose={handleCloseModal}
           idNegocio={idNegocio}
           standData={selectedStand}
-          isOwner={user && selectedStand.userId === user.id}
+          isOwner={user && (selectedStand.userId === user.id || selectedStand.usuario_id === user.id)}
           isMapMode={true}
         />
       )}

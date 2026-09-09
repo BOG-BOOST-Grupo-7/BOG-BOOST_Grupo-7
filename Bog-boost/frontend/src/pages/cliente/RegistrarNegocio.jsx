@@ -1,139 +1,176 @@
-import { useState } from "react";
 
+import { useState, useEffect } from "react";
+import { useAuth } from "../../context/AuthContext";
+
+// ============================================
+// IMPORTS DE APIS
+// ============================================
 import { subirLogo as subirLogoApi } from "../../api/uploadApi";
-
 import { registrarNegocio } from "../../api/negocioApi";
+import {
+    getAvailableStands,
+    assignStandToBusiness,
+} from "../../api/api";
 
 import "../../styles/RegistrarNegocio.css";
 
-
 function RegistrarNegocio() {
+    const { user } = useAuth();
 
+    // ============================================
+    // ESTADOS
+    // ============================================
     const [datos, setDatos] = useState({
-
         nombre_negocio: "",
-
         descripcion_negocio: "",
-
         telefono_negocio: "",
-
         numero_puesto: "",
-
-        logo: ""
-
+        logo: "",
     });
 
     const [subiendoLogo, setSubiendoLogo] = useState(false);
     const [previewLogo, setPreviewLogo] = useState("");
+    const [loading, setLoading] = useState(false);
+    const [availableStands, setAvailableStands] = useState([]);
+    const [cargandoPuestos, setCargandoPuestos] = useState(false);
 
-    const handleChange = (e) => {
+    // ============================================
+    // CARGAR PUESTOS DISPONIBLES
+    // ============================================
+    const loadAvailableStands = async () => {
+        try {
+            setCargandoPuestos(true);
 
-        setDatos({
+            const data = await getAvailableStands();
 
-            ...datos,
+            setAvailableStands(Array.isArray(data) ? data : []);
+        } catch (error) {
+            console.error(
+                "Error al cargar puestos disponibles:",
+                error
+            );
 
-            [e.target.name]: e.target.value
-
-        });
-
+            alert("Error al cargar los puestos disponibles.");
+        } finally {
+            setCargandoPuestos(false);
+        }
     };
 
-    const subirLogo = async (e) => {
+    useEffect(() => {
+        loadAvailableStands();
+    }, []);
 
-    const file = e.target.files[0];
-
-    if (!file) return;
-
-    // Validar que sea una imagen
-    if (!file.type.startsWith("image/")) {
-
-        alert("Solo se permiten imágenes.");
-
-        return;
-
-    }
-
-    // Máximo 5 MB
-    if (file.size > 5 * 1024 * 1024) {
-
-        alert("La imagen no puede superar los 5 MB.");
-
-        return;
-
-    }
-
-    // Validar dimensiones
-    const imagen = new Image();
-
-    imagen.src = URL.createObjectURL(file);
-
-    try {
-
-        await new Promise((resolve, reject) => {
-
-            imagen.onload = () => {
-
-                if (
-                    imagen.width > 2500 ||
-                    imagen.height > 2500
-                ) {
-
-                    reject(
-                        new Error(
-                            "La imagen es demasiado grande. Máximo 2500x2500 píxeles."
-                        )
-                    );
-
-                } else {
-
-                    resolve();
-
-                }
-
-            };
-
-        });
-
-        setPreviewLogo(URL.createObjectURL(file));
-
-        setSubiendoLogo(true);
-
-        // Ahora el logo se sube al backend
-        const respuesta = await subirLogoApi(file);
+    // ============================================
+    // MANEJADOR DE CAMBIOS
+    // ============================================
+    const handleChange = (e) => {
+        const { name, value } = e.target;
 
         setDatos((prev) => ({
-
             ...prev,
-
-            logo: respuesta.url
-
+            [name]: value,
         }));
+    };
 
-    } catch (error) {
+    // ============================================
+    // SUBIR LOGO
+    // ============================================
+    const subirLogo = async (e) => {
+        if (!e || !e.target) {
+            console.error("Evento o target no definido.");
+            return;
+        }
 
-        console.error(error);
+        const file = e.target.files?.[0];
 
-        alert(
+        if (!file) {
+            console.warn("No se seleccionó ningún archivo.");
+            return;
+        }
 
-            error.response?.data?.mensaje ||
+        // Validar tipo de imagen
+        if (!file.type || !file.type.startsWith("image/")) {
+            alert("Solo se permiten imágenes.");
+            e.target.value = "";
+            return;
+        }
 
-            error.message ||
+        // Máximo 5 MB
+        if (file.size > 5 * 1024 * 1024) {
+            alert("La imagen no puede superar los 5 MB.");
+            e.target.value = "";
+            return;
+        }
 
-            "Error al subir el logo."
+        const previewUrl = URL.createObjectURL(file);
+        const imagen = new Image();
 
-        );
+        imagen.src = previewUrl;
 
-    } finally {
+        try {
+            // Validar dimensiones
+            await new Promise((resolve, reject) => {
+                imagen.onload = () => {
+                    if (
+                        imagen.width > 2500 ||
+                        imagen.height > 2500
+                    ) {
+                        reject(
+                            new Error(
+                                "La imagen es demasiado grande. Máximo 2500x2500 píxeles."
+                            )
+                        );
+                    } else {
+                        resolve();
+                    }
+                };
 
-        setSubiendoLogo(false);
+                imagen.onerror = () => {
+                    reject(new Error("Error al cargar la imagen."));
+                };
+            });
 
-    }
+            // Mostrar preview
+            setPreviewLogo(previewUrl);
 
-};
+            setSubiendoLogo(true);
 
+            // Subir logo al backend
+            const respuesta = await subirLogoApi(file);
+
+            setDatos((prev) => ({
+                ...prev,
+                logo: respuesta.url,
+            }));
+        } catch (error) {
+            console.error("Error al subir logo:", error);
+
+            // Si hubo error, eliminar preview
+            URL.revokeObjectURL(previewUrl);
+            setPreviewLogo("");
+
+            alert(
+                error.response?.data?.mensaje ||
+                    error.message ||
+                    "Error al subir el logo."
+            );
+        } finally {
+            setSubiendoLogo(false);
+
+            // Permitir seleccionar nuevamente el mismo archivo
+            e.target.value = "";
+        }
+    };
+
+    // ============================================
+    // GUARDAR SOLICITUD
+    // ============================================
     const guardarSolicitud = async (e) => {
-
         e.preventDefault();
+
+        // ============================================
+        // VALIDACIONES
+        // ============================================
 
         if (!datos.logo) {
             alert("Debes subir el logo del negocio.");
@@ -156,98 +193,180 @@ function RegistrarNegocio() {
         }
 
         if (!datos.numero_puesto) {
-            alert("Ingresa el número del puesto.");
+            alert("Selecciona un número de puesto disponible.");
             return;
         }
 
-        try {
+        // ============================================
+        // VERIFICAR DISPONIBILIDAD DEL PUESTO
+        // ============================================
+        const standSeleccionado = availableStands.find(
+            (stand) =>
+                Number(stand.number) === Number(datos.numero_puesto)
+        );
 
-            const respuesta = await registrarNegocio({
-
-                ...datos,
-
-                numero_puesto: Number(datos.numero_puesto)
-
-            });
-
-            alert(respuesta.mensaje);
-
-            setDatos({
-
-                nombre_negocio: "",
-
-                descripcion_negocio: "",
-
-                telefono_negocio: "",
-
-                numero_puesto: "",
-
-                logo: ""
-
-            });
-
-        } catch (error) {
-
-            console.log(error);
-
+        if (!standSeleccionado) {
             alert(
-
-                error.response?.data?.mensaje ||
-
-                "Error al registrar el negocio"
-
+                "El puesto seleccionado no está disponible. Por favor, elige otro."
             );
 
+            await loadAvailableStands();
+            return;
         }
 
+        setLoading(true);
+
+        try {
+            // ============================================
+            // 1. REGISTRAR NEGOCIO
+            // ============================================
+            const respuesta = await registrarNegocio({
+                nombre_negocio: datos.nombre_negocio.trim(),
+                descripcion_negocio:
+                    datos.descripcion_negocio.trim(),
+                telefono_negocio: datos.telefono_negocio.trim(),
+                numero_puesto: Number(datos.numero_puesto),
+                logo: datos.logo,
+            });
+
+            console.log("Negocio registrado:", respuesta);
+
+            // ============================================
+            // 2. ASIGNAR NEGOCIO AL PUESTO
+            // ============================================
+            const negocioId =
+                respuesta.id || respuesta.id_negocio;
+
+            if (!negocioId) {
+                throw new Error(
+                    "El negocio fue registrado, pero no se recibió su ID."
+                );
+            }
+
+            await assignStandToBusiness(
+                datos.numero_puesto,
+                {
+                    negocioId,
+                    userId: user?.id,
+                    ownerName: datos.nombre_negocio,
+                    products: [],
+                    description: datos.descripcion_negocio,
+                }
+            );
+
+            // ============================================
+            // 3. MENSAJE DE ÉXITO
+            // ============================================
+            alert(
+                `✅ ¡Éxito! Tu negocio "${datos.nombre_negocio}" ha sido registrado y asignado al puesto #${datos.numero_puesto}.`
+            );
+
+            // ============================================
+            // 4. LIMPIAR FORMULARIO
+            // ============================================
+            setDatos({
+                nombre_negocio: "",
+                descripcion_negocio: "",
+                telefono_negocio: "",
+                numero_puesto: "",
+                logo: "",
+            });
+
+            setPreviewLogo("");
+
+            // ============================================
+            // 5. ACTUALIZAR PUESTOS DISPONIBLES
+            // ============================================
+            await loadAvailableStands();
+        } catch (error) {
+            console.error(
+                "Error al registrar negocio:",
+                error
+            );
+
+            alert(
+                error.response?.data?.mensaje ||
+                    error.response?.data?.message ||
+                    error.message ||
+                    "Error al registrar el negocio. Por favor, intenta de nuevo."
+            );
+        } finally {
+            setLoading(false);
+        }
     };
 
+    // ============================================
+    // SELECCIONAR PUESTO DESDE EL MAPA
+    // ============================================
+    const handleStandSelect = (standNumber) => {
+        setDatos((prev) => ({
+            ...prev,
+            numero_puesto: String(standNumber),
+        }));
+    };
+
+    // ============================================
+    // ELIMINAR / CAMBIAR LOGO
+    // ============================================
+    const eliminarLogo = () => {
+        setPreviewLogo("");
+
+        setDatos((prev) => ({
+            ...prev,
+            logo: "",
+        }));
+    };
+
+    // ============================================
+    // RENDER
+    // ============================================
     return (
-
         <main className="registro-negocio-container">
-
             <div className="registro-negocio-card">
+                <h1>Solicitud de Registro de Negocio</h1>
 
-                <h1>
+                <p className="subtitle">
+                    Solo se aceptan negocios que tengan un puesto fijo
+                    dentro del Mercado de las Pulgas San Alejo.
+                    <br />
 
-                    Solicitud de Registro de Negocio
-
-                </h1>
-
-                <p>
-
-                    Solo se aceptan negocios que tengan un puesto fijo dentro del Mercado de las Pulgas San Alejo.
-
+                    <strong>
+                        Puestos disponibles:{" "}
+                        {availableStands.length}
+                    </strong>
                 </p>
 
                 <form onSubmit={guardarSolicitud}>
-
-                    <label> <i className="fas fa-image"></i>Logo del negocio</label>
+                    {/* ========================================
+                        LOGO
+                    ======================================== */}
+                    <label>
+                        <i className="fas fa-image"></i>{" "}
+                        Logo del negocio
+                    </label>
 
                     <label className="logo-upload">
-
                         {previewLogo ? (
-
                             <img
                                 src={previewLogo}
                                 alt="Logo del negocio"
                                 className="preview-logo"
                             />
-
                         ) : (
-
                             <>
                                 <div className="logo-icon">
                                     🏪
                                 </div>
 
-                                <p>Haz clic para seleccionar el logo</p>
+                                <p>
+                                    Haz clic para seleccionar el
+                                    logo
+                                </p>
 
                                 <small>
                                     PNG, JPG o WEBP (máx. 5 MB)
                                 </small>
                             </>
-
                         )}
 
                         <input
@@ -256,7 +375,6 @@ function RegistrarNegocio() {
                             accept="image/png,image/jpeg,image/webp"
                             onChange={subirLogo}
                         />
-
                     </label>
 
                     {subiendoLogo && (
@@ -269,83 +387,207 @@ function RegistrarNegocio() {
                         <button
                             type="button"
                             className="btn-eliminar-logo"
-                            onClick={() => {
-
-                                setPreviewLogo("");
-
-                                setDatos((prev) => ({
-                                    ...prev,
-                                    logo: ""
-                                }));
-
-                            }}
+                            onClick={eliminarLogo}
                         >
                             🗑 Cambiar logo
                         </button>
                     )}
 
-                    <label> <i className="fas fa-store"></i> Nombre del negocio</label>
+                    {/* ========================================
+                        NOMBRE
+                    ======================================== */}
+                    <label>
+                        <i className="fas fa-store"></i>{" "}
+                        Nombre del negocio
+                    </label>
 
                     <input
+                        type="text"
                         name="nombre_negocio"
                         value={datos.nombre_negocio}
                         onChange={handleChange}
+                        placeholder="Ej: Antigüedades San Alejo"
                     />
 
-                    <label><i className="fas fa-align-left"></i>Descripción</label>
+                    {/* ========================================
+                        DESCRIPCIÓN
+                    ======================================== */}
+                    <label>
+                        <i className="fas fa-align-left"></i>{" "}
+                        Descripción
+                    </label>
 
                     <textarea
                         name="descripcion_negocio"
                         value={datos.descripcion_negocio}
                         onChange={handleChange}
+                        placeholder="Describe tu negocio"
+                        rows="4"
                     />
 
-                    <label><i className="fas fa-phone"></i>Teléfono</label>
+                    {/* ========================================
+                        TELÉFONO
+                    ======================================== */}
+                    <label>
+                        <i className="fas fa-phone"></i>{" "}
+                        Teléfono
+                    </label>
 
                     <input
+                        type="tel"
                         name="telefono_negocio"
                         value={datos.telefono_negocio}
                         onChange={handleChange}
+                        placeholder="Ej: 3012345678"
                     />
 
-                    <label><i className="fas fa-map-marker-alt"></i>Número del puesto</label>
+                    {/* ========================================
+                        SELECCIÓN DE PUESTO
+                    ======================================== */}
+                    <label>
+                        <i className="fas fa-map-marker-alt"></i>{" "}
+                        Número del puesto
+                    </label>
 
-                    <input
-                        type="text"
+                    <select
                         name="numero_puesto"
-                        inputMode="numeric"
-                        pattern="[0-9]*"
                         value={datos.numero_puesto}
-                        onChange={(e) => {
+                        onChange={handleChange}
+                        className="stand-select"
+                        disabled={cargandoPuestos}
+                    >
+                        <option value="">
+                            -- Selecciona un puesto disponible --
+                        </option>
 
-                            const soloNumeros = e.target.value.replace(/\D/g, "");
+                        {availableStands.map((stand) => (
+                            <option
+                                key={stand.id}
+                                value={stand.number}
+                            >
+                                Puesto #{stand.number} -{" "}
+                                {stand.section}
 
-                            setDatos({
-                                ...datos,
-                                numero_puesto: soloNumeros
-                            });
+                                {stand.size
+                                    ? ` - ${stand.size}`
+                                    : ""}
 
-                        }}
-                    />
+                                {stand.price
+                                    ? ` ($${Number(
+                                          stand.price
+                                      ).toLocaleString()}/mes)`
+                                    : ""}
+                            </option>
+                        ))}
+                    </select>
 
+                    {cargandoPuestos && (
+                        <div className="cargando-puestos">
+                            ⏳ Cargando puestos disponibles...
+                        </div>
+                    )}
+
+                    {availableStands.length === 0 &&
+                        !cargandoPuestos && (
+                            <div className="sin-puestos">
+                                ⚠️ No hay puestos disponibles en
+                                este momento.
+                            </div>
+                        )}
+
+                    {/* ========================================
+                        MAPA INTERACTIVO
+                    ======================================== */}
+                    <div className="stand-map-preview">
+                        <h4>
+                            <i className="fas fa-map"></i>{" "}
+                            Selecciona tu puesto en el mapa
+                        </h4>
+
+                        <p className="map-hint">
+                            Haz clic en cualquier número verde
+                            para seleccionar tu puesto
+                        </p>
+
+                        <div className="mini-map">
+                            {availableStands
+                                .slice(0, 30)
+                                .map((stand) => (
+                                    <button
+                                        type="button"
+                                        key={stand.id}
+                                        className={`stand-selector ${
+                                            Number(
+                                                datos.numero_puesto
+                                            ) ===
+                                            Number(stand.number)
+                                                ? "selected"
+                                                : ""
+                                        }`}
+                                        onClick={() =>
+                                            handleStandSelect(
+                                                stand.number
+                                            )
+                                        }
+                                        style={{
+                                            position: "absolute",
+                                            left: `${
+                                                (stand.coordinates
+                                                    ?.x ||
+                                                    stand.number) *
+                                                    1.8 +
+                                                20
+                                            }px`,
+                                            top: `${
+                                                (stand.coordinates
+                                                    ?.y || 1) *
+                                                    1.8 +
+                                                20
+                                            }px`,
+                                        }}
+                                        title={`Puesto #${stand.number} - ${stand.section}`}
+                                    >
+                                        {stand.number}
+                                    </button>
+                                ))}
+
+                            <div className="map-legend-mini">
+                                <span className="legend-dot available"></span>{" "}
+                                Disponible
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* ========================================
+                        BOTÓN DE REGISTRO
+                    ======================================== */}
                     <button
                         type="submit"
                         className="btn-registrar"
-                        disabled={subiendoLogo}
+                        disabled={
+                            subiendoLogo ||
+                            loading ||
+                            availableStands.length === 0
+                        }
                     >
                         {subiendoLogo
-                            ? "Subiendo logo..."
-                            : "Enviar solicitud"}
+                            ? "⏳ Subiendo logo..."
+                            : loading
+                            ? "⏳ Registrando..."
+                            : "📝 Enviar solicitud"}
                     </button>
 
+                    {loading && (
+                        <div className="registrando-mensaje">
+                            ⏳ Registrando tu negocio y asignando
+                            el puesto...
+                        </div>
+                    )}
                 </form>
-
             </div>
-
         </main>
-
     );
-
 }
 
 export default RegistrarNegocio;
+```

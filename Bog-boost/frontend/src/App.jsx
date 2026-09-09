@@ -65,15 +65,13 @@ function App() {
         <Route path="/contacto" element={<PQRS /> } />
         <Route path="/admin/pqrs" element={<ProtectedRoute allowedRoles={["SUPER_ADMIN"]}> <AdminPQRS /> </ProtectedRoute>} />
         <Route path="/stock" element={<ProtectedRoute allowedRoles={["VENDEDOR"]}> <AdminMovimientoStock /> </ProtectedRoute>} />
-<<<<<<< Updated upstream
+ Updated upstream
         <Route path="/historial" element={<Historial />} />
         <Route path="/producto/:idProducto/comentarios" element={<ComentariosProducto />} />
         <Route path="/ventas" element={<ProtectedRoute allowedRoles={["VENDEDOR"]}> <AdminVentasYSeguimiento /> </ProtectedRoute>} />
         <Route path="buscar" element={<ResultadosBusqueda />} />
-=======
         <Route path="/mapa" element={<Mapa />} />
-        
->>>>>>> Stashed changes
+         Stashed changes
       </Route>
 
     </Routes>

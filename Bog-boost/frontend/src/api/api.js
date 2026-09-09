@@ -1,12 +1,16 @@
 import axios from "axios";
 
+// ============================================
+// CONFIGURACIÓN DE LA API
+// ============================================
+
 // Crear instancia de axios con la URL base
 const api = axios.create({
-  baseURL: "http://localhost:3000/api"
+  baseURL: "http://localhost:5000/api"  // Cambia al puerto de tu backend
 });
 
 // ============================================
-// AGREGAR TOKEN DE AUTENTICACIÓN
+// INTERCEPTOR PARA AGREGAR TOKEN DE AUTENTICACIÓN
 // ============================================
 
 api.interceptors.request.use((config) => {
@@ -18,6 +22,10 @@ api.interceptors.request.use((config) => {
 
   return config;
 });
+
+// ============================================
+// EXPORTAR LA INSTANCIA DE API
+// ============================================
 
 export default api;
 
@@ -32,7 +40,7 @@ export default api;
  */
 export const getAllStands = async () => {
   try {
-    const response = await api.get('/puestos');
+    const response = await api.get('/stands');
     return response.data;
   } catch (error) {
     console.error('Error al obtener puestos:', error);
@@ -52,6 +60,36 @@ export const getStandById = async (id) => {
     return response.data;
   } catch (error) {
     console.error(`Error al obtener puesto ${id}:`, error);
+    throw error;
+  }
+};
+
+/**
+ * Obtener puestos disponibles
+ * GET /api/stands/available
+ * @returns {Promise<Array>} Lista de puestos disponibles
+ */
+export const getAvailableStands = async () => {
+  try {
+    const response = await api.get('/stands/available');
+    return response.data;
+  } catch (error) {
+    console.error('Error al obtener puestos disponibles:', error);
+    throw error;
+  }
+};
+
+/**
+ * Obtener puestos ocupados
+ * GET /api/stands/occupied
+ * @returns {Promise<Array>} Lista de puestos ocupados
+ */
+export const getOccupiedStands = async () => {
+  try {
+    const response = await api.get('/stands/occupied');
+    return response.data;
+  } catch (error) {
+    console.error('Error al obtener puestos ocupados:', error);
     throw error;
   }
 };
@@ -84,6 +122,45 @@ export const getStandsBySection = async (section) => {
     return response.data;
   } catch (error) {
     console.error(`Error al obtener puestos de sección ${section}:`, error);
+    throw error;
+  }
+};
+
+/**
+ * Asignar un negocio a un puesto
+ * PUT /api/stands/assign/:standNumber
+ * @param {number} standNumber - Número del puesto
+ * @param {Object} data - Datos del negocio
+ * @param {number} data.negocioId - ID del negocio
+ * @param {number} data.userId - ID del usuario
+ * @param {string} data.ownerName - Nombre del propietario
+ * @param {Array} data.products - Lista de productos
+ * @param {string} data.description - Descripción
+ * @returns {Promise<Object>} Puesto actualizado
+ */
+export const assignStandToBusiness = async (standNumber, data) => {
+  try {
+    const response = await api.put(`/stands/assign/${standNumber}`, data);
+    return response.data;
+  } catch (error) {
+    console.error('Error al asignar puesto:', error);
+    throw error;
+  }
+};
+
+/**
+ * Liberar un puesto (desasignar negocio)
+ * PUT /api/stands/release/:standNumber
+ * @param {number} standNumber - Número del puesto
+ * @param {number} userId - ID del usuario dueño
+ * @returns {Promise<Object>} Puesto liberado
+ */
+export const releaseStand = async (standNumber, userId) => {
+  try {
+    const response = await api.put(`/stands/release/${standNumber}`, { userId });
+    return response.data;
+  } catch (error) {
+    console.error('Error al liberar puesto:', error);
     throw error;
   }
 };
