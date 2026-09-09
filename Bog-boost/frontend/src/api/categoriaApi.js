@@ -10,6 +10,11 @@ export const obtenerCategoriaPorId = async (id) => {
     return data;
 };
 
+export const obtenerProductosPorCategoria = async (id) => {
+    const { data } = await axiosClient.get(`/categoria/${id}/productos`);
+    return data;
+};
+
 export const crearCategoria = async (categoria) => {
     const { data } = await axiosClient.post(
         "/categoria/crear",

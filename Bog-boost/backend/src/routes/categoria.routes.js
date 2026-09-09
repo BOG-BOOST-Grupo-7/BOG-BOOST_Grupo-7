@@ -6,6 +6,7 @@ import adminMiddleware from "../middlewares/admin.js";
 import {
   listarCategorias,
   obtenerCategoriaPorId,
+  obtenerProductosPorCategoria,
   crearCategoria,
   actualizarCategoria,
   eliminarCategoria
@@ -16,6 +17,7 @@ const router = Router();
 
 router.get("/", listarCategorias);
 router.get("/:id", obtenerCategoriaPorId);
+router.get("/:id/productos", obtenerProductosPorCategoria);
 router.post("/crear", authMiddleware, adminMiddleware, crearCategoria);
 router.put( "/actualizar/:id", authMiddleware, adminMiddleware, actualizarCategoria);
 router.delete("/eliminar/:id", authMiddleware, adminMiddleware, eliminarCategoria);

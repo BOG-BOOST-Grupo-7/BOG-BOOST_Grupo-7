@@ -117,7 +117,7 @@ function Header() {
                   setCatalogoOpen(!catalogoOpen);
                 }}
               >
-                Categorías <i className="fas fa-chevron-down"></i>
+                Categorías <i className={`fas fa-chevron-down dropdown-arrow ${catalogoOpen ? "rotate" : ""}`}></i>
               </a>
 
               <div className={`catalogo-dropdown ${catalogoOpen ? "show" : ""}`}>
@@ -126,9 +126,9 @@ function Header() {
                   categorias.map((cat) => (
                     <a
                       key={cat.id_categoria}
-                      onClick={() => go(`/catalogo/${cat.id_categoria}`)}
+                      onClick={() => go(`/categoria/${cat.id_categoria}`)}
                     >
-                      {cat.nombre_categoria}
+                      <i className="fas fa-tag"></i> {cat.nombre_categoria}
                     </a>
                   ))
                 ) : (
@@ -136,12 +136,6 @@ function Header() {
                     Cargando...
                   </span>
                 )}
-
-                <div className="dropdown-divider"></div>
-
-                <a onClick={() => go("/catalogo")}>
-                  Ver todos
-                </a>
 
               </div>
 
@@ -267,7 +261,7 @@ function Header() {
                   setCatalogoOpen(!catalogoOpen);
                 }}
               >
-                Categorías
+                Categorías <i className={`fas fa-chevron-down dropdown-arrow ${catalogoOpen ? "rotate" : ""}`}></i>
               </a>
 
               <div
@@ -282,7 +276,7 @@ function Header() {
                         go(`/catalogo/${cat.id_categoria}`)
                       }
                     >
-                      {cat.nombre_categoria}
+                      <i className="fas fa-tag"></i> {cat.nombre_categoria}
                     </a>
                   ))
                 ) : (
@@ -290,12 +284,6 @@ function Header() {
                     No hay categorías
                   </span>
                 )}
-
-                <div className="dropdown-divider"></div>
-
-                <a onClick={() => go("/catalogo")}>
-                  Ver todos
-                </a>
 
               </div>
 

@@ -133,3 +133,41 @@ export const eliminarCategoria = async (req, res) => {
       res.status(500).json(error);
     }
 };
+
+export const obtenerProductosPorCategoria = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        // 1. Opcional: Verificar primero si la categoría existe
+        const { data: categoria, error: errorCat } = await supabase
+            .schema("catalogo")
+            .from("categoria")
+            .select("*")
+            .eq("id_categoria", id)
+            .single();
+
+        if (errorCat || !categoria) {
+            return res.status(404).json({ mensaje: "Categoría no encontrada" });
+        }
+
+        // 2. Consultar los productos que pertenecen a esta categoría
+        const { data: productos, error: errorProd } = await supabase
+            .schema("catalogo")
+            .from("producto")
+            .select("*")
+            .eq("id_categoria", id);
+
+        if (errorProd) {
+            return res.status(400).json(errorProd);
+        }
+
+        // Retornamos tanto la categoría como sus productos asociados
+        res.json({
+            categoria,
+            productos
+        });
+
+    } catch (error) {
+        res.status(500).json(error);
+    }
+};

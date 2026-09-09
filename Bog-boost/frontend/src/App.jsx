@@ -14,6 +14,7 @@ import PQRS from "./pages/cliente/PQRS";
 import Historial from "./pages/cliente/Historial";
 import ComentariosProducto from "./pages/cliente/ComentariosProducto";
 import ResultadosBusqueda from "./components/home/ResultadosBusqueda";
+import Categoria from "./pages/cliente/Categoria";
 
 
 // Auth
@@ -64,6 +65,7 @@ function App() {
         <Route path="/producto/:idProducto/comentarios" element={<ComentariosProducto />} />
         <Route path="/ventas" element={<ProtectedRoute allowedRoles={["VENDEDOR"]}> <AdminVentasYSeguimiento /> </ProtectedRoute>} />
         <Route path="buscar" element={<ResultadosBusqueda />} />
+        <Route path="/categoria/:id" element={<Categoria />} />
       </Route>
 
     </Routes>
