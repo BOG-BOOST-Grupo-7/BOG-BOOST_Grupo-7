@@ -590,4 +590,4 @@ function RegistrarNegocio() {
 }
 
 export default RegistrarNegocio;
-```
+
