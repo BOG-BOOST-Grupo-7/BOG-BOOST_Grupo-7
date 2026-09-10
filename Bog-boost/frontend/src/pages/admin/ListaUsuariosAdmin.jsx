@@ -6,9 +6,10 @@ import {
     FaUserShield,
     FaEye,
     FaUndo,
-    FaUserPlus,
     FaSearch,
     FaUserTie,
+    FaChevronLeft,
+    FaChevronRight,
 } from "react-icons/fa";
 
 import "../../styles/ListaUsuariosAdmin.css";
@@ -34,6 +35,10 @@ export default function ListaUsuariosAdmin() {
     const [estadoFiltro, setEstadoFiltro] = useState("todos");
     const [rolFiltro, setRolFiltro] = useState("todos");
     const [busqueda, setBusqueda] = useState("");
+
+    // ================= ESTADOS DE PAGINACIÓN =================
+    const [paginaActual, setPaginaActual] = useState(1);
+    const filasPorPagina = 8; // Puedes ajustar este número según prefieras
 
     const [usuarioSeleccionado, setUsuarioSeleccionado] = useState(null);
     const [mostrarModal, setMostrarModal] = useState(false);
@@ -98,6 +103,21 @@ export default function ListaUsuariosAdmin() {
             return cumpleEstado && cumpleRol && cumpleBusqueda;
         });
     }, [usuarios, estadoFiltro, rolFiltro, busqueda]);
+
+    // Cada vez que cambien los filtros, la búsqueda o las filas por página, regresamos a la página 1
+    useEffect(() => {
+        setPaginaActual(1);
+    }, [estadoFiltro, rolFiltro, busqueda]);
+
+    // =====================================
+    // Lógica de Paginación
+    // =====================================
+    const totalPaginas = Math.ceil(usuariosFiltrados.length / filasPorPagina) || 1;
+
+    const usuariosPaginados = useMemo(() => {
+        const inicio = (paginaActual - 1) * filasPorPagina;
+        return usuariosFiltrados.slice(inicio, inicio + filasPorPagina);
+    }, [usuariosFiltrados, paginaActual, filasPorPagina]);
 
     const totalClientes = usuariosFiltrados.filter((u) => u.rol?.nombre_rol === "CLIENTE").length;
     const totalVendedores = usuariosFiltrados.filter((u) => u.rol?.nombre_rol === "VENDEDOR").length;
@@ -210,7 +230,6 @@ export default function ListaUsuariosAdmin() {
 
             {/* ======== FILTROS Y BÚSQUEDA ======== */}
             <div className="action-bar">
-
                 {/* BARRA DE BÚSQUEDA */}
                 <div className="search-group">
                     <FaSearch />
@@ -277,14 +296,14 @@ export default function ListaUsuariosAdmin() {
                                     Cargando usuarios...
                                 </td>
                             </tr>
-                        ) : usuariosFiltrados.length === 0 ? (
+                        ) : usuariosPaginados.length === 0 ? (
                             <tr>
                                 <td colSpan="5" className="sin-datos">
                                     No se encontraron usuarios con esos filtros.
                                 </td>
                             </tr>
                         ) : (
-                            usuariosFiltrados.map((usuario) => (
+                            usuariosPaginados.map((usuario) => (
                                 <tr key={usuario.id_perfil}>
                                     <td>{nombreCompleto(usuario)}</td>
                                     <td>{usuario.email}</td>
@@ -335,6 +354,38 @@ export default function ListaUsuariosAdmin() {
                     </tbody>
                 </table>
             </div>
+
+            {/* ======== CONTROLES DE PAGINACIÓN ======== */}
+            {!loading && usuariosFiltrados.length > 0 && (
+                <div className="pagination-container" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "1rem", padding: "0.5rem 1rem" }}>
+                    <span className="pagination-info" style={{ fontSize: "0.9rem", color: "#666" }}>
+                        Mostrando del {(paginaActual - 1) * filasPorPagina + 1} al{" "}
+                        {Math.min(paginaActual * filasPorPagina, usuariosFiltrados.length)} de{" "}
+                        {usuariosFiltrados.length} usuarios
+                    </span>
+                    <div className="pagination-buttons" style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+                        <button
+                            className="btn-orange"
+                            onClick={() => setPaginaActual((prev) => Math.max(prev - 1, 1))}
+                            disabled={paginaActual === 1}
+                            style={{ opacity: paginaActual === 1 ? 0.5 : 1, cursor: paginaActual === 1 ? "not-allowed" : "pointer" }}
+                        >
+                            <FaChevronLeft /> Anterior
+                        </button>
+                        <span style={{ margin: "0 0.5rem", fontWeight: "bold" }}>
+                            Página {paginaActual} de {totalPaginas}
+                        </span>
+                        <button
+                            className="btn-orange"
+                            onClick={() => setPaginaActual((prev) => Math.min(prev + 1, totalPaginas))}
+                            disabled={paginaActual === totalPaginas}
+                            style={{ opacity: paginaActual === totalPaginas ? 0.5 : 1, cursor: paginaActual === totalPaginas ? "not-allowed" : "pointer" }}
+                        >
+                            Siguiente <FaChevronRight />
+                        </button>
+                    </div>
+                </div>
+            )}
 
             {/* ================= MODAL DETALLES ================= */}
             {mostrarModal && usuarioSeleccionado && (
