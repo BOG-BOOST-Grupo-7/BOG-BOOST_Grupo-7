@@ -6,8 +6,6 @@ import {
     FaPlusCircle,
     FaUndo,
     FaEye,
-    FaEdit,
-    FaTrash,
     FaBoxOpen,
 } from "react-icons/fa";
 
@@ -17,7 +15,6 @@ import "../../styles/ListaNegociosAdmin.css";
 import {
     obtenerNegocios,
     obtenerNegocioPorId,
-    eliminarNegocio
 } from "../../api/negocioApi";
 
 function ListaNegociosAdmin() {
@@ -139,7 +136,7 @@ function ListaNegociosAdmin() {
         ]);
 
     // ============================
-    // Resumen
+    // Resumen Global / Página
     // ============================
 
     const totalNegocios =
@@ -175,16 +172,18 @@ function ListaNegociosAdmin() {
         }, [negocios]);
 
     const totalProductos =
-        negociosFiltrados.reduce(
-            (total, negocio) =>
-                total +
-                (
-                    negocio
-                        .productos
-                        ?.length || 0
-                ),
-            0
-        );
+        useMemo(() => {
+            return negocios.reduce(
+                (total, negocio) =>
+                    total +
+                    (
+                        negocio
+                            .productos
+                            ?.length || 0
+                    ),
+                0
+            );
+        }, [negocios]);
 
     // ============================
     // Limpiar filtros
@@ -230,56 +229,6 @@ function ListaNegociosAdmin() {
     };
 
     // ============================
-    // Editar
-    // ============================
-
-    const editarNegocio = (
-        negocio
-    ) => {
-
-        console.log(
-            "Editar:",
-            negocio
-        );
-
-    };
-
-    // ============================
-    // Eliminar
-    // ============================
-
-    const eliminar = async (id) => {
-
-        const confirmar =
-            window.confirm(
-                "¿Deseas eliminar este negocio?"
-            );
-
-        if (!confirmar) return;
-
-        try {
-
-            await eliminarNegocio(id);
-
-            alert(
-                "Negocio eliminado correctamente."
-            );
-
-            cargarNegocios();
-
-        } catch (error) {
-
-            console.error(error);
-
-            alert(
-                "No fue posible eliminar el negocio."
-            );
-
-        }
-
-    };
-
-    // ============================
     // Cerrar modal
     // ============================
 
@@ -301,8 +250,7 @@ function ListaNegociosAdmin() {
         (perfil) => {
 
             if (!perfil)
-                return
-            "No disponible";
+                return "No disponible";
 
             return [
 
@@ -319,6 +267,7 @@ function ListaNegociosAdmin() {
                 .join(" ");
 
         };
+
     return (
 
         <div className="negocios-admin-container">
@@ -520,7 +469,7 @@ function ListaNegociosAdmin() {
 
                             <th>
 
-                                Acciones
+                                Detalles
 
                             </th>
 
@@ -721,42 +670,6 @@ function ListaNegociosAdmin() {
                                                 >
 
                                                     <FaEye />
-
-                                                </button>
-
-                                                <button
-
-                                                    className="btn-icon edit"
-
-                                                    title="Editar"
-
-                                                    onClick={() =>
-                                                        editarNegocio(
-                                                            negocio
-                                                        )
-                                                    }
-
-                                                >
-
-                                                    <FaEdit />
-
-                                                </button>
-
-                                                <button
-
-                                                    className="btn-icon delete"
-
-                                                    title="Eliminar"
-
-                                                    onClick={() =>
-                                                        eliminar(
-                                                            negocio.id_negocio
-                                                        )
-                                                    }
-
-                                                >
-
-                                                    <FaTrash />
 
                                                 </button>
 

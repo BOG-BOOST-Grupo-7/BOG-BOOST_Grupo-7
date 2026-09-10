@@ -10,7 +10,6 @@ import {
 
 function Perfil() {
     const { logout } = useAuth();
-
     const fileInputRef = useRef(null);
 
     const [perfil, setPerfil] = useState({
@@ -33,9 +32,6 @@ function Perfil() {
     const cargarPerfil = async () => {
         try {
             const data = await obtenerMiPerfil();
-
-            console.log("PERFIL RECIBIDO:", data);
-
             setPerfil({
                 primer_nombre: data.primer_nombre || "",
                 segundo_nombre: data.segundo_nombre || "",
@@ -52,9 +48,23 @@ function Perfil() {
     };
 
     const handleChange = (e) => {
+        const { name, value } = e.target;
+        let valorValidado = value;
+
+        // Validar campos de nombres y apellidos (solo letras, espacios y acentos)
+        const camposNombres = ["primer_nombre", "segundo_nombre", "primer_apellido", "segundo_apellido"];
+        if (camposNombres.includes(name)) {
+            valorValidado = value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, "");
+        }
+
+        // Validar número de documento (solo números)
+        if (name === "numero_documento") {
+            valorValidado = value.replace(/\D/g, "");
+        }
+
         setPerfil({
             ...perfil,
-            [e.target.name]: e.target.value,
+            [name]: valorValidado,
         });
     };
 
@@ -67,7 +77,6 @@ function Perfil() {
 
     const guardarPerfil = async () => {
         try {
-
             const datos = {
                 primer_nombre: perfil.primer_nombre,
                 segundo_nombre: perfil.segundo_nombre,
@@ -76,30 +85,18 @@ function Perfil() {
             };
 
             if (perfil.id_tipo_documento !== "") {
-                datos.id_tipo_documento = Number(
-                    perfil.id_tipo_documento
-                );
+                datos.id_tipo_documento = Number(perfil.id_tipo_documento);
             }
 
             if (perfil.numero_documento !== "") {
-                datos.numero_documento = Number(
-                    perfil.numero_documento
-                );
+                datos.numero_documento = Number(perfil.numero_documento);
             }
 
-            const respuesta = await actualizarPerfil(datos);
-
-            console.log("RESPUESTA UPDATE:", respuesta);
-
+            await actualizarPerfil(datos);
             alert("Perfil actualizado correctamente");
-
             setEditando({});
-
         } catch (error) {
-
             console.error("ERROR UPDATE:", error);
-            console.error("ERROR RESPONSE:", error.response);
-
             alert(
                 error.response?.data?.message ||
                 error.response?.data?.mensaje ||
@@ -107,6 +104,7 @@ function Perfil() {
             );
         }
     };
+
     const handleDesactivarCuenta = async () => {
         const confirmar = window.confirm(
             "¿Estás seguro de que deseas desactivar tu cuenta?\n\nEsta acción impedirá que puedas iniciar sesión."
@@ -125,30 +123,18 @@ function Perfil() {
 
         try {
             const respuesta = await desactivarCuenta();
-
-            alert(
-                respuesta?.mensaje ||
-                "Cuenta desactivada correctamente"
-            );
-
+            alert(respuesta?.mensaje || "Cuenta desactivada correctamente");
             logout();
-
             window.location.href = "/";
         } catch (error) {
             console.error(error);
-
-            alert(
-                error.response?.data?.mensaje ||
-                "Error al desactivar la cuenta"
-            );
+            alert(error.response?.data?.mensaje || "Error al desactivar la cuenta");
         }
     };
 
     const handleImagen = (file) => {
         if (!file) return;
-
         const preview = URL.createObjectURL(file);
-
         setPerfil((prev) => ({
             ...prev,
             foto_perfil: preview,
@@ -157,14 +143,12 @@ function Perfil() {
 
     const handleDrop = (e) => {
         e.preventDefault();
-
         const file = e.dataTransfer.files[0];
-
         handleImagen(file);
     };
 
     const renderCampo = (label, campo, icono) => (
-        <>
+        <div key={campo} className="perfil-field-wrapper">
             <div className="info-field">
                 <label>
                     <i className={icono}></i>
@@ -172,80 +156,63 @@ function Perfil() {
                 </label>
 
                 <div className="field-value">
-
                     {editando[campo] ? (
-
                         campo === "id_tipo_documento" ? (
-
                             <select
                                 className="field-input-edit"
                                 name="id_tipo_documento"
                                 value={perfil.id_tipo_documento}
                                 onChange={handleChange}
                             >
-                                <option value="">
-                                    Seleccione...
-                                </option>
-
-                                <option value="1">
-                                    Cédula de Ciudadanía
-                                </option>
-
-                                <option value="2">
-                                    Cédula de Extranjería
-                                </option>
+                                <option value="">Seleccione...</option>
+                                <option value="1">Cédula de Ciudadanía</option>
+                                <option value="2">Cédula de Extranjería</option>
                             </select>
-
                         ) : (
-
                             <input
                                 className="field-input-edit"
                                 name={campo}
                                 value={perfil[campo]}
                                 onChange={handleChange}
+                                placeholder={`Ingrese ${label.toLowerCase()}`}
                             />
-
                         )
-
                     ) : (
-
                         <span className="field-text">
                             {campo === "id_tipo_documento"
                                 ? perfil.id_tipo_documento === 1 ||
-                                    perfil.id_tipo_documento === "1"
+                                  perfil.id_tipo_documento === "1"
                                     ? "Cédula de Ciudadanía"
                                     : perfil.id_tipo_documento === 2 ||
-                                        perfil.id_tipo_documento === "2"
-                                        ? "Cédula de Extranjería"
-                                        : "Sin registrar"
+                                      perfil.id_tipo_documento === "2"
+                                    ? "Cédula de Extranjería"
+                                    : "Sin registrar"
                                 : perfil[campo] || "Sin registrar"}
                         </span>
-
                     )}
 
                     <button
                         type="button"
-                        className="btn-edit-field"
+                        className={`btn-edit-field ${editando[campo] ? "active" : ""}`}
                         onClick={() => toggleEdit(campo)}
+                        title={editando[campo] ? "Cerrar edición" : "Editar campo"}
                     >
-                        <i className="fas fa-pen"></i>
+                        <i className={editando[campo] ? "fas fa-check" : "fas fa-pen"}></i>
                     </button>
-
                 </div>
             </div>
-
             <hr className="field-divider" />
-        </>
+        </div>
     );
 
     return (
         <main className="perfil-container">
-            <h1 className="perfil-title">
-                Perfil de Usuario
-            </h1>
+            <div className="perfil-header-container">
+                <h1 className="perfil-title">Mi Perfil</h1>
+                <p className="perfil-subtitle">Administra tu información personal y configuración de cuenta</p>
+            </div>
 
             <div className="perfil-card">
-
                 <div className="avatar-section">
                     <div
                         className="avatar-container"
@@ -267,7 +234,7 @@ function Perfil() {
 
                         <div className="avatar-overlay">
                             <i className="fas fa-cloud-upload-alt"></i>
-                            <p>Arrastra una imagen aquí</p>
+                            <p>Actualizar foto</p>
                         </div>
 
                         <input
@@ -275,90 +242,48 @@ function Perfil() {
                             type="file"
                             accept="image/*"
                             hidden
-                            onChange={(e) =>
-                                handleImagen(e.target.files?.[0])
-                            }
+                            onChange={(e) => handleImagen(e.target.files?.[0])}
                         />
                     </div>
 
                     <p className="avatar-texto">
-                        🖱️ Haz clic o arrastra una imagen
+                        Haz clic o arrastra una imagen
                     </p>
                 </div>
 
                 <div className="perfil-info">
+                    {renderCampo("Primer Nombre", "primer_nombre", "fas fa-user")}
+                    {renderCampo("Segundo Nombre", "segundo_nombre", "fas fa-user")}
+                    {renderCampo("Primer Apellido", "primer_apellido", "fas fa-user-tag")}
+                    {renderCampo("Segundo Apellido", "segundo_apellido", "fas fa-user-tag")}
+                    {renderCampo("Tipo Documento", "id_tipo_documento", "fas fa-id-card")}
+                    {renderCampo("Número Documento", "numero_documento", "fas fa-address-card")}
 
-                    {renderCampo(
-                        "Primer Nombre",
-                        "primer_nombre",
-                        "fas fa-user"
-                    )}
-
-                    {renderCampo(
-                        "Segundo Nombre",
-                        "segundo_nombre",
-                        "fas fa-user"
-                    )}
-
-                    {renderCampo(
-                        "Primer Apellido",
-                        "primer_apellido",
-                        "fas fa-user-tag"
-                    )}
-
-                    {renderCampo(
-                        "Segundo Apellido",
-                        "segundo_apellido",
-                        "fas fa-user-tag"
-                    )}
-
-                    {renderCampo(
-                        "Tipo Documento",
-                        "id_tipo_documento",
-                        "fas fa-id-card"
-                    )}
-
-                    {renderCampo(
-                        "Número Documento",
-                        "numero_documento",
-                        "fas fa-address-card"
-                    )}
-
-                    <div className="info-field">
-                        <label>
-                            <i className="fas fa-envelope"></i>
-                            Correo
-                        </label>
-
-                        <div className="field-value">
-                            <span className="field-text">
-                                {perfil.email}
-                            </span>
+                    <div className="perfil-field-wrapper">
+                        <div className="info-field">
+                            <label>
+                                <i className="fas fa-envelope"></i>
+                                Correo Electrónico
+                            </label>
+                            <div className="field-value readonly-field">
+                                <span className="field-text">{perfil.email}</span>
+                            </div>
                         </div>
+                        <hr className="field-divider" />
                     </div>
 
-                    <hr className="field-divider" />
-
                     <div className="perfil-actions">
-                        <button
-                            className="btn-guardar"
-                            onClick={guardarPerfil}
-                        >
+                        <button className="btn-guardar" onClick={guardarPerfil}>
                             <i className="fas fa-save"></i>
                             Guardar cambios
                         </button>
 
-                        <button
-                            className="btn-danger"
-                            onClick={handleDesactivarCuenta}
-                        >
+                        <button className="btn-danger" onClick={handleDesactivarCuenta}>
                             <i className="fas fa-user-slash"></i>
                             Desactivar cuenta
                         </button>
                     </div>
-
                 </div>
-
             </div>
         </main>
     );
