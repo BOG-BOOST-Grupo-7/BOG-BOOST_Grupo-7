@@ -1,0 +1,114 @@
+/* Este archivo es para poner el css de mapa */
+.contenedor-mapa {
+  width: 95%;
+  margin: 0 auto;
+  padding: 20px;
+  text-align: center;
+}
+
+.leyenda {
+  color: #555;
+  font-size: 14px;
+  margin-bottom: 15px;
+  line-height: 1.5;
+}
+
+.controles-zoom {
+  margin-bottom: 12px;
+}
+
+.controles-zoom button {
+  margin: 0 6px;
+  padding: 9px 18px;
+  background: #8b4513;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.controles-zoom button:hover {
+  background: #a0522d;
+}
+
+.plano-mapa {
+  border: 4px solid #8b4513;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #fffef5;
+  display: inline-block;
+}
+
+.svg-mapa {
+  cursor: grab;
+}
+
+.svg-mapa:active {
+  cursor: grabbing;
+}
+
+.etiqueta-referencia, .etiqueta-entrada {
+  font-size: 13px;
+  font-weight: bold;
+  fill: #5c3317;
+}
+
+/* Estilos del Modal */
+.modal-fondo {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-contenido {
+  background: white;
+  padding: 25px;
+  border-radius: 12px;
+  max-width: 420px;
+  width: 90%;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+}
+
+.modal-contenido h3 {
+  margin-top: 0;
+  color: #8b4513;
+  border-bottom: 2px solid #eee;
+  padding-bottom: 10px;
+}
+
+.btn-cerrar {
+  margin-top: 18px;
+  padding: 10px 25px;
+  background: #8b4513;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 15px;
+  width: 100%;
+}
+
+.btn-cerrar:hover {
+  background: #a0522d;
+}
+
+.puesto-disponible {
+  color: #28a745;
+  padding: 10px;
+  background: #f0fff4;
+  border-radius: 6px;
+}
+
+.datos-puesto p {
+  font-size: 15px;
+  line-height: 1.8;
+  margin: 8px 0;
+}

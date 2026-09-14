@@ -4,7 +4,8 @@ import "../../styles/Home.css";
 import { useEffect, useState } from "react";
 
 import HomeCarousel from "../../components/home/HomeCarousel";
-import HomeMap from "../../components/home/HomeMap";
+import MapaMercadoPagina from '../pages/MapaMercadoPagina';
+
 import RegistrarNegocioCard from "../../components/home/RegistrarNegocioCard";
 
 import { obtenerProductos } from "../../api/productoApi";

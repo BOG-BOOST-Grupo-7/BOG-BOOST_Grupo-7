@@ -1,0 +1,16 @@
+/* // Este archivo esta para crear el diseño de las casillas de los puestos */
+.puesto-en-mapa {
+  cursor: pointer;
+  transition: transform 0.1s ease;
+}
+
+.puesto-en-mapa:hover .puesto-casilla {
+  fill: #ffd900 !important;
+  stroke: #8b4513 !important;
+  stroke-width: 2 !important;
+}
+
+.puesto-en-mapa:hover .numero-puesto {
+  fill: #000;
+  font-weight: 900;
+}
