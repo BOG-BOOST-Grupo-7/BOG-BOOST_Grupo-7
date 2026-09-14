@@ -16,17 +16,24 @@ export function estadoColor(e: string) {
     return { bg: C.beige, text: C.black };
 }
 
+// Anchos fijos de cada columna de las tablas de Stock y Pedidos. Al ser fijos (en vez de "flex: 1"),
+// la tabla puede envolverse en un ScrollView horizontal y deslizarse hacia la derecha para ver
+// las columnas que no entran en el ancho de la pantalla, en vez de quedar todas apretadas.
+export const tableColWidths = [64, 58, 72, 96, 62, 62, 78];
+
 // Fila de tabla reutilizada por las pantallas de Stock y Pedidos del panel de vendedor.
 export function TableRow({ item, onEdit }: { item: (VendorProduct | VendorPedido) & { agotado?: boolean }; onEdit?: () => void }) {
     const estado = (item as VendorPedido).estado || (item.agotado ? "Agotado" : "Disponible");
     const col = estadoColor(estado);
     return (
         <View style={rowStyles.row}>
-            <Image source={{ uri: item.img }} style={rowStyles.avatar} />
+            <View style={{ width: tableColWidths[0], alignItems: 'center' }}>
+                <Image source={{ uri: item.img }} style={rowStyles.avatar} />
+            </View>
             {[item.code, item.name.split(" ")[0], item.info.split(",")[0], String(item.qty), `$${(item.valor / 1000).toFixed(0)}k`].map((v, i) => (
-                <View key={i} style={rowStyles.cell}><Text numberOfLines={1} style={rowStyles.cellText}>{v}</Text></View>
+                <View key={i} style={[rowStyles.cell, { width: tableColWidths[i + 1] }]}><Text numberOfLines={1} style={rowStyles.cellText}>{v}</Text></View>
             ))}
-            <TouchableOpacity style={[rowStyles.stateBadge, { backgroundColor: col.bg }]} onPress={onEdit}>
+            <TouchableOpacity style={[rowStyles.stateBadge, { width: tableColWidths[6], backgroundColor: col.bg }]} onPress={onEdit}>
                 <Text style={[rowStyles.stateBadgeText, { color: col.text }]}>{estado}</Text>
             </TouchableOpacity>
         </View>
@@ -87,12 +94,12 @@ export function VendorShell({ children, active = "inicio" }: { children: React.R
 
 // Estilos de las filas de tabla (Stock/Pedidos).
 const rowStyles = StyleSheet.create({
-    row: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: C.beigeDark },
-    avatar: { width: 32, height: 32, borderRadius: 16, borderWidth: 1, borderColor: C.beigeDark },
-    cell: { flex: 1, backgroundColor: C.beige, borderRadius: 20, paddingVertical: 3, paddingHorizontal: 4 },
-    cellText: { fontSize: 9, textAlign: 'center', color: C.black },
-    stateBadge: { borderRadius: 20, paddingVertical: 3, paddingHorizontal: 6, minWidth: 54, alignItems: 'center' },
-    stateBadgeText: { fontSize: 9, fontWeight: '700' },
+    row: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: 5, borderBottomWidth: 1, borderBottomColor: C.beigeDark },
+    avatar: { width: 60, height: 60, borderRadius: 26, borderWidth: 1, borderColor: C.beigeDark },
+    cell: { backgroundColor: C.beige, borderRadius: 20, paddingVertical: 2, paddingHorizontal: 3 },
+    cellText: { fontSize: 14, textAlign: 'center', color: C.black },
+    stateBadge: { borderRadius: 20, paddingVertical: 3, paddingHorizontal: 6, alignItems: 'center' },
+    stateBadgeText: { fontSize: 13, fontWeight: '700' },
 });
 
 // Estilos del shell del panel de vendedor.
