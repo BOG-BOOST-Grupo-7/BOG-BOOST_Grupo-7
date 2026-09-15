@@ -1,5 +1,3 @@
-// Este archivo es para crear el mapa 
-
 import React, { useState } from 'react';
 import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch';
 import Puesto from './Puesto';
@@ -8,17 +6,35 @@ import TODOS_LOS_PUESTOS from './DatosPuestos';
 import './MapaMercado.css';
 
 const MapaMercado = () => {
-  const [puestoSeleccionado, setPuestoSeleccionado] = useState(null);
+  const [puestoDatos, setPuestoDatos] = useState(null); // ← Guarda los datos del backend
   const [modalAbierto, setModalAbierto] = useState(false);
+  const [cargando, setCargando] = useState(false);
 
-  const abrirModal = (numeroPuesto) => {
-    setPuestoSeleccionado(numeroPuesto);
+  // Función para consultar la API al hacer clic en un puesto
+  const abrirModal = async (numeroPuesto) => {
     setModalAbierto(true);
+    setCargando(true);
+    setPuestoDatos(null);
+
+    try {
+      const respuesta = await fetch(
+        `http://localhost:3000/api/mapa/puesto/${numeroPuesto}`
+      );
+      const datos = await respuesta.json();
+      setPuestoDatos(datos); 
+    } catch (error) {
+      setPuestoDatos({
+        error: true,
+        mensaje: "Error al consultar el puesto"
+      });
+    }
+
+    setCargando(false);
   };
 
   const cerrarModal = () => {
     setModalAbierto(false);
-    setPuestoSeleccionado(null);
+    setPuestoDatos(null);
   };
 
   return (
@@ -50,8 +66,8 @@ const MapaMercado = () => {
                 <svg width="1000" height="950" className="svg-mapa">
                   {/* Fondo */}
                   <rect x="0" y="0" width="1000" height="950" fill="#fef9e7" stroke="#d4ac0d" strokeWidth="3"/>
-
-                  {/* Etiquetas de Referencia */}
+                  
+                  {/* Etiquetas para los lugares de Referencia */}
                   <text x="30" y="60" className="etiqueta-referencia">PLANETARIO DISTRITAL</text>
                   <text x="320" y="90" className="etiqueta-referencia">MUSEO DE ARTE MODERNO</text>
                   <text x="740" y="55" className="etiqueta-referencia">MONSERRATE</text>
@@ -59,7 +75,7 @@ const MapaMercado = () => {
                   <text x="430" y="935" className="etiqueta-entrada">⬇️ ENTRADA Cra 7</text>
                   <text x="955" y="420" className="etiqueta-entrada">⬅️ SALIDA Calle 24</text>
 
-                  {/* Dibujar TODOS los puestos */}
+                  {/* Dibujar todos los puestos */}
                   {TODOS_LOS_PUESTOS.map((puesto) => (
                     <Puesto
                       key={puesto.numero}
@@ -76,11 +92,12 @@ const MapaMercado = () => {
         )}
       </TransformWrapper>
 
-      {/* Modal */}
+      {/*  Los datos se pasan al modal  */}
       <ModalInfoPuesto
         abierto={modalAbierto}
         alCerrar={cerrarModal}
-        numeroPuesto={puestoSeleccionado}
+        cargando={cargando}
+        datosPuesto={puestoDatos}
       />
     </div>
   );

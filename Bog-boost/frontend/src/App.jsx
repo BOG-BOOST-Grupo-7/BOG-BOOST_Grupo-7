@@ -5,7 +5,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import ClienteLayout from "./layouts/ClienteLayout";
 
 // Mapa
-import Mapa from "./pages/cliente/Mapa";
+import MapaMercadoPagina from './pages/MapaMercadoPagina.jsx';
 
 
 // Cliente
@@ -70,7 +70,7 @@ function App() {
         <Route path="/producto/:idProducto/comentarios" element={<ComentariosProducto />} />
         <Route path="/ventas" element={<ProtectedRoute allowedRoles={["VENDEDOR"]}> <AdminVentasYSeguimiento /> </ProtectedRoute>} />
         <Route path="buscar" element={<ResultadosBusqueda />} />
-        <Route path="/mapa" element={<Mapa />} />
+        <Route path="/mapa-mercado" element={<MapaMercadoPagina />} />
          Stashed changes
       </Route>
 

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useCarrito } from "../../context/CarritoContext";
-import FormularioCompra from "../../components/Carrito/FormularioCompra.jsx";
+import FormularioCompra from "../../components/carrito/FormularioCompra.jsx";
 import "../../styles/Carrito.css";
 
 function Carrito() {

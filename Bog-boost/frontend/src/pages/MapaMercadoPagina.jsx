@@ -1,11 +1,10 @@
-//  Este archivo es para crear la pagina y poner la ruta 
-import React from 'react';
-import MapaMercado from '../components/mapa/MapaMercado';
+// Este archivo es para crear la pagina y poner la ruta 
+import MapaMercado from "../components/mapa/MapaMercado.jsx"; // ✅ Importa el mapa real
 
 const MapaMercadoPagina = () => {
   return (
     <div>
-      <MapaMercado />
+      <MapaMercado /> {/* ✅ Componente del mapa */}
     </div>
   );
 };
