@@ -19,7 +19,7 @@ export function estadoColor(e: string) {
 // Anchos fijos de cada columna de las tablas de Stock y Pedidos. Al ser fijos (en vez de "flex: 1"),
 // la tabla puede envolverse en un ScrollView horizontal y deslizarse hacia la derecha para ver
 // las columnas que no entran en el ancho de la pantalla, en vez de quedar todas apretadas.
-export const tableColWidths = [64, 58, 72, 96, 62, 62, 78];
+export const tableColWidths = [85, 80, 95, 125, 100, 85, 90];
 
 // Fila de tabla reutilizada por las pantallas de Stock y Pedidos del panel de vendedor.
 export function TableRow({ item, onEdit }: { item: (VendorProduct | VendorPedido) & { agotado?: boolean }; onEdit?: () => void }) {
@@ -59,7 +59,7 @@ export function VendorShell({ children, active = "inicio" }: { children: React.R
     return (
         <View style={styles.root}>
             <View style={styles.header}>
-                <View style={styles.logoBox}><Text style={{ fontSize: 15 }}>🦁</Text></View>
+                <View style={styles.logoBox}><Text style={{ fontSize: 26 }}>🦁</Text></View>
                 {(["inicio", "ventas", "stock"] as const).map((t) => (
                     <TouchableOpacity key={t} style={[styles.tab, active === t && styles.tabActive]} onPress={() => goTo(tabScreens[t])}>
                         <Text style={styles.tabText}>{t === "ventas" ? "Ventas ▼" : t.charAt(0).toUpperCase() + t.slice(1)}</Text>
@@ -105,18 +105,18 @@ const rowStyles = StyleSheet.create({
 // Estilos del shell del panel de vendedor.
 const styles = StyleSheet.create({
     root: { flex: 1, backgroundColor: C.white },
-    header: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 10, paddingVertical: 8, backgroundColor: C.amber },
-    logoBox: { width: 30, height: 30, borderRadius: 10, backgroundColor: C.white, alignItems: 'center', justifyContent: 'center' },
+    header: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 8, paddingVertical: 12, backgroundColor: C.amber },
+    logoBox: { width: 36, height: 36,  borderRadius: 12, backgroundColor: C.white, alignItems: 'center', justifyContent: 'center' },
     tab: { paddingHorizontal: 8, paddingVertical: 5, borderRadius: 16 },
     tabActive: { backgroundColor: 'rgba(0,0,0,0.15)' },
-    tabText: { fontSize: 11, fontWeight: '700', color: C.black },
-    iconButtonDark: { width: 28, height: 28, borderRadius: 14, alignItems: 'center', justifyContent: 'center', backgroundColor: C.black },
-    iconButtonTextWhite: { fontSize: 12, color: C.white },
+    tabText: { fontSize: 16, fontWeight: '700', color: C.black },
+    iconButtonDark: { width: 30, height: 30, borderRadius: 14, alignItems: 'center', justifyContent: 'center', backgroundColor: C.black },
+    iconButtonTextWhite: { fontSize: 16, color: C.white },
     iconButton: { width: 28, height: 28, borderRadius: 14, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.1)' },
-    iconButtonText: { fontSize: 15, fontWeight: '700', color: C.black },
+    iconButtonText: { fontSize: 16, fontWeight: '700', color: C.black },
     content: { flex: 1 },
     modal: { margin: 0, justifyContent: 'flex-start', alignItems: 'flex-end', paddingTop: 55, paddingRight: 10 },
     menuBox: { backgroundColor: C.white, borderRadius: 16, overflow: 'hidden', minWidth: 175, elevation: 6 },
-    menuItem: { paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: C.beige },
+    menuItem: { paddingHorizontal: 16, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: C.beige },
     menuItemText: { fontSize: 13, fontWeight: '600', color: C.black },
 });

@@ -72,11 +72,11 @@ export function AgregarProductoScreen() {
 
 // Hoja de estilos de la pantalla para agregar producto.
 const styles = StyleSheet.create({
-    title: { textAlign: 'center', fontWeight: '800', fontSize: 16, marginBottom: 12 },
-    panel: { borderRadius: 16, padding: 14, borderWidth: 1.5, borderColor: C.beigeDark },
+    title: { textAlign: 'center', fontWeight: '700', fontSize: 22, marginBottom: 14 },
+    panel: { borderRadius: 16, padding: 12, borderWidth: 1.5, borderColor: C.beigeDark },
     imageBox: { width: 100, height: 100, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: C.beige, borderWidth: 1.5, borderColor: C.beigeDark, gap: 4 },
-    amberSmallButton: { paddingVertical: 6, borderRadius: 999, backgroundColor: C.amber, alignItems: 'center' },
-    amberSmallButtonText: { fontSize: 11, fontWeight: '700', color: C.black },
+    amberSmallButton: { paddingVertical: 6, paddingHorizontal: 5, borderRadius: 999, backgroundColor: C.amber, alignItems: 'center' },
+    amberSmallButtonText: { fontSize: 13, fontWeight: '700', color: C.black },
     infoBox: { flex: 1, borderRadius: 12, padding: 10, backgroundColor: C.beige },
     rowBetween: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
     input: { backgroundColor: C.white, borderRadius: 10, paddingHorizontal: 8, paddingVertical: 6, fontSize: 11 },
@@ -85,8 +85,8 @@ const styles = StyleSheet.create({
     qtyButtonText: { fontWeight: '700' },
     valorRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 6 },
     valorInput: { backgroundColor: C.white, borderRadius: 10, paddingHorizontal: 8, paddingVertical: 3, fontSize: 11, width: 64 },
-    amberButton: { paddingVertical: 11, borderRadius: 999, alignItems: 'center', backgroundColor: C.amber },
-    amberButtonText: { fontSize: 13, fontWeight: '700', color: C.black },
-    darkButton: { paddingVertical: 11, borderRadius: 999, alignItems: 'center', backgroundColor: C.amberDark },
-    darkButtonText: { fontSize: 13, fontWeight: '700', color: C.white },
+    amberButton: { paddingVertical: 10, borderRadius: 999, alignItems: 'center', backgroundColor: C.amber },
+    amberButtonText: { fontSize: 17, fontWeight: '600', color: C.black },
+    darkButton: { paddingVertical: 9, borderRadius: 999, alignItems: 'center', backgroundColor: C.amberDark },
+    darkButtonText: { fontSize: 17, fontWeight: '600', color: C.white },
 });

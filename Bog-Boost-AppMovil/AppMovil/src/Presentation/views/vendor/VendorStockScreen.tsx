@@ -39,10 +39,10 @@ export function VendorStockScreen() {
 
 // Hoja de estilos compartida por las pantallas de Stock y Pedidos.
 const styles = StyleSheet.create({
-    title: { textAlign: 'center', fontWeight: '800', fontSize: 16, marginBottom: 12 },
-    headerRow: { flexDirection: 'row', gap: 4, marginBottom: 6 },
-    headerCell: { paddingVertical: 4, borderRadius: 999, backgroundColor: C.amber, alignItems: 'center' },
-    headerCellText: { fontSize: 8, fontWeight: '700', color: C.black },
+    title: { textAlign: 'center', fontWeight: '800', fontSize: 22, marginBottom: 12 },
+    headerRow: { flexDirection: 'row', gap: 4, marginBottom: 5, padding: 5 },
+    headerCell: { paddingVertical: 2, paddingHorizontal: 3, borderRadius: 40, backgroundColor: C.amber, alignItems: 'center' },
+    headerCellText: { fontSize: 16, padding: 1, fontWeight: '700', color: C.black },
     addButton: { marginTop: 12, paddingVertical: 12, borderRadius: 999, alignItems: 'center', backgroundColor: C.amber },
-    addButtonText: { fontSize: 13, fontWeight: '700', color: C.black },
+    addButtonText: { fontSize: 15, fontWeight: '700', color: C.black },
 });

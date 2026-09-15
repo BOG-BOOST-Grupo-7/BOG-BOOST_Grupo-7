@@ -36,7 +36,7 @@ export function PedidosScreen() {
 // Hoja de estilos de la pantalla de pedidos.
 const styles = StyleSheet.create({
     title: { textAlign: 'center', fontWeight: '800', fontSize: 20, marginBottom: 12 },
-    headerRow: { flexDirection: 'row', gap: 3, marginBottom: 5 },
-    headerCell: { paddingVertical: 3, borderRadius: 999, backgroundColor: C.amber, alignItems: 'center' },
-    headerCellText: { fontSize: 14, fontWeight: '700', color: C.black },
+    headerRow: { flexDirection: 'row', gap: 4, marginBottom: 5, padding: 5 },
+    headerCell: { paddingVertical: 2, paddingHorizontal: 3, borderRadius: 40, backgroundColor: C.amber, alignItems: 'center' },
+    headerCellText: { fontSize: 16, padding: 1, fontWeight: '700', color: C.black },
 });

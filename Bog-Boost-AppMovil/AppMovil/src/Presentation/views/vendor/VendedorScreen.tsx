@@ -29,7 +29,7 @@ export function VendedorScreen() {
                 <Image source={{ uri: images[heroIdx].url }} style={styles.hero} />
 
                 <View style={styles.statsRow}>
-                    {[{ label: "Ventas hoy", val: "3" }, { label: "Ingresos", val: "$185k" }, { label: "Productos", val: "5" }].map((s) => (
+                    {[{ label: "Ventas hoy", val: "3" }, { label: "Ingresos", val: "$180k" }, { label: "Productos", val: "5" }].map((s) => (
                         <View key={s.label} style={styles.statCard}>
                             <Text style={styles.statVal}>{s.val}</Text>
                             <Text style={styles.statLabel}>{s.label}</Text>
@@ -47,8 +47,8 @@ export function VendedorScreen() {
                             <View key={p.id} style={styles.productCard}>
                                 <Image source={{ uri: p.img }} style={styles.productImage} />
                                 <View style={{ padding: 8 }}>
-                                    <Text style={{ fontSize: 11, fontWeight: '700' }}>Info. Negocio</Text>
-                                    <Text style={{ fontSize: 11, color: C.amberDark }}>Stock: {p.qty}</Text>
+                                    <Text style={{ fontSize: 14, fontWeight: '600' }}>Info. Negocio</Text>
+                                    <Text style={{ fontSize: 14, color: C.amberDark }}>Stock: {p.qty}</Text>
                                 </View>
                             </View>
                         ))}
@@ -59,10 +59,10 @@ export function VendedorScreen() {
                     <Text style={styles.sectionTitle}>Ventas Recientes</Text>
                     {ventas.map((v) => (
                         <View key={v.id} style={styles.ventaRow}>
-                            <Text style={{ fontSize: 18 }}>📦</Text>
+                            <Text style={{ fontSize: 26 }}>📦</Text>
                             <View style={{ flex: 1 }}>
-                                <Text style={{ fontSize: 11, fontWeight: '700' }}>{v.producto}</Text>
-                                <Text style={{ fontSize: 10, color: C.muted }}>{v.fecha} · Cant: {v.qty}</Text>
+                                <Text style={{ fontSize: 14, fontWeight: '700' }}>{v.producto}</Text>
+                                <Text style={{ fontSize: 14, color: C.muted }}>{v.fecha} · Cant: {v.qty}</Text>
                             </View>
                             <Text style={[styles.ventaBadge, badgeStyle(v.estado)]}>{v.estado}</Text>
                         </View>
@@ -77,14 +77,14 @@ export function VendedorScreen() {
 const styles = StyleSheet.create({
     hero: { width: '100%', height: 150, backgroundColor: '#1a1a1a' },
     statsRow: { flexDirection: 'row', gap: 10, paddingHorizontal: 16, paddingTop: 14, paddingBottom: 6 },
-    statCard: { flex: 1, borderRadius: 14, padding: 10, alignItems: 'center', backgroundColor: C.beige },
-    statVal: { fontWeight: '800', fontSize: 16, color: C.amberDark },
-    statLabel: { fontSize: 10, color: C.muted },
+    statCard: { flex: 1, borderRadius: 16, padding: 10, alignItems: 'center', backgroundColor: C.beige },
+    statVal: { fontWeight: '800', fontSize: 18, color: C.amberDark },
+    statLabel: { fontSize: 14, color: C.muted },
     sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
-    sectionTitle: { fontWeight: '800', fontSize: 14, color: C.black, marginBottom: 8 },
-    sectionLink: { fontSize: 11, fontWeight: '700', color: C.amberDark },
+    sectionTitle: { fontWeight: '800', fontSize: 19, color: C.black, marginBottom: 8 },
+    sectionLink: { fontSize: 15, fontWeight: '700', color: C.amberDark },
     productCard: { width: 118, marginRight: 10, borderRadius: 14, overflow: 'hidden', backgroundColor: C.beige },
     productImage: { width: '100%', height: 82 },
     ventaRow: { flexDirection: 'row', alignItems: 'center', gap: 8, borderRadius: 14, padding: 8, marginBottom: 8, backgroundColor: C.beige },
-    ventaBadge: { fontSize: 11, fontWeight: '700', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 999 },
+    ventaBadge: { fontSize: 13, fontWeight: '700', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 999 },
 });
