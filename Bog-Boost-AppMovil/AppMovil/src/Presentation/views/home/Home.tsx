@@ -13,8 +13,11 @@ interface Props extends StackScreenProps<RootStackParamList, 'HomeScreen'> {};
 // contra el backend, pero con el diseño de tarjeta centrada del proyecto de Figma (BOG-BOOST).
 export const HomeScreen = ({navigation, route}: Props) => {
 
+  // Rol requerido para entrar (llega cuando se accede desde "Panel Vendedor" o "Panel Admin"); undefined en un login normal.
+  const requiredRole = route.params?.requiredRole;
+
   // Desestructura las propiedades, estados y funciones necesarias expuestas por el patrón ViewModel.
-  const {email, password, errorMessage, onChange, login, user} = useViewModel(navigation);
+  const {email, password, errorMessage, onChange, login, user} = useViewModel(navigation, requiredRole);
 
   // Efecto que reacciona a los cambios en los mensajes de error para mostrarlos mediante notificaciones Toast de Android.
   useEffect(() => {
@@ -22,10 +25,14 @@ export const HomeScreen = ({navigation, route}: Props) => {
       ToastAndroid.show(errorMessage, ToastAndroid.LONG);
     }
   }, [errorMessage]);
-  // Efecto que detecta la presencia de una sesión de usuario válida para redirigirlo automáticamente al perfil.
+  // Efecto que detecta la presencia de una sesión de usuario válida para redirigirlo automáticamente,
+  // respetando el rol pedido (si se entró desde "Panel Vendedor" o "Panel Admin").
   useEffect(() => {
     if (user && user.id) {
-      navigation.replace('InicioScreen');
+      if (requiredRole && user.role !== requiredRole) return; // esta sesión guardada no tiene el rol pedido, se queda en Login
+      if (requiredRole === 'admin') navigation.replace('AdminDashboardScreen');
+      else if (requiredRole === 'vendor') navigation.replace('VendedorScreen');
+      else navigation.replace('InicioScreen');
     }
   }, [user]);
 

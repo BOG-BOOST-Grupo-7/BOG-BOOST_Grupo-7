@@ -5,7 +5,8 @@ import { SaveUserLocalUseCase } from '../../../Domain/UseCases/userLocal/SaveUse
 import { useUserLocal } from "../../hooks/useUserLocal";
 
 // Modelo de vista (ViewModel) para la pantalla de inicio. Controla los estados del formulario, validaciones y lógica de inicio de sesión.
-const HomeviewModel = (navigation: any) => {
+// "requiredRole" llega cuando se entra desde "Panel Vendedor" o "Panel Admin": obliga a que la cuenta que inicie sesión tenga ese rol.
+const HomeviewModel = (navigation: any, requiredRole?: string) => {
     // Estado para gestionar los mensajes de error que se mostrarán en la interfaz de usuario.
     const [errorMessage, setErrorMessage] = useState('');
 
@@ -30,9 +31,17 @@ const HomeviewModel = (navigation: any) => {
             if(!response.success){
                 setErrorMessage(response.message);
             } else {
-                await SaveUserLocalUseCase(response.data);
+                const loggedUser = response.data;
+                // Si se pidió un rol específico (ej: se entró desde "Panel Admin"), la cuenta debe tenerlo.
+                if (requiredRole && loggedUser.role !== requiredRole) {
+                    setErrorMessage('Esta cuenta no tiene permisos de ' + requiredRole);
+                    return; // no se guarda la sesión, el usuario se queda en Login
+                }
+                await SaveUserLocalUseCase(loggedUser);
                 await getUserSession();
-                navigation.replace('InicioScreen');
+                if (requiredRole === 'admin') navigation.replace('AdminDashboardScreen');
+                else if (requiredRole === 'vendor') navigation.replace('VendedorScreen');
+                else navigation.replace('InicioScreen');
             }
         }
     };

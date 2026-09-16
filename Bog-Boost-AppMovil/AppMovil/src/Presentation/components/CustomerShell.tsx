@@ -47,6 +47,14 @@ export function CustomerShell({ title, subtitle, activeTab, showBack, showBottom
         navigation.reset({ index: 0, routes: [{ name: "HomeScreen" }] });
     };
 
+    // Cierra la sesión actual y manda a Login pidiendo que la cuenta que inicie sesión tenga el rol indicado
+    // ("admin" o "vendor"), para no dejar entrar a un cliente normal a esos paneles.
+    const switchRole = async (role: string) => {
+        setMenuOpen(false);
+        await RemoveUserLocalUseCase();
+        navigation.reset({ index: 0, routes: [{ name: "HomeScreen", params: { requiredRole: role } }] });
+    };
+
     return (
         <View style={styles.root}>
             {/* Encabezado con botón de regreso o logo, título y accesos rápidos. */}
@@ -111,8 +119,8 @@ export function CustomerShell({ title, subtitle, activeTab, showBack, showBottom
                         { icon: "📋", label: "Historial", action: () => goTo("HistorialScreen") },
                         { icon: "💬", label: "Comentarios", action: () => goTo("ComentariosScreen") },
                         { icon: "📞", label: "Contáctenos", action: () => goTo("ContactenosScreen") },
-                        { icon: "🏪", label: "Panel Vendedor", action: () => goTo("VendedorScreen") },
-                        { icon: "⚙️", label: "Panel Admin", action: () => goTo("AdminDashboardScreen") },
+                        { icon: "🏪", label: "Panel Vendedor", action: () => switchRole("vendor") },
+                        { icon: "⚙️", label: "Panel Admin", action: () => switchRole("admin") },
                         { icon: "🚪", label: "Cerrar Sesión", action: logout },
                     ].map((item) => (
                         <TouchableOpacity key={item.label} style={styles.menuItem} onPress={item.action}>

@@ -40,7 +40,7 @@ import { AdminVentasScreen } from './src/Presentation/views/admin/AdminVentasScr
 // Se incluye toda la app migrada desde el diseño de Figma (BOG-BOOST): autenticación, cliente, vendedor y administrador.
 export type RootStackParamList = {
   // Autenticación
-  HomeScreen: undefined;
+  HomeScreen: { requiredRole?: 'admin' | 'vendor' } | undefined;
   RegisterScreen: undefined;
   RecuperarScreen: undefined;
   RegistroNegocioScreen: undefined;
