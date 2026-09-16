@@ -1,19 +1,21 @@
 .contenedor-mapa {
-  padding: 20px;
-  max-width: 1200px;
+  padding: 10px;
+  max-width: 350px;
   margin: 0 auto;
+  overflow: hidden;
 }
 
 .leyenda {
   color: #666;
-  margin-bottom: 20px;
+  margin-bottom: 10px;
+  font-size: 14px;
 }
 
 .mapa-contenedor {
   position: relative;
-  width: 1000px; /* Ajusta según tu plano */
-  height: 950px; /* Ajusta según tu plano */
-  border: 2px solid #ccc;
+  width: 580px; 
+  height: 520px; 
+  border: 1px solid #ccc;
   background-color: #f9f9f9;
   margin: 0 auto;
   border-radius: 8px;
@@ -33,7 +35,7 @@
   align-items: center;
   justify-content: center;
   transition: all 0.2s ease;
-  font-size: 13px;
+  font-size: 10px;
   box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
 

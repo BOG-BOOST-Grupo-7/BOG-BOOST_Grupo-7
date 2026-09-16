@@ -4,6 +4,9 @@ import "../../styles/Home.css";
 import { useEffect, useState } from "react";
 
 import HomeCarousel from "../../components/home/HomeCarousel";
+
+// mapa
+import HomeMap from "../../components/mapa/HomeMap.jsx";
 import MapaMercadoPagina from "../MapaMercadoPagina.jsx";
 
 import RegistrarNegocioCard from "../../components/home/RegistrarNegocioCard";
