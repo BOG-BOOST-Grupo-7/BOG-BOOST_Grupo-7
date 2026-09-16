@@ -30,13 +30,13 @@ const styles = StyleSheet.create({
     },
     footer: {
         paddingHorizontal: 16,
-        paddingVertical: 12,
+        paddingVertical: 10,
         alignItems: 'center',
         backgroundColor: C.amber,
     },
     footerText: {
-        fontSize: 11,
-        fontWeight: '700',
+        fontSize: 14,
+        fontWeight: '600',
         color: C.black,
     },
 });
