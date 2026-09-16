@@ -32,11 +32,11 @@ function AdminHome() {
             ruta: "/admin/pqrs"
         },
         {
-            titulo: "Ventas",
-            descripcion: "Consulta reportes y estadísticas globales de ventas.",
+            titulo: "Reportes",
+            descripcion: "Consulta reportes y estadísticas sobre usuarios, ventas y productos.",
             icono: "fas fa-chart-bar",
             color: "#8B5CF6",
-            ruta: "/admin/ventas"
+            ruta: "/admin/reportes"
         }
     ];
 

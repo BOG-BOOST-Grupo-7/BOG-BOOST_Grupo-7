@@ -22,18 +22,21 @@ import {
 function SolicitudesAdmin() {
     const [solicitudes, setSolicitudes] = useState([]);
     const [loading, setLoading] = useState(true);
-
     const [estadoFiltro, setEstadoFiltro] = useState("PENDIENTE");
-
-    // ================= ESTADOS DE PAGINACIÓN =================
-    const [paginaActual, setPaginaActual] = useState(1);
-    const filasPorPagina = 8;
-
     const [solicitudSeleccionada, setSolicitudSeleccionada] = useState(null);
+
+    // Estados para la paginación (igual que en ListaUsuariosAdmin)
+    const [paginaActual, setPaginaActual] = useState(1);
+    const filasPorPagina = 5; // Puedes cambiar este número según prefieras
 
     useEffect(() => {
         cargarSolicitudes();
     }, []);
+
+    // Reiniciar a la página 1 cuando cambia el filtro
+    useEffect(() => {
+        setPaginaActual(1);
+    }, [estadoFiltro]);
 
     const cargarSolicitudes = async () => {
         try {
@@ -91,20 +94,10 @@ function SolicitudesAdmin() {
 
     const solicitudesFiltradas = useMemo(() => {
         if (estadoFiltro === "TODOS") return solicitudes;
-
-        return solicitudes.filter(
-            (s) => s.estado_negocio === estadoFiltro
-        );
+        return solicitudes.filter((s) => s.estado_negocio === estadoFiltro);
     }, [solicitudes, estadoFiltro]);
 
-    // Cada vez que cambie el filtro, regresamos a la página 1
-    useEffect(() => {
-        setPaginaActual(1);
-    }, [estadoFiltro]);
-
-    // =====================================
-    // Lógica de Paginación
-    // =====================================
+    // Lógica de paginación idéntica
     const totalPaginas = Math.ceil(solicitudesFiltradas.length / filasPorPagina) || 1;
 
     const solicitudesPaginadas = useMemo(() => {
@@ -251,24 +244,25 @@ function SolicitudesAdmin() {
                                         <div className="action-buttons">
                                             <button
                                                 className="btn-icon view"
-                                                onClick={() => verDetalles(solicitud)}
                                                 title="Ver detalles"
+                                                onClick={() => verDetalles(solicitud)}
                                             >
                                                 <FaEye />
                                             </button>
+
                                             {solicitud.estado_negocio === "PENDIENTE" && (
                                                 <>
                                                     <button
                                                         className="btn-icon approve"
-                                                        onClick={() => aprobar(solicitud.id_negocio)}
                                                         title="Aprobar"
+                                                        onClick={() => aprobar(solicitud.id_negocio)}
                                                     >
                                                         <FaCheck />
                                                     </button>
                                                     <button
                                                         className="btn-icon reject"
-                                                        onClick={() => rechazar(solicitud.id_negocio)}
                                                         title="Rechazar"
+                                                        onClick={() => rechazar(solicitud.id_negocio)}
                                                     >
                                                         <FaTimes />
                                                     </button>
@@ -284,7 +278,7 @@ function SolicitudesAdmin() {
             </div>
 
             {/* ============================
-            CONTROLES DE PAGINACIÓN
+            CONTROLES DE PAGINACIÓN IDÉNTICOS
             ============================ */}
             {!loading && solicitudesFiltradas.length > 0 && (
                 <div
@@ -330,12 +324,7 @@ function SolicitudesAdmin() {
                         >
                             <FaChevronLeft /> Anterior
                         </button>
-                        <span
-                            style={{
-                                margin: "0 0.5rem",
-                                fontWeight: "bold",
-                            }}
-                        >
+                        <span style={{ margin: "0 0.5rem", fontWeight: "bold" }}>
                             Página {paginaActual} de {totalPaginas}
                         </span>
                         <button
@@ -356,6 +345,116 @@ function SolicitudesAdmin() {
                         >
                             Siguiente <FaChevronRight />
                         </button>
+                    </div>
+                </div>
+            )}
+
+            {/* ============================
+            MODAL DETALLES
+            ============================ */}
+            {solicitudSeleccionada && (
+                <div className="modal-overlay" onClick={cerrarModal}>
+                    <div
+                        className="modal-content negocio-modal"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div className="modal-header">
+                            <div className="modal-logo">
+                                {solicitudSeleccionada.logo ? (
+                                    <img
+                                        src={solicitudSeleccionada.logo}
+                                        alt={solicitudSeleccionada.nombre_negocio}
+                                    />
+                                ) : (
+                                    <div className="logo-placeholder">🏪</div>
+                                )}
+                            </div>
+                            <div>
+                                <h2>{solicitudSeleccionada.nombre_negocio}</h2>
+                                <span
+                                    className={estadoClass(
+                                        solicitudSeleccionada.estado_negocio
+                                    )}
+                                >
+                                    {solicitudSeleccionada.estado_negocio}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div className="modal-grid">
+                            <div className="info-card">
+                                <h4>Propietario</h4>
+                                <p>
+                                    {solicitudSeleccionada.perfil?.primer_nombre}{" "}
+                                    {solicitudSeleccionada.perfil?.segundo_nombre}{" "}
+                                    {solicitudSeleccionada.perfil?.primer_apellido}{" "}
+                                    {solicitudSeleccionada.perfil?.segundo_apellido}
+                                </p>
+                            </div>
+                            <div className="info-card">
+                                <h4>Correo</h4>
+                                <p>{solicitudSeleccionada.perfil?.correo}</p>
+                            </div>
+                            <div className="info-card">
+                                <h4>Teléfono</h4>
+                                <p>{solicitudSeleccionada.telefono_negocio}</p>
+                            </div>
+                            <div className="info-card">
+                                <h4>Puesto</h4>
+                                <p>
+                                    {
+                                        solicitudSeleccionada.puesto?.[0]
+                                            ?.numero_puesto
+                                    }
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="info-card descripcion-card">
+                            <h4>Descripción</h4>
+                            <p>{solicitudSeleccionada.descripcion_negocio}</p>
+                        </div>
+
+                        <div className="info-card descripcion-card">
+                            <h4>Observación del administrador</h4>
+                            <p>
+                                {solicitudSeleccionada.observacion_admin ||
+                                    "Sin observaciones"}
+                            </p>
+                        </div>
+
+                        <div className="modal-actions">
+                            {solicitudSeleccionada.estado_negocio ===
+                                "PENDIENTE" && (
+                                <>
+                                    <button
+                                        className="btn-approve"
+                                        title="Aprobar"
+                                        onClick={() => {
+                                            aprobar(
+                                                solicitudSeleccionada.id_negocio
+                                            );
+                                        }}
+                                    >
+                                        <FaCheck /> Aprobar
+                                    </button>
+                                    <button
+                                        className="btn-reject"
+                                        title="Rechazar"
+                                        onClick={() => {
+                                            rechazar(
+                                                solicitudSeleccionada.id_negocio
+                                            );
+                                        }}
+                                    >
+                                        <FaTimes /> Rechazar
+                                    </button>
+                                </>
+                            )}
+                            <button className="btn-close" onClick={cerrarModal}>
+                                Cerrar
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}

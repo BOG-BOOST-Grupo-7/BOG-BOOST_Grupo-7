@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import {
     FaPlus,
     FaEdit,
-    FaTrash
+    FaTrash,
+    FaTimes
 } from "react-icons/fa";
 
 import {
@@ -16,7 +17,8 @@ import "../styles/PerfilNegocio.css";
 
 export default function ModalCategorias({
     abierto,
-    onClose
+    onClose,
+    categoriaAEditar
 }) {
     const [categorias, setCategorias] = useState([]);
     const [editando, setEditando] = useState(null);
@@ -29,9 +31,17 @@ export default function ModalCategorias({
     useEffect(() => {
         if (abierto) {
             cargarCategorias();
-            limpiarFormulario();
+            if (categoriaAEditar) {
+                setEditando(categoriaAEditar.id_categoria);
+                setFormulario({
+                    nombre_categoria: categoriaAEditar.nombre_categoria || "",
+                    id_categoria_padre: categoriaAEditar.id_categoria_padre || ""
+                });
+            } else {
+                limpiarFormulario();
+            }
         }
-    }, [abierto]);
+    }, [abierto, categoriaAEditar]);
 
     const cargarCategorias = async () => {
         try {
@@ -55,14 +65,12 @@ export default function ModalCategorias({
             return false;
         }
 
-        // Validación que permite únicamente letras (con acentos y eñes) y espacios
         const regexValido = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/;
         if (!regexValido.test(nombreLimpio)) {
             setErrorValidacion("El nombre de la categoría solo debe contener letras.");
             return false;
         }
 
-        // Evitar que una categoría sea padre de sí misma
         if (editando && String(formulario.id_categoria_padre) === String(editando)) {
             setErrorValidacion("Una categoría no puede ser padre de sí misma.");
             return false;
@@ -88,29 +96,7 @@ export default function ModalCategorias({
             }
 
             limpiarFormulario();
-            cargarCategorias();
-        } catch (error) {
-            console.error(error);
-        }
-    };
-
-    const editar = (categoria) => {
-        setEditando(categoria.id_categoria);
-        setFormulario({
-            nombre_categoria: categoria.nombre_categoria,
-            id_categoria_padre: categoria.id_categoria_padre || ""
-        });
-        setErrorValidacion("");
-    };
-
-    const eliminar = async (id) => {
-        if (!window.confirm("¿Eliminar esta categoría?")) {
-            return;
-        }
-
-        try {
-            await eliminarCategoria(id);
-            cargarCategorias();
+            onClose();
         } catch (error) {
             console.error(error);
         }
@@ -128,27 +114,30 @@ export default function ModalCategorias({
     if (!abierto) return null;
 
     return (
-        <div className="modal-overlay">
-            <div className="modal-content">
+        <div className="modal-overlay" onClick={onClose}>
+            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
                 <div className="modal-header">
                     <h2>
-                        {
-                            editando
-                                ? "Editar categoría"
-                                : "Administrar categorías"
-                        }
+                        {editando ? "Actualizar Categoría" : "Administrar Categorías"}
                     </h2>
+                    <button className="modal-close" onClick={onClose}>
+                        <FaTimes />
+                    </button>
                 </div>
 
                 <div className="modal-body">
+                    {errorValidacion && (
+                        <div className="error-message" style={{ color: "#d9534f", marginBottom: "15px", fontSize: "0.9rem", fontWeight: "500" }}>
+                            {errorValidacion}
+                        </div>
+                    )}
+
                     <div className="form-group">
-                        <label>
-                            Nombre
-                        </label>
+                        <label>Nombre</label>
                         <input
+                            type="text"
                             value={formulario.nombre_categoria}
                             onChange={(e) => {
-                                // Reemplaza cualquier número por una cadena vacía en tiempo real
                                 const valorSinNumeros = e.target.value.replace(/[0-9]/g, "");
                                 setFormulario({
                                     ...formulario,
@@ -156,14 +145,12 @@ export default function ModalCategorias({
                                 });
                                 if (errorValidacion) setErrorValidacion("");
                             }}
-                            placeholder="Ej. Entradas, Bebidas..."
+                            placeholder="Ej. Ropa,  Mascotas..."
                         />
                     </div>
 
                     <div className="form-group">
-                        <label>
-                            Categoría padre
-                        </label>
+                        <label>Categoría padre</label>
                         <select
                             value={formulario.id_categoria_padre}
                             onChange={(e) =>
@@ -173,126 +160,36 @@ export default function ModalCategorias({
                                 })
                             }
                         >
-                            <option value="">
-                                Ninguna
-                            </option>
-                            {
-                                categorias
-                                    .filter(
-                                        c => c.id_categoria !== editando
-                                    )
-                                    .map(categoria => (
-                                        <option
-                                            key={categoria.id_categoria}
-                                            value={categoria.id_categoria}
-                                        >
-                                            {categoria.nombre_categoria}
+                            <option value="">Ninguna</option>
+                            {categorias
+                                .filter((cat) => editando !== cat.id_categoria)
+                                .map((cat) => {
+                                    const esHija = Boolean(cat.id_categoria_padre);
+                                    return (
+                                        <option key={cat.id_categoria} value={cat.id_categoria}>
+                                            {esHija ? `└─ ${cat.nombre_categoria}` : cat.nombre_categoria}
                                         </option>
-                                    ))
-                            }
+                                    );
+                                })}
                         </select>
-                    </div>
-
-                    {errorValidacion && (
-                        <p className="error-mensaje" style={{ color: "red", fontSize: "13px", marginTop: "-5px", marginBottom: "10px" }}>
-                            {errorValidacion}
-                        </p>
-                    )}
-
-                    <div className="acciones-formulario">
-                        <button
-                            className="btn-green"
-                            onClick={guardar}
-                        >
-                            {editando ? (
-                                <>
-                                    <FaEdit />
-                                    Actualizar
-                                </>
-                            ) : (
-                                <>
-                                    <FaPlus />
-                                    Guardar
-                                </>
-                            )}
-                        </button>
-
-                        {editando && (
-                            <button
-                                className="btn-orange"
-                                onClick={limpiarFormulario}
-                            >
-                                Cancelar
-                            </button>
-                        )}
-                    </div>
-
-                    <div className="lista-categorias">
-                        {
-                            categorias.length === 0 ? (
-                                <p className="sin-categorias">
-                                    No existen categorías.
-                                </p>
-                            ) : (
-                                categorias.map(categoria => (
-                                    <div
-                                        className="categoria-card"
-                                        key={categoria.id_categoria}
-                                    >
-                                        <h4>
-                                            {categoria.nombre_categoria}
-                                        </h4>
-                                        <p>
-                                            <strong>
-                                                Categoría padre:
-                                            </strong>{" "}
-                                            {
-                                                categoria.id_categoria_padre
-                                                    ? categorias.find(
-                                                        c =>
-                                                            c.id_categoria ===
-                                                            categoria.id_categoria_padre
-                                                    )?.nombre_categoria ||
-                                                    "No encontrada"
-                                                    : "Ninguna"
-                                            }
-                                        </p>
-                                        <div className="acciones-categoria">
-                                            <button
-                                                className="btn-orange"
-                                                onClick={() =>
-                                                    editar(categoria)
-                                                }
-                                            >
-                                                <FaEdit />
-                                            </button>
-                                            <button
-                                                className="btn-delete"
-                                                onClick={() =>
-                                                    eliminar(
-                                                        categoria.id_categoria
-                                                    )
-                                                }
-                                            >
-                                                <FaTrash />
-                                            </button>
-                                        </div>
-                                    </div>
-                                ))
-                            )
-                        }
                     </div>
                 </div>
 
                 <div className="modal-footer">
                     <button
+                        type="button"
                         className="btn-orange"
-                        onClick={() => {
-                            limpiarFormulario();
-                            onClose();
-                        }}
+                        style={{ backgroundColor: "#e23e0c" }}
+                        onClick={onClose}
                     >
-                        Cerrar
+                        Cancelar
+                    </button>
+                    <button
+                        type="button"
+                        className="btn-orange"
+                        onClick={guardar}
+                    >
+                        {editando ? "Actualizar" : "Guardar"}
                     </button>
                 </div>
             </div>

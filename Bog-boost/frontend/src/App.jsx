@@ -20,6 +20,8 @@ import Categoria from "./pages/cliente/Categoria";
 // Auth
 import Login from "./pages/auth/Login";
 import Registro from "./pages/auth/Registro";
+import RecuperarPassword from "./pages/auth/RecuperarPassword";
+import ActualizarPassword from "./pages/auth/ActualizarPassword";
 
 // Admin
 import AdminHome from "./pages/admin/AdminHome";
@@ -27,6 +29,7 @@ import SolicitudesAdmin from "./pages/admin/SolicitudesAdmin";
 import ListaNegociosAdmin from "./pages/admin/ListaNegociosAdmin";
 import ListaUsuariosAdmin from "./pages/admin/ListaUsuariosAdmin";
 import AdminPQRS from "./pages/admin/AdminPQRS";
+import ReportesAdmin from "./pages/admin/ReportesAdmin";
 import Notificaciones from "./pages/cliente/Notificaciones";
 
 // Vendedor
@@ -46,6 +49,8 @@ function App() {
         <Route index element={<Home />} />
         <Route path="login" element={<Login />} />
         <Route path="registro" element={<Registro />} />
+        <Route path="recuperar-password" element={<RecuperarPassword />} />
+        <Route path="cambiar-password" element={<ActualizarPassword />} />
         <Route path="perfil" element={<ProtectedRoute> <Perfil /> </ProtectedRoute>} />
         <Route path="registrar-negocio" element={<ProtectedRoute> <RegistrarNegocio /> </ProtectedRoute>} />
         <Route path="/admin" element={<ProtectedRoute allowedRoles={["SUPER_ADMIN"]}> <AdminHome /> </ProtectedRoute>} />
@@ -66,6 +71,7 @@ function App() {
         <Route path="/ventas" element={<ProtectedRoute allowedRoles={["VENDEDOR"]}> <AdminVentasYSeguimiento /> </ProtectedRoute>} />
         <Route path="buscar" element={<ResultadosBusqueda />} />
         <Route path="/categoria/:id" element={<Categoria />} />
+        <Route path="/admin/reportes" element={<ProtectedRoute allowedRoles={["SUPER_ADMIN"]}> <ReportesAdmin /> </ProtectedRoute>} />
       </Route>
 
     </Routes>

@@ -121,11 +121,15 @@ function Login() {
           </button>
         </form>
 
-        <div className="registro-links">
-          <Link to="/registro" className="link-login">
-            ¿No tienes una cuenta? <span>Regístrate aquí</span>
+        <div className="registro-links columnas">
+          <Link to="/recuperar-password" className="link-login">
+          ¿Olvidaste tu contraseña? <span>Recupérala aquí</span>
           </Link>
-        </div>
+          
+          <Link to="/registro" className="link-login">
+          ¿No tienes una cuenta? <span>Regístrate aquí</span>
+          </Link>
+          </div>
       </div>
     </section>
   );

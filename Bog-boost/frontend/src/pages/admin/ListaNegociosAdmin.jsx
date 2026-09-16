@@ -7,42 +7,70 @@ import {
     FaEye,
     FaBoxOpen,
     FaSearch,
+    FaEdit,
+    FaTrash,
+    FaListAlt
 } from "react-icons/fa";
 
 import ModalCategorias from "../../components/ModalCategorias";
 import "../../styles/ListaNegociosAdmin.css";
 import { obtenerNegocios, obtenerNegocioPorId } from "../../api/negocioApi";
+import { obtenerCategorias, eliminarCategoria } from "../../api/categoriaApi";
 
 function ListaNegociosAdmin() {
     const [negocios, setNegocios] = useState([]);
+    const [listaCategoriasGenerales, setListaCategoriasGenerales] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [categoriaFiltro, setCategoriaFiltro] = useState("todos");
     const [busqueda, setBusqueda] = useState("");
     const [negocioSeleccionado, setNegocioSeleccionado] = useState(null);
     const [mostrarModal, setMostrarModal] = useState(false);
     const [mostrarModalCategorias, setMostrarModalCategorias] = useState(false);
+    const [categoriaAEditar, setCategoriaAEditar] = useState(null);
 
-    // Paginación
+    // Nuevo estado para alternar entre la vista de "negocios" y la vista de tabla de "categorias"
+    const [vistaActual, setVistaActual] = useState("negocios"); // "negocios" | "categorias"
+    const [busquedaCategorias, setBusquedaCategorias] = useState("");
+    const [categoriaPadreFiltro, setCategoriaPadreFiltro] = useState("todos");
+
+    // Paginación de Negocios
     const [paginaActual, setPaginaActual] = useState(1);
     const elementosPorPagina = 5;
 
+    // Paginación de Categorías
+    const [paginaActualCategorias, setPaginaActualCategorias] = useState(1);
+    const elementosPorPaginaCategorias = 5;
+
     useEffect(() => {
-        cargarNegocios();
+        cargarDatosIniciales();
     }, []);
 
-    const cargarNegocios = async () => {
+    const cargarDatosIniciales = async () => {
         try {
             setLoading(true);
-            const respuesta = await obtenerNegocios();
-            const negociosAprobados = respuesta.filter(
+            const [respuestaNegocios, respuestaCategorias] = await Promise.all([
+                obtenerNegocios(),
+                obtenerCategorias()
+            ]);
+
+            const negociosAprobados = respuestaNegocios.filter(
                 (negocio) => negocio.estado_negocio === "APROBADO"
             );
             setNegocios(negociosAprobados);
+            setListaCategoriasGenerales(respuestaCategorias || []);
         } catch (error) {
             console.error(error);
-            alert("No fue posible cargar los negocios.");
+            alert("No fue posible cargar la información de la administración.");
         } finally {
             setLoading(false);
+        }
+    };
+
+    const recargarCategorias = async () => {
+        try {
+            const respuestaCategorias = await obtenerCategorias();
+            setListaCategoriasGenerales(respuestaCategorias || []);
+        } catch (error) {
+            console.error(error);
         }
     };
 
@@ -58,23 +86,9 @@ function ListaNegociosAdmin() {
             .join(" ");
     };
 
-    const categorias = useMemo(() => {
-        const lista = new Set();
-        negocios.forEach((negocio) => {
-            if (negocio.categoria?.nombre_categoria) {
-                lista.add(negocio.categoria.nombre_categoria);
-            }
-        });
-        return [...lista];
-    }, [negocios]);
-
-    // Filtrado para incluir nombre del negocio, correo y propietario
+    // Filtrado de Negocios
     const negociosFiltrados = useMemo(() => {
         return negocios.filter((negocio) => {
-            const cumpleCategoria =
-                categoriaFiltro === "todos" ||
-                negocio.categoria?.nombre_categoria === categoriaFiltro;
-
             const textoBusqueda = busqueda.toLowerCase().trim();
             const nombreNegocio = (negocio.nombre_negocio || "").toLowerCase();
             const correoPropietario = (negocio.perfil?.correo || "").toLowerCase();
@@ -86,33 +100,52 @@ function ListaNegociosAdmin() {
                 correoPropietario.includes(textoBusqueda) ||
                 nombreCompletoPropietario.includes(textoBusqueda);
 
-            return cumpleCategoria && cumpleBusqueda;
+            return cumpleBusqueda;
         });
-    }, [negocios, categoriaFiltro, busqueda]);
+    }, [negocios, busqueda]);
 
-    // Calcular datos paginados
+    // Filtrado de Categorías para la tabla
+    const categoriasFiltradas = useMemo(() => {
+        return listaCategoriasGenerales.filter((cat) => {
+            const textoBusq = busquedaCategorias.toLowerCase().trim();
+            const nombreCat = (cat.nombre_categoria || "").toLowerCase();
+            const cumpleBusq = textoBusq === "" || nombreCat.includes(textoBusq);
+
+            let cumplePadre = true;
+            if (categoriaPadreFiltro === "ninguna") {
+                cumplePadre = !cat.id_categoria_padre;
+            } else if (categoriaPadreFiltro !== "todos") {
+                cumplePadre = String(cat.id_categoria_padre) === String(categoriaPadreFiltro) || 
+                            String(cat.id_categoria) === String(categoriaPadreFiltro);
+            }
+
+            return cumpleBusq && cumplePadre;
+        });
+    }, [listaCategoriasGenerales, busquedaCategorias, categoriaPadreFiltro]);
+
     const totalPaginas = Math.ceil(negociosFiltrados.length / elementosPorPagina) || 1;
     const negociosPaginados = useMemo(() => {
         const inicio = (paginaActual - 1) * elementosPorPagina;
         return negociosFiltrados.slice(inicio, inicio + elementosPorPagina);
     }, [negociosFiltrados, paginaActual]);
 
-    // Resetear a la página 1 cuando cambia el filtro o la búsqueda
+    // Paginación de Categorías
+    const totalPaginasCategorias = Math.ceil(categoriasFiltradas.length / elementosPorPaginaCategorias) || 1;
+    const categoriasPaginadas = useMemo(() => {
+        const inicio = (paginaActualCategorias - 1) * elementosPorPaginaCategorias;
+        return categoriasFiltradas.slice(inicio, inicio + elementosPorPaginaCategorias);
+    }, [categoriasFiltradas, paginaActualCategorias]);
+
     useEffect(() => {
         setPaginaActual(1);
-    }, [categoriaFiltro, busqueda]);
+    }, [busqueda]);
+
+    useEffect(() => {
+        setPaginaActualCategorias(1);
+    }, [busquedaCategorias, categoriaPadreFiltro]);
 
     const totalNegocios = negociosFiltrados.length;
-
-    const totalCategorias = useMemo(() => {
-        const lista = new Set();
-        negocios.forEach((negocio) => {
-            if (negocio.categoria?.nombre_categoria) {
-                lista.add(negocio.categoria.nombre_categoria);
-            }
-        });
-        return lista.size;
-    }, [negocios]);
+    const totalCategorias = listaCategoriasGenerales.length;
 
     const totalProductos = useMemo(() => {
         return negocios.reduce(
@@ -122,29 +155,60 @@ function ListaNegociosAdmin() {
     }, [negocios]);
 
     const limpiarFiltros = () => {
-        setCategoriaFiltro("todos");
         setBusqueda("");
     };
 
-    const verNegocio = async (id) => {
-        try {
-            const negocio = await obtenerNegocioPorId(id);
-            setNegocioSeleccionado(negocio);
-            setMostrarModal(true);
-        } catch (error) {
-            console.error(error);
-            alert("No fue posible obtener el negocio.");
-        }
+    const limpiarFiltrosCategorias = () => {
+        setBusquedaCategorias("");
+        setCategoriaPadreFiltro("todos");
     };
+
+    const verNegocio = async (id) => {
+    try {
+        const negocio = await obtenerNegocioPorId(id);
+        console.log("1. Datos del negocio obtenidos:", negocio);
+        
+        setNegocioSeleccionado(negocio);
+        setMostrarModal(true);
+        
+        console.log("2. Estados actualizados: mostrarModal debería ser true");
+    } catch (error) {
+        console.error(error);
+        alert("No fue posible obtener el negocio.");
+    }
+};
 
     const cerrarModal = () => {
         setMostrarModal(false);
         setNegocioSeleccionado(null);
     };
 
+    const abrirModalCrearCategoria = () => {
+        setCategoriaAEditar(null);
+        setMostrarModalCategorias(true);
+    };
+
+    const abrirModalEditarCategoria = (cat) => {
+        setCategoriaAEditar(cat);
+        setMostrarModalCategorias(true);
+    };
+
+    const eliminarCatTabla = async (id) => {
+        if (!window.confirm("¿Estás seguro de eliminar esta categoría?")) return;
+        try {
+            await eliminarCategoria(id);
+            await recargarCategorias();
+        } catch (error) {
+            console.error(error);
+            alert("No se pudo eliminar la categoría.");
+        }
+    };
+
     return (
         <div className="negocios-admin-container">
-            <h1 className="view-title">Lista de Negocios</h1>
+            <h1 className="view-title">
+                {vistaActual === "negocios" ? "Lista de Negocios" : "Lista de Categorías"}
+            </h1>
 
             {/* RESUMEN */}
             <div className="negocios-summary">
@@ -169,142 +233,259 @@ function ListaNegociosAdmin() {
             </div>
 
             {/* BARRA DE ACCIÓN / FILTROS Y BÚSQUEDA */}
-            <div className="action-bar">
-                <button
-                    className="btn-orange"
-                    onClick={() => setMostrarModalCategorias(true)}
-                >
-                    <FaPlusCircle /> Agregar Categorías
-                </button>
+            <div className="action-bar" style={{ flexDirection: "column", alignItems: "flex-start", gap: "15px" }}>
+                <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", width: "100%", justifyContent: "space-between" }}>
+                    <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+                        <button
+                            className="btn-orange"
+                            onClick={abrirModalCrearCategoria}
+                        >
+                            <FaPlusCircle /> Agregar Categorías
+                        </button>
 
-                {/* BARRA DE BÚSQUEDA */}
-                <div className="search-group">
-                    <FaSearch />
-                    <input
-                        type="text"
-                        className="usuarios-input"
-                        placeholder="Buscar por negocio, correo o propietario..."
-                        value={busqueda}
-                        onChange={(e) => setBusqueda(e.target.value)}
-                    />
+                        {vistaActual === "negocios" ? (
+                            <button
+                                className="btn-orange"
+                                onClick={() => setVistaActual("categorias")}
+                                style={{ backgroundColor: "#2196F3" }}
+                            >
+                                <FaTags /> Ver Lista de Categorías
+                            </button>
+                        ) : (
+                            <button
+                                className="btn-orange"
+                                onClick={() => setVistaActual("negocios")}
+                                style={{ backgroundColor: "#4CAF50" }}
+                            >
+                                <FaListAlt /> Ver Lista de Negocios
+                            </button>
+                        )}
+                    </div>
                 </div>
 
-                <div className="filter-group">
-                    <label>Categoría</label>
-                    <select
-                        className="usuarios-select"
-                        value={categoriaFiltro}
-                        onChange={(e) => setCategoriaFiltro(e.target.value)}
-                    >
-                        <option value="todos">Todas</option>
-                        {categorias.map((categoria) => (
-                            <option key={categoria} value={categoria}>
-                                {categoria}
-                            </option>
-                        ))}
-                    </select>
-                    <button className="btn-orange" onClick={limpiarFiltros}>
-                        <FaUndo /> Limpiar
-                    </button>
+                {/* Filtros colocados debajo de las acciones principales */}
+                <div style={{ width: "100%", display: "flex", gap: "15px", flexWrap: "wrap", alignItems: "center" }}>
+                    {vistaActual === "negocios" ? (
+                        <>
+                            <div className="search-group" style={{ width: "100%", maxWidth: "400px" }}>
+                                <FaSearch />
+                                <input
+                                    type="text"
+                                    className="usuarios-input"
+                                    placeholder="Buscar por negocio, correo o propietario..."
+                                    value={busqueda}
+                                    onChange={(e) => setBusqueda(e.target.value)}
+                                />
+                            </div>
+
+                            <div className="filter-group">
+                                <button className="btn-orange" onClick={limpiarFiltros}>
+                                    <FaUndo /> Limpiar
+                                </button>
+                            </div>
+                        </>
+                    ) : (
+                        <>
+                            <div className="search-group" style={{ width: "100%", maxWidth: "350px" }}>
+                                <FaSearch />
+                                <input
+                                    type="text"
+                                    className="usuarios-input"
+                                    placeholder="Buscar categoría por nombre..."
+                                    value={busquedaCategorias}
+                                    onChange={(e) => setBusquedaCategorias(e.target.value)}
+                                />
+                            </div>
+
+                            <div className="filter-group" style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
+                                <select
+                                    className="usuarios-select"
+                                    value={categoriaPadreFiltro}
+                                    onChange={(e) => setCategoriaPadreFiltro(e.target.value)}
+                                >
+                                    <option value="todos">Todas las categorías padre</option>
+                                    <option value="ninguna">Sin categoría padre (Sólo principales)</option>
+                                    {listaCategoriasGenerales.map((cat) => {
+                                        const esHija = Boolean(cat.id_categoria_padre);
+                                        return (
+                                            <option key={cat.id_categoria} value={cat.id_categoria}>
+                                                {esHija ? `└─ ${cat.nombre_categoria}` : cat.nombre_categoria}
+                                            </option>
+                                        );
+                                    })}
+                                </select>
+                                <button className="btn-orange" onClick={limpiarFiltrosCategorias}>
+                                    <FaUndo /> Limpiar
+                                </button>
+                            </div>
+                        </>
+                    )}
                 </div>
             </div>
 
-            {/* TABLA */}
-            <div className="table-container">
-                <table className="negocios-table">
-                    <thead>
-                        <tr>
-                            <th>Logo</th>
-                            <th>Negocio</th>
-                            <th>Propietario</th>
-                            <th>Información</th>
-                            <th>Productos</th>
-                            <th>Estado</th>
-                            <th>Detalles</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {loading ? (
+            {/* TABLA DINÁMICA */}
+            {vistaActual === "negocios" ? (
+                <div className="table-container">
+                    <table className="negocios-table">
+                        <thead>
                             <tr>
-                                <td colSpan="7" style={{ textAlign: "center", padding: "40px" }}>
-                                    Cargando negocios...
-                                </td>
+                                <th>Logo</th>
+                                <th>Negocio</th>
+                                <th>Propietario</th>
+                                <th>Información</th>
+                                <th>Productos</th>
+                                <th>Estado</th>
+                                <th>Detalles</th>
                             </tr>
-                        ) : negociosPaginados.length === 0 ? (
-                            <tr>
-                                <td colSpan="7" className="sin-datos">
-                                    No existen negocios con los filtros seleccionados.
-                                </td>
-                            </tr>
-                        ) : (
-                            negociosPaginados.map((negocio) => (
-                                <tr key={negocio.id_negocio}>
-                                    <td>
-                                        {negocio.logo ? (
-                                            <img
-                                                src={negocio.logo}
-                                                alt={negocio.nombre_negocio}
-                                                className="logo-business"
-                                            />
-                                        ) : (
-                                            <div className="logo-business logo-placeholder">
-                                                <FaStore />
-                                            </div>
-                                        )}
-                                    </td>
-                                    <td>
-                                        <strong>{negocio.nombre_negocio}</strong>
-                                        <br />
-                                        <small>{negocio.categoria?.nombre_categoria}</small>
-                                    </td>
-                                    <td>
-                                        <strong>{nombrePropietario(negocio.perfil)}</strong>
-                                        <br />
-                                        <small>{negocio.perfil?.correo}</small>
-                                    </td>
-                                    <td>
-                                        <strong>Descripción</strong>
-                                        <br />
-                                        <small>
-                                            {negocio.descripcion_negocio || "Sin descripción"}
-                                        </small>
-                                    </td>
-                                    <td>
-                                        <span className="product-badge">
-                                            <FaBoxOpen /> {negocio.productos?.length || 0} Productos
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <span
-                                            className={`status-badge ${
-                                                negocio.estado_negocio === "APROBADO"
-                                                    ? "status-active"
-                                                    : "status-inactive"
-                                            }`}
-                                        >
-                                            {negocio.estado_negocio}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <div className="action-buttons">
-                                            <button
-                                                className="btn-icon view"
-                                                title="Ver detalles"
-                                                onClick={() => verNegocio(negocio.id_negocio)}
-                                            >
-                                                <FaEye />
-                                            </button>
-                                        </div>
+                        </thead>
+                        <tbody>
+                            {loading ? (
+                                <tr>
+                                    <td colSpan="7" style={{ textAlign: "center", padding: "40px" }}>
+                                        Cargando negocios...
                                     </td>
                                 </tr>
-                            ))
-                        )}
-                    </tbody>
-                </table>
-            </div>
+                            ) : negociosPaginados.length === 0 ? (
+                                <tr>
+                                    <td colSpan="7" className="sin-datos">
+                                        No existen negocios con los filtros seleccionados.
+                                    </td>
+                                </tr>
+                            ) : (
+                                negociosPaginados.map((negocio) => (
+                                    <tr key={negocio.id_negocio}>
+                                        <td>
+                                            {negocio.logo ? (
+                                                <img
+                                                    src={negocio.logo}
+                                                    alt={negocio.nombre_negocio}
+                                                    className="logo-business"
+                                                />
+                                            ) : (
+                                                <div className="logo-business logo-placeholder">
+                                                    <FaStore />
+                                                </div>
+                                            )}
+                                        </td>
+                                        <td>
+                                            <strong>{negocio.nombre_negocio}</strong>
+                                            <br />
+                                            <small>{negocio.categoria?.nombre_categoria}</small>
+                                        </td>
+                                        <td>
+                                            <strong>{nombrePropietario(negocio.perfil)}</strong>
+                                            <br />
+                                            <small>{negocio.perfil?.correo}</small>
+                                        </td>
+                                        <td>
+                                            <strong>Descripción</strong>
+                                            <br />
+                                            <small>
+                                                {negocio.descripcion_negocio || "Sin descripción"}
+                                            </small>
+                                        </td>
+                                        <td>
+                                            <span className="product-badge">
+                                                <FaBoxOpen /> {negocio.productos?.length || 0} Productos
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span
+                                                className={`status-badge ${
+                                                    negocio.estado_negocio === "APROBADO"
+                                                        ? "status-active"
+                                                        : "status-inactive"
+                                                }`}
+                                            >
+                                                {negocio.estado_negocio}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div className="action-buttons">
+                                                <button
+                                                    className="btn-icon view"
+                                                    title="Ver detalles"
+                                                    onClick={() => verNegocio(negocio.id_negocio)}
+                                                >
+                                                    <FaEye />
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+            ) : (
+                <div className="table-container">
+                    <table className="negocios-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Nombre de Categoría</th>
+                                <th>Categoría Padre</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {loading ? (
+                                <tr>
+                                    <td colSpan="4" style={{ textAlign: "center", padding: "40px" }}>
+                                        Cargando categorías...
+                                    </td>
+                                </tr>
+                            ) : categoriasPaginadas.length === 0 ? (
+                                <tr>
+                                    <td colSpan="4" className="sin-datos">
+                                        No existen categorías con los filtros seleccionados.
+                                    </td>
+                                </tr>
+                            ) : (
+                                categoriasPaginadas.map((cat) => {
+                                    const categoriaPadreObj = listaCategoriasGenerales.find(
+                                        (c) => c.id_categoria === cat.id_categoria_padre
+                                    );
+                                    return (
+                                        <tr key={cat.id_categoria}>
+                                            <td>{cat.id_categoria}</td>
+                                            <td>
+                                                <strong>{cat.nombre_categoria}</strong>
+                                            </td>
+                                            <td>
+                                                {categoriaPadreObj
+                                                    ? categoriaPadreObj.nombre_categoria
+                                                    : "Ninguna"}
+                                            </td>
+                                            <td>
+                                                <div className="action-buttons" style={{ display: "flex", gap: "5px" }}>
+                                                    <button
+                                                        className="btn-icon edit"
+                                                        title="Editar categoría"
+                                                        onClick={() => abrirModalEditarCategoria(cat)}
+                                                    >
+                                                        <FaEdit />
+                                                    </button>
+                                                    <button
+                                                        className="btn-icon delete"
+                                                        title="Eliminar categoría"
+                                                        onClick={() => eliminarCatTabla(cat.id_categoria)}
+                                                    >
+                                                        <FaTrash />
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    );
+                                })
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+            )}
 
             {/* PAGINACIÓN */}
-            {!loading && negociosFiltrados.length > 0 && (
+            {vistaActual === "negocios" && !loading && negociosFiltrados.length > 0 && (
                 <div className="pagination-container" style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "10px", marginTop: "15px" }}>
                     <button
                         className="btn-orange"
@@ -326,7 +507,29 @@ function ListaNegociosAdmin() {
                 </div>
             )}
 
-            {/* MODAL */}
+            {vistaActual === "categorias" && !loading && categoriasFiltradas.length > 0 && (
+                <div className="pagination-container" style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "10px", marginTop: "15px" }}>
+                    <button
+                        className="btn-orange"
+                        disabled={paginaActualCategorias === 1}
+                        onClick={() => setPaginaActualCategorias((prev) => Math.max(prev - 1, 1))}
+                    >
+                        Anterior
+                    </button>
+                    <span>
+                        Página {paginaActualCategorias} de {totalPaginasCategorias}
+                    </span>
+                    <button
+                        className="btn-orange"
+                        disabled={paginaActualCategorias === totalPaginasCategorias}
+                        onClick={() => setPaginaActualCategorias((prev) => Math.min(prev + 1, totalPaginasCategorias))}
+                    >
+                        Siguiente
+                    </button>
+                </div>
+            )}
+
+            {/* MODAL DETALLES DE NEGOCIO */}
             {mostrarModal && negocioSeleccionado && (
                 <div className="modal-overlay" onClick={cerrarModal}>
                     <div className="modal-content" onClick={(e) => e.stopPropagation()}>
@@ -391,9 +594,15 @@ function ListaNegociosAdmin() {
                 </div>
             )}
 
+            {/* MODAL DE GESTIÓN DE CATEGORÍAS */}
             <ModalCategorias
                 abierto={mostrarModalCategorias}
-                onClose={() => setMostrarModalCategorias(false)}
+                categoriaAEditar={categoriaAEditar}
+                onClose={() => {
+                    setMostrarModalCategorias(false);
+                    setCategoriaAEditar(null);
+                    recargarCategorias();
+                }}
             />
         </div>
     );
