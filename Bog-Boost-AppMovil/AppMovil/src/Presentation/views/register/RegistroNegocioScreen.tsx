@@ -26,9 +26,9 @@ export function RegistroNegocioScreen() {
                 <View style={styles.card}>
                     <Text style={styles.cardTitle}>Registro del Negocio</Text>
 
-                    <View style={{ alignItems: 'center', marginBottom: 4 }}>
-                        <View style={{ width: 80, height: 80, borderRadius: 40, alignItems: 'center', justifyContent: 'center', backgroundColor: C.beigeDark, borderWidth: 2, borderColor: C.amberDark, borderStyle: 'dashed' }}>
-                            <Text style={{ fontSize: 26 }}>📷</Text>
+                    <View style={{ alignItems: 'center', marginBottom: 5 }}>
+                        <View style={{ width: 90, height: 90, borderRadius: 50, alignItems: 'center', justifyContent: 'center', backgroundColor: C.beigeDark, borderWidth: 2, borderColor: C.amberDark, borderStyle: 'dashed' }}>
+                            <Text style={{ fontSize: 40 }}>📷</Text>
                         </View>
                     </View>
 
@@ -41,7 +41,7 @@ export function RegistroNegocioScreen() {
                         {categorias.map((c) => (
                             <TouchableOpacity key={c} onPress={() => setCategoria(c)}
                                 style={{ paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999, backgroundColor: categoria === c ? C.amber : C.white }}>
-                                <Text style={{ fontSize: 12, fontWeight: '600', color: C.black }}>{c}</Text>
+                                <Text style={{ fontSize: 15, fontWeight: '500', color: C.black }}>{c}</Text>
                             </TouchableOpacity>
                         ))}
                     </View>

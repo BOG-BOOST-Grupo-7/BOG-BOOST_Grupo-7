@@ -19,9 +19,9 @@ export function CarritoScreen() {
             <ScrollView contentContainerStyle={{ padding: 16 }}>
                 <View style={styles.panel}>
                     {cart.length === 0 ? (
-                        <View style={{ alignItems: 'center', paddingVertical: 30 }}>
-                            <Text style={{ fontSize: 40, marginBottom: 8 }}>🛒</Text>
-                            <Text style={{ fontSize: 13, fontWeight: '600', color: C.muted }}>Tu carrito está vacío</Text>
+                        <View style={{ alignItems: 'center', paddingVertical: 32 }}>
+                            <Text style={{ fontSize: 50, marginBottom: 9, marginLeft: 10 }}>🛒</Text>
+                            <Text style={{ fontSize: 17, fontWeight: '600', color: C.muted }}>Tu carrito está vacío</Text>
                             <TouchableOpacity style={styles.amberButton} onPress={() => navigation.navigate("CatalogoScreen")}>
                                 <Text style={styles.amberButtonText}>Ver productos</Text>
                             </TouchableOpacity>
@@ -74,6 +74,16 @@ export function ProcesoCompraScreen() {
     const [correo, setCorreo] = useState("ana@gmail.com");
     const [telefono, setTelefono] = useState("3215369484");
     const [direccion, setDireccion] = useState("Bogotá, Colombia");
+    const [medioPago, setMedioPago] = useState("Tarjeta débito");
+    const [metodoEnvio, setMetodoEnvio] = useState("Recogida en puesto");
+
+    // Junta todos los datos ingresados y los envía al Ticket como parámetros de navegación,
+    // para que el ticket muestre exactamente lo que la persona escribió en este formulario.
+    const finalizarCompra = () => {
+        navigation.navigate("TicketScreen", {
+            checkoutData: { nombre, correo, telefono, direccion, medioPago, metodoEnvio },
+        });
+    };
 
     return (
         <CustomerShell title="Proceso de Compra" showBack showBottomNav={false}>
@@ -90,13 +100,34 @@ export function ProcesoCompraScreen() {
                     ].map((f) => (
                         <TextInput key={f.label} style={styles.formInput} placeholder={f.label} value={f.value} onChangeText={f.set} />
                     ))}
+
+                    {/* Medio de pago: se puede elegir entre las opciones disponibles. */}
+                    <Text style={styles.sectionLabel}>Medio de pago</Text>
+                    <View style={styles.pillRow}>
+                        {["Tarjeta débito", "Efectivo"].map((op) => (
+                            <TouchableOpacity key={op} onPress={() => setMedioPago(op)} style={[styles.pill, medioPago === op && styles.pillActive]}>
+                                <Text style={styles.pillText}>{op}</Text>
+                            </TouchableOpacity>
+                        ))}
+                    </View>
+
+                    {/* Método de envío: se puede elegir entre las opciones disponibles. */}
+                    <Text style={styles.sectionLabel}>Método de envío</Text>
+                    <View style={styles.pillRow}>
+                        {["Recogida en puesto", "Domicilio"].map((op) => (
+                            <TouchableOpacity key={op} onPress={() => setMetodoEnvio(op)} style={[styles.pill, metodoEnvio === op && styles.pillActive]}>
+                                <Text style={styles.pillText}>{op}</Text>
+                            </TouchableOpacity>
+                        ))}
+                    </View>
+
                     <View style={styles.infoField}><Text style={styles.infoFieldText}>Subtotal: ${cartTotal.toLocaleString("es-CO")}</Text></View>
                     <View style={styles.infoField}><Text style={[styles.infoFieldText, { fontWeight: '700' }]}>Total: ${cartTotal.toLocaleString("es-CO")}</Text></View>
                     <View style={{ flexDirection: 'row', gap: 12, marginTop: 6 }}>
                         <TouchableOpacity style={[styles.amberButton, { flex: 1 }]} onPress={() => navigation.navigate("CarritoScreen")}>
                             <Text style={styles.amberButtonText}>Cancelar</Text>
                         </TouchableOpacity>
-                        <TouchableOpacity style={[styles.darkButton, { flex: 1 }]} onPress={() => navigation.navigate("TicketScreen")}>
+                        <TouchableOpacity style={[styles.darkButton, { flex: 1 }]} onPress={finalizarCompra}>
                             <Text style={styles.darkButtonText}>Finalizar</Text>
                         </TouchableOpacity>
                     </View>
@@ -113,20 +144,28 @@ export function ProcesoCompraScreen() {
 export function TicketScreen() {
     const { cart, cartTotal, clearCart } = useCart();
     const navigation = useNavigation<any>();
+    const route = useRoute<any>();
     const today = new Date();
     const delivery = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
     const fmt = (d: Date) => d.toLocaleDateString("es-CO", { day: "2-digit", month: "short", year: "numeric" });
 
+    // Datos escritos en "Proceso de Compra". Si por alguna razón se llega aquí sin pasar por ahí,
+    // se usan estos valores por defecto para que la pantalla no se rompa.
+    const checkoutData = route.params?.checkoutData ?? {
+        nombre: "—", correo: "—", telefono: "—", direccion: "—",
+        medioPago: "—", metodoEnvio: "—",
+    };
+
     const fields = [
         { label: "ID Negocio/s", value: "#001, #002" },
         { label: "ID Producto/s", value: cart.map((i) => `#${i.product.id}`).join(", ") || "—" },
-        { label: "Nombre", value: "Ana García" },
-        { label: "Correo", value: "ana@gmail.com" },
-        { label: "Teléfono", value: "3215369484" },
-        { label: "Dirección", value: "Bogotá, Colombia" },
+        { label: "Nombre", value: checkoutData.nombre },
+        { label: "Correo", value: checkoutData.correo },
+        { label: "Teléfono", value: checkoutData.telefono },
+        { label: "Dirección", value: checkoutData.direccion },
         { label: "Fecha de entrega", value: fmt(delivery) },
-        { label: "Medio de pago", value: "Tarjeta débito" },
-        { label: "Método de envío", value: "Recogida en puesto" },
+        { label: "Medio de pago", value: checkoutData.medioPago },
+        { label: "Método de envío", value: checkoutData.metodoEnvio },
         { label: "Subtotal", value: `$${cartTotal.toLocaleString("es-CO")}` },
         { label: "Total", value: `$${cartTotal.toLocaleString("es-CO")}` },
     ];
@@ -274,23 +313,28 @@ export function ProductoScreen() {
 // Hoja de estilos compartida por las pantallas del módulo de carrito.
 const styles = StyleSheet.create({
     panel: { borderRadius: 24, padding: 16, gap: 10, backgroundColor: C.beige },
-    itemRow: { flexDirection: 'row', alignItems: 'center', gap: 10, borderRadius: 16, padding: 8, backgroundColor: C.white, borderWidth: 1, borderColor: C.beigeDark },
-    itemImage: { width: 52, height: 52, borderRadius: 26, borderWidth: 2, borderColor: C.beigeDark },
-    itemText: { fontSize: 11, fontWeight: '700' },
+    itemRow: { flexDirection: 'row', alignItems: 'center', gap: 10, borderRadius: 16, padding: 6, backgroundColor: C.white, borderWidth: 1, borderColor: C.beigeDark },
+    itemImage: { width: 80, height: 80, borderRadius: 38, borderWidth: 2, borderColor: C.beigeDark },
+    itemText: { fontSize: 17, fontWeight: '600' },
     itemValue: { fontWeight: '400' },
     itemPrice: { fontWeight: '400', color: C.amberDark },
-    removeButton: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: 999, backgroundColor: C.amber },
-    removeButtonText: { fontSize: 11, fontWeight: '700', color: C.black },
+    removeButton: { paddingHorizontal: 8, paddingVertical: 6, borderRadius: 999, backgroundColor: C.amber },
+    removeButtonText: { fontSize: 16, fontWeight: '700', color: C.black },
     totalRow: { flexDirection: 'row', justifyContent: 'space-between', paddingTop: 6, paddingHorizontal: 2 },
-    totalLabel: { fontSize: 13, fontWeight: '800' },
-    totalValue: { fontSize: 13, fontWeight: '800', color: C.amberDark },
-    amberButton: { paddingVertical: 11, borderRadius: 999, alignItems: 'center', backgroundColor: C.amber },
-    amberButtonText: { fontSize: 13, fontWeight: '700', color: C.black },
+    totalLabel: { fontSize: 17, fontWeight: '700' },
+    totalValue: { fontSize: 17, fontWeight: '700', color: C.amberDark },
+    amberButton: { paddingVertical: 9, borderRadius: 999, alignItems: 'center', backgroundColor: C.amber },
+    amberButtonText: { fontSize: 16, fontWeight: '600', paddingHorizontal: 16, color: C.black },
     darkButton: { paddingVertical: 11, borderRadius: 999, alignItems: 'center', backgroundColor: C.amberDark },
-    darkButtonText: { fontSize: 13, fontWeight: '700', color: C.white },
+    darkButtonText: { fontSize: 17, fontWeight: '600', color: C.white },
     infoField: { width: '100%', paddingVertical: 11, paddingHorizontal: 14, borderRadius: 14, backgroundColor: C.white },
-    infoFieldText: { fontSize: 12, textAlign: 'center' },
+    infoFieldText: { fontSize: 16, textAlign: 'center' },
     formInput: { width: '100%', paddingVertical: 11, paddingHorizontal: 14, borderRadius: 14, backgroundColor: C.white, fontSize: 12, textAlign: 'center' },
+    sectionLabel: { fontSize: 16, fontWeight: '700', marginTop: 4, marginBottom: -2, color: C.black },
+    pillRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+    pill: { paddingHorizontal: 12, paddingVertical: 7, borderRadius: 999, backgroundColor: C.white },
+    pillActive: { backgroundColor: C.amber },
+    pillText: { fontSize: 15, fontWeight: '600', color: C.black },
     ticketRow: { flexDirection: 'row', justifyContent: 'center', paddingVertical: 9, paddingHorizontal: 12, borderRadius: 14, backgroundColor: C.white },
     ticketLabel: { fontSize: 11, fontWeight: '700' },
     ticketValue: { fontSize: 11, color: C.muted },

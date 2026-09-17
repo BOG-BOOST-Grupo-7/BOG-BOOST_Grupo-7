@@ -26,6 +26,9 @@ export function RecuperarScreen() {
                     <TouchableOpacity style={styles.primaryButton} onPress={() => navigation.navigate('HomeScreen')}>
                         <Text style={styles.primaryButtonText}>Confirmar</Text>
                     </TouchableOpacity>
+                    <TouchableOpacity onPress={() => navigation.navigate('HomeScreen')}>
+                        <Text style={styles.linkText}>Volver al inicio</Text>
+                    </TouchableOpacity>
                 </View>
             </View>
             <Footer />

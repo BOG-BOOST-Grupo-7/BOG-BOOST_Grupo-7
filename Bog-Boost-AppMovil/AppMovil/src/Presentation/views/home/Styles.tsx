@@ -28,8 +28,8 @@ const HomeStyles = StyleSheet.create({
   },
   cardTitle: {
     textAlign: 'center',
-    fontWeight: '800',
-    fontSize: 24,
+    fontWeight: '700',
+    fontSize: 25,
     color: C.black,
   },
   input: {
@@ -38,11 +38,11 @@ const HomeStyles = StyleSheet.create({
     borderRadius: 14,
     paddingHorizontal: 16,
     paddingVertical: 12,
-    fontSize: 14,
+    fontSize: 16,
   },
   primaryButton: {
     width: '100%',
-    paddingVertical: 13,
+    paddingVertical: 11,
     borderRadius: 999,
     alignItems: 'center',
     backgroundColor: C.amber,
@@ -52,18 +52,18 @@ const HomeStyles = StyleSheet.create({
     elevation: 2,
   },
   primaryButtonText: {
-    fontSize: 14,
-    fontWeight: '700',
+    fontSize: 18,
+    fontWeight: '600',
     color: C.black,
   },
   linksArea: {
     alignItems: 'center',
-    gap: 8,
+    gap: 7,
     marginTop: 4,
   },
   linkText: {
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: 15,
+    fontWeight: '500',
     textDecorationLine: 'underline',
     color: C.black,
   },
