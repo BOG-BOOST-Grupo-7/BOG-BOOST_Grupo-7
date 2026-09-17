@@ -271,10 +271,7 @@ export const crearNegocio = async (req, res) => {
       .schema("negocio")
       .from("negocio")
       .select("id_negocio")
-      .eq(
-        "id_perfil",
-        req.user.id
-      )
+      .eq("id_perfil", req.user.id)
       .maybeSingle();
 
     if (errorBusqueda) {
@@ -287,6 +284,7 @@ export const crearNegocio = async (req, res) => {
       });
     }
 
+    // Crear el negocio con estado PENDIENTE
     const {
       data: negocio,
       error
@@ -295,16 +293,12 @@ export const crearNegocio = async (req, res) => {
       .from("negocio")
       .insert([
         {
-          id_perfil:
-            req.user.id,
-
+          id_perfil: req.user.id,
           nombre_negocio,
           descripcion_negocio,
           telefono_negocio,
           logo,
-
-          estado_negocio:
-            "PENDIENTE"
+          estado_negocio: "PENDIENTE"
         }
       ])
       .select()
@@ -317,6 +311,7 @@ export const crearNegocio = async (req, res) => {
     console.log("Usuario:", req.user.id);
     console.log("Negocio:", negocio);
 
+    // Registrar el puesto asociado al negocio
     const {
       error: errorPuesto
     } = await supabase
@@ -324,9 +319,7 @@ export const crearNegocio = async (req, res) => {
       .from("puesto")
       .insert([
         {
-          id_negocio:
-            negocio.id_negocio,
-
+          id_negocio: negocio.id_negocio,
           numero_puesto
         }
       ]);
@@ -334,6 +327,46 @@ export const crearNegocio = async (req, res) => {
     if (errorPuesto) {
       return res.status(400).json(errorPuesto);
     }
+
+    // --- NOTIFICAR A LOS ADMINISTRADORES Y SUPER_ADMINS ---
+    try {
+      // 1. Buscar los IDs de los roles 'SUPER_ADMIN' y 'ADMINISTRADOR'
+      const { data: rolesAdmins, error: errorRoles } = await supabase
+        .schema("cliente")
+        .from("rol")
+        .select("id_rol")
+        .in("nombre_rol", ["SUPER_ADMIN", "ADMINISTRADOR"]);
+
+      if (!errorRoles && rolesAdmins && rolesAdmins.length > 0) {
+        const idsRoles = rolesAdmins.map((r) => r.id_rol);
+
+        // 2. Buscar directamente en cliente.perfil los usuarios que tengan esos id_rol
+        const { data: perfilesAdmins, error: errorPerfiles } = await supabase
+          .schema("cliente")
+          .from("perfil")
+          .select("id_perfil")
+          .in("id_rol", idsRoles);
+
+        if (!errorPerfiles && perfilesAdmins && perfilesAdmins.length > 0) {
+          // 3. Crear el arreglo de notificaciones para cada administrador encontrado
+          const notificacionesAdmins = perfilesAdmins.map((admin) => ({
+            id_perfil: admin.id_perfil,
+            mensaje: `Hay una nueva solicitud de negocio pendiente: "${nombre_negocio}".`,
+            tipo: "SISTEMA"
+          }));
+
+          // 4. Insertar las notificaciones de forma masiva
+          await supabase
+            .schema("cliente")
+            .from("notificacion")
+            .insert(notificacionesAdmins);
+        }
+      }
+    } catch (errorNotif) {
+      // Capturamos cualquier error de notificación para que no afecte la respuesta principal
+      console.error("Error al enviar notificaciones a los administradores:", errorNotif);
+    }
+    // -----------------------------------------------------
 
     res.status(201).json({
       mensaje: "Negocio creado correctamente",

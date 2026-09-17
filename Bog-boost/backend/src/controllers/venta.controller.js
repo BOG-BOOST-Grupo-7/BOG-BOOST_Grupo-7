@@ -176,7 +176,19 @@ export const confirmarCarrito = async (req, res) => {
     if (errorVenta) return res.status(400).json(errorVenta);
     const venta = ventaData[0];
 
-    // 6. Insertar Detalles y actualizar Stock
+    // Obtener el id_perfil del vendedor del negocio para las notificaciones
+    const { data: negocioData, error: errorNegocio } = await supabase
+      .schema("negocio")
+      .from("negocio")
+      .select("id_perfil")
+      .eq("id_negocio", id_negocio)
+      .single();
+
+    if (errorNegocio) {
+      console.error("Error al buscar el perfil del vendedor del negocio:", errorNegocio);
+    }
+
+    // 6. Insertar Detalles, actualizar Stock y evaluar alerta de stock bajo
     for (const detalle of detallesDB) {
       await supabase
         .schema("ventas")
@@ -186,11 +198,14 @@ export const confirmarCarrito = async (req, res) => {
       const { data: prod } = await supabase
         .schema("catalogo")
         .from("producto")
-        .select("stock")
+        .select("stock, nombre_producto")
         .eq("id_producto", detalle.id_producto)
         .single();
 
       const nuevoStock = prod.stock - detalle.cantidad;
+
+      // Diagnóstico para ver qué está calculando exactamente
+      console.log(`[DEBUG STOCK] Producto: ${prod.nombre_producto} | Stock Actual en DB: ${prod.stock} | Cantidad Vendida: ${detalle.cantidad} | Nuevo Stock Calculado: ${nuevoStock}`);
 
       await supabase
         .schema("catalogo")
@@ -200,6 +215,34 @@ export const confirmarCarrito = async (req, res) => {
           estado_producto: nuevoStock === 0 ? "AGOTADO" : "DISPONIBLE"
         })
         .eq("id_producto", detalle.id_producto);
+
+      // ==========================================
+      // ALERTA DE BAJO STOCK (Si el stock queda en 2 o menos)
+      // ==========================================
+      // Nota: Cambié a `<= 2` por seguridad por si en algún caso cae por debajo de 2 directamente
+      if (nuevoStock <= 2 && !errorNegocio && negocioData?.id_perfil) {
+        try {
+          const { error: errorNotifStock } = await supabase
+            .schema("cliente")
+            .from("notificacion")
+            .insert([
+              {
+                id_perfil: negocioData.id_perfil,
+                mensaje: `⚠️ Alerta: El producto "${prod.nombre_producto}" tiene stock bajo (Quedan ${nuevoStock} unidades).`,
+                tipo: "ALERTA",
+                estado_notificacion: false
+              }
+            ]);
+
+          if (errorNotifStock) {
+            console.error("❌ Error al enviar notificación de stock bajo:", errorNotifStock);
+          } else {
+            console.log(`✅ Alerta de stock bajo enviada para el producto: ${prod.nombre_producto}`);
+          }
+        } catch (errStock) {
+          console.error("Error general en alerta de stock:", errStock);
+        }
+      }
     }
 
     // 7. Crear Seguimiento
@@ -208,13 +251,57 @@ export const confirmarCarrito = async (req, res) => {
       .from("seguimiento")
       .insert([{ id_venta: venta.id_venta, estado_seguimiento: "PENDIENTE", fecha_entrega: null }]);
 
-    // 8. Respuesta enriquecida
+    // ==========================
+    // 8. ENVIAR NOTIFICACIONES DE VENTA
+    // ==========================
+    try {
+      const notificaciones = [];
+
+      // Notificación para el cliente que compró
+      if (req.user && req.user.id && venta?.id_venta) {
+        notificaciones.push({
+          id_perfil: req.user.id,
+          mensaje: `¡Tu compra #${venta.id_venta} ha sido creada exitosamente!`,
+          tipo: "INFORMATIVA",
+          estado_notificacion: false
+        });
+      }
+
+      // Notificación para el vendedor dueño del negocio
+      if (!errorNegocio && negocioData && negocioData.id_perfil && venta?.id_venta) {
+        notificaciones.push({
+          id_perfil: negocioData.id_perfil,
+          mensaje: `¡Has recibido una nueva venta (#${venta.id_venta}) en tu negocio!`,
+          tipo: "ALERTA",
+          estado_notificacion: false
+        });
+      }
+
+      // Insertar en la base de datos
+      if (notificaciones.length > 0) {
+        const { error: errorInsertarNotif } = await supabase
+          .schema("cliente")
+          .from("notificacion")
+          .insert(notificaciones);
+
+        if (errorInsertarNotif) {
+          console.error("❌ ERROR SUPABASE NOTIFICACIONES:", JSON.stringify(errorInsertarNotif, null, 2));
+        } else {
+          console.log("✅ Notificaciones de venta creadas correctamente para cliente y vendedor.");
+        }
+      }
+
+    } catch (notifError) {
+      console.error("Error general en el bloque de notificaciones:", notifError);
+    }
+
+    // 9. Respuesta enriquecida
     return res.status(201).json({
       mensaje: "Compra realizada correctamente.",
       venta: {
         ...venta,
-        detalle_venta: detallesRespuesta, // Ahora el frontend puede hacer .map() sin error
-        medio_pago: medioPago,            // Enviamos el objeto completo para evitar undefined
+        detalle_venta: detallesRespuesta, // El frontend puede hacer .map() sin error
+        medio_pago: medioPago,            // Objeto completo
         metodo_envio: metodoEnvio
       }
     });
