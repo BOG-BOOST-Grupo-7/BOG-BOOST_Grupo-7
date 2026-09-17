@@ -92,14 +92,14 @@ function Header() {
 
         {rol === "SUPER_ADMIN" ? (
 
-          <a onClick={() => go("/admin")}>Inicio</a>
+          <a onClick={() => go("/admin")}>Panel Principal</a>
 
         ) : rol === "VENDEDOR" ? (
 
           <>
-            <a onClick={() => go("/vendedor")}>Inicio</a>
+            <a onClick={() => go("/vendedor")}>Perfil Negocio</a>
             <a onClick={() => go("/ventas")}>Ventas</a>
-            <a onClick={() => go("/stock")}>Stock</a>
+            <a onClick={() => go("/stock")}>Inventario y Stock</a>
           </>
 
         ) : (
@@ -226,14 +226,14 @@ function Header() {
         {rol === "SUPER_ADMIN" ? (
 
           <a onClick={() => go("/admin")}>
-            Inicio
+            Panel Principal
           </a>
 
         ) : rol === "VENDEDOR" ? (
 
           <>
             <a onClick={() => go("/vendedor")}>
-              Inicio
+              Perfil Negocio
             </a>
 
             <a onClick={() => go("/ventas")}>
@@ -241,7 +241,7 @@ function Header() {
             </a>
 
             <a onClick={() => go("/stock")}>
-              Stock
+              Inventario y Stock
             </a>
           </>
 
@@ -317,15 +317,11 @@ function Header() {
             </a>
 
             <a onClick={() => go("/historial")}>
-              Historial
-            </a>
-
-            <a onClick={() => go("/comentarios")}>
-              Comentarios
+              Historial/Compras
             </a>
 
             <a onClick={() => go("/contacto")}>
-              Contáctenos
+              Contáctenos/PQRS
             </a>
           </>
 
@@ -353,7 +349,7 @@ function Header() {
             </a>
 
             <a onClick={() => go("/ventas")}>
-              Ventas
+              Reportes
             </a>
           </>
 
@@ -364,12 +360,8 @@ function Header() {
               Perfil
             </a>
 
-            <a onClick={() => go("/productos")}>
-              Productos
-            </a>
-
             <a onClick={() => go("/contacto")}>
-              Contáctenos
+              Contáctenos/PQRS
             </a>
           </>
 

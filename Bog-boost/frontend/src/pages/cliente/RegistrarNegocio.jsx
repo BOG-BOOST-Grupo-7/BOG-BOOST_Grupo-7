@@ -1,9 +1,14 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { subirLogo as subirLogoApi } from "../../api/uploadApi";
 import { registrarNegocio } from "../../api/negocioApi";
+import { obtenerMiPerfil } from "../../api/perfilApi";
 import "../../styles/RegistrarNegocio.css";
 
 function RegistrarNegocio() {
+    const navigate = useNavigate();
+    const [cargandoPerfil, setCargandoPerfil] = useState(true);
+
     const [datos, setDatos] = useState({
         nombre_negocio: "",
         descripcion_negocio: "",
@@ -15,6 +20,34 @@ function RegistrarNegocio() {
     const [subiendoLogo, setSubiendoLogo] = useState(false);
     const [previewLogo, setPreviewLogo] = useState("");
 
+    // Validar perfil antes de permitir registrar el negocio
+    useEffect(() => {
+        const verificarPerfil = async () => {
+            try {
+                const perfil = await obtenerMiPerfil();
+
+                // Define aquí los campos obligatorios que el usuario debe tener llenos
+                const perfilIncompleto = 
+                    !perfil.primer_nombre || 
+                    !perfil.primer_apellido || 
+                    !perfil.id_tipo_documento || 
+                    !perfil.numero_documento;
+
+                if (perfilIncompleto) {
+                    alert("Por favor, completa la información de tu perfil personal antes de registrar un negocio.");
+                    navigate("/perfil"); // Ajusta la ruta a tu vista de perfil si es diferente
+                }
+            } catch (error) {
+                console.error("Error al verificar el perfil:", error);
+                alert("No se pudo verificar tu perfil. Inicia sesión nuevamente.");
+            } finally {
+                setCargandoPerfil(false);
+            }
+        };
+
+        verificarPerfil();
+    }, [navigate]);
+
     const handleChange = (e) => {
         setDatos({
             ...datos,
@@ -23,60 +56,60 @@ function RegistrarNegocio() {
     };
 
     const subirLogo = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
+        const file = e.target.files[0];
+        if (!file) return;
 
-    if (!file.type.startsWith("image/")) {
-        alert("Solo se permiten imágenes.");
-        return;
-    }
+        if (!file.type.startsWith("image/")) {
+            alert("Solo se permiten imágenes.");
+            return;
+        }
 
-    if (file.size > 5 * 1024 * 1024) {
-        alert("La imagen no puede superar los 5 MB.");
-        return;
-    }
+        if (file.size > 5 * 1024 * 1024) {
+            alert("La imagen no puede superar los 5 MB.");
+            return;
+        }
 
-    const imagen = new Image();
-    imagen.src = URL.createObjectURL(file);
+        const imagen = new Image();
+        imagen.src = URL.createObjectURL(file);
 
-    try {
-        await new Promise((resolve, reject) => {
-            imagen.onload = () => {
-                if (
-                    imagen.width > 2500 ||
-                    imagen.height > 2500
-                ) {
-                    reject(
-                        new Error(
-                            "La imagen es demasiado grande. Máximo 2500x2500 píxeles."
-                        )
-                    );
-                } else {
-                    resolve();
-                }
-            };
-        });
+        try {
+            await new Promise((resolve, reject) => {
+                imagen.onload = () => {
+                    if (
+                        imagen.width > 2500 ||
+                        imagen.height > 2500
+                    ) {
+                        reject(
+                            new Error(
+                                "La imagen es demasiado grande. Máximo 2500x2500 píxeles."
+                            )
+                        );
+                    } else {
+                        resolve();
+                    }
+                };
+            });
 
-        setPreviewLogo(URL.createObjectURL(file));
-        setSubiendoLogo(true);
+            setPreviewLogo(URL.createObjectURL(file));
+            setSubiendoLogo(true);
 
-        const respuesta = await subirLogoApi(file);
+            const respuesta = await subirLogoApi(file);
 
-        setDatos((prev) => ({
-            ...prev,
-            logo: respuesta.url
-        }));
-    } catch (error) {
-        console.error(error);
-        alert(
-            error.response?.data?.mensaje ||
-            error.message ||
-            "Error al subir el logo."
-        );
-    } finally {
-        setSubiendoLogo(false);
-    }
-};
+            setDatos((prev) => ({
+                ...prev,
+                logo: respuesta.url
+            }));
+        } catch (error) {
+            console.error(error);
+            alert(
+                error.response?.data?.mensaje ||
+                error.message ||
+                "Error al subir el logo."
+            );
+        } finally {
+            setSubiendoLogo(false);
+        }
+    };
 
     const guardarSolicitud = async (e) => {
         e.preventDefault();
@@ -131,6 +164,17 @@ function RegistrarNegocio() {
             );
         }
     };
+
+    // Mostrar pantalla de carga mientras valida el perfil
+    if (cargandoPerfil) {
+        return (
+            <main className="registro-negocio-container">
+                <div className="registro-negocio-card">
+                    <p style={{ textAlign: "center", padding: "20px" }}>Verificando información del perfil...</p>
+                </div>
+            </main>
+        );
+    }
 
     return (
         <main className="registro-negocio-container">
@@ -199,7 +243,6 @@ function RegistrarNegocio() {
                         name="nombre_negocio"
                         value={datos.nombre_negocio}
                         onChange={(e) => {
-                            // Permitir letras (incluyendo acentos y eñes) y espacios
                             const soloLetras = e.target.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, "");
                             setDatos({
                                 ...datos,
@@ -222,7 +265,6 @@ function RegistrarNegocio() {
                         inputMode="numeric"
                         value={datos.telefono_negocio}
                         onChange={(e) => {
-                            // Permitir únicamente números
                             const soloNumeros = e.target.value.replace(/\D/g, "");
                             setDatos({
                                 ...datos,

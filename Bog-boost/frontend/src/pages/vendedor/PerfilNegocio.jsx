@@ -1,14 +1,13 @@
-import { useEffect, useState, useRef } from "react"; // <-- Agregamos useRef
+import { useEffect, useState, useRef } from "react";
 
-import { FaEdit, FaPlus } from "react-icons/fa";
+import { FaEdit } from "react-icons/fa";
 
-import { obtenerMiNegocio, actualizarNegocio } from "../../api/negocioApi"; // <-- Agregamos actualizarNegocio
+import { obtenerMiNegocio, actualizarNegocio } from "../../api/negocioApi";
 import { obtenerMisProductos } from "../../api/productoApi";
 
 import ModalEditarNegocio from "../../components/ModalEditarNegocio";
 import ModalMediosPago from "../../components/ModalMediosPago";
 import ModalMetodosEnvio from "../../components/ModalMetodosEnvio";
-import ModalProductos from "../../components/ModalProductos";
 
 import "../../styles/PerfilNegocio.css";
 
@@ -19,16 +18,15 @@ export default function PerfilNegocio() {
     const [mostrarModal, setMostrarModal] = useState(false);
     const [mostrarMediosPago, setMostrarMediosPago] = useState(false);
     const [mostrarModalEnvio, setMostrarModalEnvio] = useState(false);
-    const [mostrarModalProducto, setMostrarModalProducto] = useState(false);
 
     // ==========================================
-    // NUEVO: Lógica para actualizar el Logo
+    // Lógica para actualizar el Logo
     // ==========================================
     const fileInputRef = useRef(null);
     const [subiendoLogo, setSubiendoLogo] = useState(false);
 
     const handleClickLogo = () => {
-        fileInputRef.current.click(); // Simula el clic en el input oculto
+        fileInputRef.current.click();
     };
 
     const handleCambioLogo = async (e) => {
@@ -38,12 +36,11 @@ export default function PerfilNegocio() {
         try {
             setSubiendoLogo(true);
             
-            // Usamos FormData porque estamos enviando un archivo
             const formData = new FormData();
-            formData.append("logo", file); // "logo" debe coincidir con el campo que espera tu backend
+            formData.append("logo", file);
 
             await actualizarNegocio(negocio.id_negocio, formData);
-            await cargarNegocio(); // Recargamos para ver el logo nuevo
+            await cargarNegocio();
             
             alert("Logo actualizado correctamente");
         } catch (error) {
@@ -53,7 +50,6 @@ export default function PerfilNegocio() {
             setSubiendoLogo(false);
         }
     };
-    // ==========================================
 
     useEffect(() => {
         cargarNegocio();
@@ -98,7 +94,6 @@ export default function PerfilNegocio() {
                                 </div>
                         }
 
-                        {/* Botón para editar el logo */}
                         <button 
                             className="btn-edit" 
                             onClick={handleClickLogo}
@@ -108,7 +103,6 @@ export default function PerfilNegocio() {
                             {subiendoLogo ? " Subiendo..." : " Editar"}
                         </button>
 
-                        {/* Input tipo archivo completamente oculto para el logo */}
                         <input 
                             type="file"
                             accept="image/*"
@@ -158,12 +152,30 @@ export default function PerfilNegocio() {
                 </div>
 
                 <div className="map-column">
-                    <div className="profile-card map-card">
-                        <h3>
-                            Mapa del negocio
-                        </h3>
-                        <div className="map-placeholder">
-                            Próximamente
+                    <div className="map-column-inner">
+                        <div className="profile-card map-card">
+                            <h3>
+                                Mapa del negocio
+                            </h3>
+                            <div className="map-placeholder">
+                                Próximamente
+                            </div>
+                        </div>
+
+                        {/* Botones de configuración colocados debajo del mapa */}
+                        <div className="config-buttons-bottom">
+                            <button
+                                className="btn-side"
+                                onClick={() => setMostrarMediosPago(true)}
+                            >
+                                Medio de pago
+                            </button>
+                            <button
+                                className="btn-side"
+                                onClick={() => setMostrarModalEnvio(true)}
+                            >
+                                Método de envío
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -202,35 +214,12 @@ export default function PerfilNegocio() {
                         </div>
                     ))}
                 </div>
-
-                <div className="side-buttons">
-                    <button
-                        className="btn-side"
-                        onClick={() => setMostrarMediosPago(true)}
-                    >
-                        Medio de pago
-                    </button>
-                    <button
-                        className="btn-side"
-                        onClick={() => setMostrarModalEnvio(true)}
-                    >
-                        Método de envío
-                    </button>
-                    <button
-                        className="btn-side"
-                        onClick={() => setMostrarModalProducto(true)}
-                    >
-                        <FaPlus />
-                        Agregar producto
-                    </button>
-                </div>
             </div>
 
             {/* ========================================== */}
             {/* ZONA DE MODALES */}
             {/* ========================================== */}
 
-            {/* Modal para editar la información del negocio */}
             <ModalEditarNegocio
                 abierto={mostrarModal}
                 negocio={negocio}
@@ -247,15 +236,6 @@ export default function PerfilNegocio() {
             <ModalMetodosEnvio
                 abierto={mostrarModalEnvio}
                 onClose={() => setMostrarModalEnvio(false)}
-                idNegocio={negocio.id_negocio}
-            />
-
-            <ModalProductos
-                abierto={mostrarModalProducto}
-                onClose={() => {
-                    setMostrarModalProducto(false);
-                    cargarNegocio();
-                }}
                 idNegocio={negocio.id_negocio}
             />
 

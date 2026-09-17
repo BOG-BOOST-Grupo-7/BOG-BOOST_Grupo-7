@@ -35,6 +35,14 @@
 
 .map-column{
     display:flex;
+    flex-direction:column;
+}
+
+.map-column-inner {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    width: 100%;
 }
 
 /* ===========================
@@ -54,24 +62,34 @@
     align-items: center;
     justify-content: center;
     gap: 20px;
-    min-height: 350px; /* Dale espacio suficiente al contenedor */
+    min-height: 350px;
 }
 
 .info-card{
-
     display:flex;
     flex-direction:column;
     gap:10px;
-
 }
 
+/* Mapa compacto */
 .map-card{
-
     width:100%;
-    min-height:530px;
+    min-height:700px;
+    max-height: 650px;
     display:flex;
     flex-direction:column;
+}
 
+/* Botones debajo del mapa */
+.config-buttons-bottom {
+    display: flex;
+    gap: 15px;
+}
+
+.config-buttons-bottom .btn-side {
+    flex: 1;
+    padding: 15px;
+    font-size: 15px;
 }
 
 /* ===========================
@@ -79,9 +97,9 @@
 =========================== */
 
 .logo-negocio {
-    width: 260px !important;  /* Aumentamos un poco más y lo forzamos */
+    width: 260px !important; 
     height: 260px !important;
-    max-width: none !important; /* Evita que estilos globales de la plantilla encojan la imagen */
+    max-width: none !important;
     object-fit: cover;
     border-radius: 50%;
     border: 4px solid #f59e0b;
@@ -105,9 +123,8 @@
 =========================== */
 
 .map-placeholder{
-
     flex:1;
-    margin-top:20px;
+    margin-top:15px;
     border-radius:12px;
     background:#ececec;
     display:flex;
@@ -115,7 +132,6 @@
     align-items:center;
     color:#666;
     font-size:18px;
-
 }
 
 /* ===========================
@@ -123,7 +139,6 @@
 =========================== */
 
 .btn-edit{
-
     margin-top:15px;
     border:none;
     border-radius:8px;
@@ -135,17 +150,13 @@
     align-items:center;
     gap:10px;
     transition:.3s;
-
 }
 
 .btn-edit:hover{
-
     background:#d97706;
-
 }
 
 .btn-side{
-
     width:100%;
     padding:15px;
     border:none;
@@ -160,55 +171,10 @@
     justify-content:center;
     align-items:center;
     gap:10px;
-
 }
 
 .btn-side:hover{
-
     background:#d97706;
-
-}
-
-/* ===========================
-   PRODUCTOS
-=========================== */
-
-.products-section{
-
-    display:grid;
-    grid-template-columns:3fr 1fr;
-    gap:25px;
-
-}
-
-.products-grid{
-
-    display:grid;
-    grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
-    gap:20px;
-
-}
-
-.product-card{
-
-    height:220px;
-    background:white;
-    border-radius:15px;
-    box-shadow:0 3px 10px rgba(0,0,0,.08);
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    font-size:18px;
-    font-weight:600;
-
-}
-
-.side-buttons{
-
-    display:flex;
-    flex-direction:column;
-    gap:20px;
-
 }
 
 /* ===========================
@@ -216,7 +182,6 @@
 =========================== */
 
 .modal-overlay{
-
     position:fixed;
     inset:0;
     background:rgba(0,0,0,.55);
@@ -224,11 +189,9 @@
     justify-content:center;
     align-items:center;
     z-index:9999;
-
 }
 
 .modal-content{
-
     width:700px;
     max-width:95%;
     max-height:90vh;
@@ -237,7 +200,6 @@
     border-radius:16px;
     overflow-x:hidden;
     animation:modal .25s ease;
-
 }
 
 /* ===========================
@@ -245,48 +207,39 @@
 =========================== */
 
 .lista-medios{
-
     display:flex;
     flex-direction:column;
     gap:18px;
     margin-top:20px;
-
 }
 
 .card-medio{
-
     border:1px solid #e5e5e5;
     border-radius:12px;
     padding:18px;
     background:#fafafa;
-
+    display:flex;
+    flex-direction:column;
 }
 
 .card-medio h4{
-
-    margin-bottom:12px;
+    margin-bottom:8px;
     color:#2b2b2b;
-
 }
 
 .card-medio p{
-
-    margin:6px 0;
+    margin:4px 0;
     color:#555;
-
 }
 
 .acciones-medio{
-
     display:flex;
     justify-content:flex-end;
     gap:12px;
     margin-top:18px;
-
 }
 
 .btn-delete{
-
     background:#dc2626;
     color:white;
     border:none;
@@ -294,17 +247,13 @@
     border-radius:8px;
     cursor:pointer;
     transition:.3s;
-
 }
 
 .btn-delete:hover{
-
     background:#b91c1c;
-
 }
 
 .btn-add{
-
     width:100%;
     margin-top:20px;
     background:#22c55e;
@@ -315,99 +264,59 @@
     font-weight:600;
     cursor:pointer;
     transition:.3s;
-
 }
 
 .btn-add:hover{
-
     background:#16a34a;
-
 }
 
 .sin-medios{
-
     text-align:center;
     padding:35px;
     color:#777;
     font-style:italic;
-
-}
-
-.btn-green{
-
-    background:#22c55e;
-    color:white;
-    border:none;
-    padding:12px 22px;
-    border-radius:8px;
-    cursor:pointer;
-
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    gap:10px;
-
-    width:100%;
-
 }
 
 @keyframes modal{
-
     from{
-
         opacity:0;
         transform:translateY(-20px);
-
     }
-
     to{
-
         opacity:1;
         transform:translateY(0);
-
     }
-
 }
 
 .modal-header{
-
     display:flex;
     justify-content:space-between;
     align-items:center;
     padding:20px 25px;
     border-bottom:1px solid #ececec;
-
 }
 
 .modal-header h2{
-
     margin:0;
-
 }
 
 .modal-close{
-
     border:none;
     background:none;
     font-size:28px;
     cursor:pointer;
-
 }
 
 .modal-body{
-
     padding:25px;
-
 }
 
 .modal-footer{
-
     display:flex;
     justify-content:flex-end;
     gap:15px;
     padding:20px 25px;
     border-top:1px solid #ececec;
-
 }
 
 /* ===========================
@@ -415,37 +324,29 @@
 =========================== */
 
 .form-group{
-
     display:flex;
     flex-direction:column;
     gap:8px;
     margin-bottom:18px;
-
 }
 
 .form-group label{
-
     font-weight:600;
-
 }
 
 .form-group input,
 .form-group textarea{
-
     padding:12px;
     border-radius:8px;
     border:1px solid #ccc;
     font-size:15px;
     outline:none;
     transition:.2s;
-
 }
 
 .form-group input:focus,
 .form-group textarea:focus{
-
     border-color:#f59e0b;
-
 }
 
 /* ===========================
@@ -453,103 +354,29 @@
 =========================== */
 
 .btn-orange{
-
     background:#f59e0b;
     color:white;
     border:none;
     padding:12px 22px;
     border-radius:8px;
     cursor:pointer;
-
 }
 
 .btn-orange:hover{
-
     background:#d97706;
-
 }
 
 .btn-green{
-
     background:#22c55e;
     color:white;
     border:none;
     padding:12px 22px;
     border-radius:8px;
     cursor:pointer;
-
 }
 
 .btn-green:hover{
-
     background:#16a34a;
-
-}
-
-/* ===========================
-   PRODUCTOS
-=========================== */
-
-.preview-imagen{
-
-    margin-top:15px;
-    margin-bottom:20px;
-    display:flex;
-    justify-content:center;
-
-}
-
-.preview-imagen img{
-
-    width:180px;
-    height:180px;
-    object-fit:cover;
-    border-radius:12px;
-    border:1px solid #ddd;
-
-}
-
-.mini-producto{
-
-    width:90px;
-    height:90px;
-    object-fit:cover;
-    border-radius:10px;
-    margin-bottom:15px;
-
-}
-
-.card-medio{
-
-    display:flex;
-    flex-direction:column;
-
-}
-
-.card-medio h4{
-
-    margin-bottom:8px;
-
-}
-
-.card-medio p{
-
-    margin:4px 0;
-
-}
-
-.logo-upload{
-    margin: 0 auto 20px auto;
-}
-
-.acciones-formulario{
-    display:flex;
-    gap:12px;
-    margin:20px 0;
-}
-
-.acciones-formulario button{
-    flex:1;
 }
 
 /*==============================
@@ -557,152 +384,89 @@
 ==============================*/
 
 .productos-carrusel{
-
     display:flex;
-
     gap:20px;
-
     overflow-x:auto;
-
     padding:10px 5px 20px;
-
     margin-top:20px;
-
     scroll-behavior:smooth;
-
 }
 
 .productos-carrusel::-webkit-scrollbar{
-
     height:8px;
-
 }
 
 .productos-carrusel::-webkit-scrollbar-thumb{
-
     background:#ff9800;
-
     border-radius:20px;
-
 }
 
 .producto-carrusel-card{
-
     width:240px;
-
     min-width:240px;
-
     background:#fff;
-
     border-radius:12px;
-
     box-shadow:0 4px 12px rgba(0,0,0,.08);
-
     overflow:hidden;
-
     flex-shrink:0;
-
     transition:.3s;
-
 }
 
 .producto-carrusel-card:hover{
-
     transform:translateY(-4px);
-
 }
 
 .producto-carrusel-imagen{
-
     width:100%;
-
     height:180px;
-
     overflow:hidden;
-
     background:#f5f5f5;
-
 }
 
 .producto-carrusel-imagen img{
-
     width:100%;
-
     height:100%;
-
     object-fit:cover;
-
 }
 
 .producto-carrusel-info{
-
     padding:15px;
-
 }
 
 .producto-carrusel-info h4{
-
     margin:0;
-
     font-size:18px;
-
     color:#222;
-
 }
 
 .producto-carrusel-info p{
-
     margin:8px 0;
-
     color:#666;
-
     font-size:14px;
-
     min-height:20px;
-
 }
 
 .producto-carrusel-info span{
-
     color:#ff9800;
-
     font-size:18px;
-
     font-weight:bold;
-
 }
+
 /* ===========================
    RESPONSIVE
 =========================== */
 
 @media(max-width:1000px){
-
     .profile-grid{
-
         grid-template-columns:1fr;
-
     }
-
-    .products-section{
-
-        grid-template-columns:1fr;
-
-    }
-
 }
 
 @media(max-width:600px){
-
     .perfil-negocio{
-
         padding:15px;
-
     }
-
-    .products-grid{
-
-        grid-template-columns:1fr;
-
+    .config-buttons-bottom {
+        flex-direction: column;
     }
-
 }
