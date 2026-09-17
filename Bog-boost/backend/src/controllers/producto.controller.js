@@ -1,16 +1,13 @@
 import supabase from "../services/supabase.js";
 
 const calcularEstadoProducto = (stock) => {
-
   return stock === 0
     ? "AGOTADO"
     : "DISPONIBLE";
-
 };
 
 export const listarProductos = async (req, res) => {
   try {
-
     // ==========================
     // PRODUCTOS
     // ==========================
@@ -28,9 +25,7 @@ export const listarProductos = async (req, res) => {
     // AGREGAR CATEGORIA Y NEGOCIO
     // ==========================
     const productosCompletos = await Promise.all(
-
       productos.map(async (producto) => {
-
         // Categoría
         const { data: categoria } = await supabase
           .schema("catalogo")
@@ -54,31 +49,24 @@ export const listarProductos = async (req, res) => {
           logo: negocio?.logo,
           negocio
         };
-
       })
-
     );
 
     res.json(productosCompletos);
 
   } catch (error) {
-
     console.error(error);
     res.status(500).json(error);
-
   }
 };
 
 export const obtenerProductoPorId = async (req, res) => {
-
     try {
-
         const { id } = req.params;
 
         // ==========================
         // PRODUCTO
         // ==========================
-
         const { data: producto, error } = await supabase
             .schema("catalogo")
             .from("producto")
@@ -87,17 +75,14 @@ export const obtenerProductoPorId = async (req, res) => {
             .single();
 
         if (error || !producto) {
-
             return res.status(404).json({
                 mensaje: "Producto no encontrado"
             });
-
         }
 
         // ==========================
         // CATEGORIA
         // ==========================
-
         const { data: categoria } = await supabase
             .schema("catalogo")
             .from("categoria")
@@ -111,7 +96,6 @@ export const obtenerProductoPorId = async (req, res) => {
         // ==========================
         // NEGOCIO
         // ==========================
-
         const { data: negocio } = await supabase
             .schema("negocio")
             .from("negocio")
@@ -124,31 +108,19 @@ export const obtenerProductoPorId = async (req, res) => {
             .single();
 
         res.json({
-
             ...producto,
-
             categoria,
-
             negocio
-
         });
 
-    }
-
-    catch (error) {
-
+    } catch (error) {
         console.error(error);
-
         res.status(500).json(error);
-
     }
-
 };
 
 export const obtenerMisProductos = async (req, res) => {
-
   try {
-
     const { data: negocio } = await supabase
       .schema("negocio")
       .from("negocio")
@@ -157,11 +129,9 @@ export const obtenerMisProductos = async (req, res) => {
       .single();
 
     if (!negocio) {
-
       return res.status(404).json({
         mensaje: "No tienes un negocio registrado."
       });
-
     }
 
     const { data, error } = await supabase
@@ -177,19 +147,14 @@ export const obtenerMisProductos = async (req, res) => {
       );
 
     if (error) {
-
       return res.status(400).json(error);
-
     }
 
     res.json(data);
 
   } catch (error) {
-
     res.status(500).json(error);
-
   }
-
 };
 
 export const crearProducto = async (req, res) => {
@@ -205,7 +170,9 @@ export const crearProducto = async (req, res) => {
       imagen
     } = req.body;
 
-    if (stock < 0) {
+    const stockInicial = stock || 0;
+
+    if (stockInicial < 0) {
       return res.status(400).json({
         mensaje: "El stock no puede ser negativo"
       });
@@ -220,18 +187,14 @@ export const crearProducto = async (req, res) => {
       .single();
 
     if (!negocio) {
-
       return res.status(403).json({
         mensaje: "No puedes crear productos para este negocio."
       });
-
     }
 
-    const estado_producto =
-      calcularEstadoProducto(
-        stock
-      );
+    const estado_producto = calcularEstadoProducto(stockInicial);
 
+    // 1. Crear el producto
     const { data, error } = await supabase
       .schema("catalogo")
       .from("producto")
@@ -242,19 +205,35 @@ export const crearProducto = async (req, res) => {
           nombre_producto,
           descripcion,
           caracteristicas,
-          stock,
+          stock: stockInicial,
           precio,
           imagen,
           estado_producto
         }
       ])
-      .select();
+      .select()
+      .single();
 
     if (error) {
       return res.status(400).json(error);
     }
 
-    res.status(201).json(data);
+    // 2. Si el stock inicial es mayor a 0, registrar la ENTRADA automática
+    if (data.stock > 0) {
+      await supabase
+        .schema("catalogo")
+        .from("movimiento_stock")
+        .insert([
+          {
+            id_producto: data.id_producto,
+            tipo_movimiento: "ENTRADA",
+            cantidad_productos: data.stock,
+            motivo: "Stock inicial por creación de producto"
+          }
+        ]);
+    }
+
+    res.status(201).json([data]);
 
   } catch (error) {
     res.status(500).json(error);
@@ -262,9 +241,7 @@ export const crearProducto = async (req, res) => {
 };
 
 export const actualizarProducto = async (req, res) => {
-
   try {
-
     const { id } = req.params;
 
     const {
@@ -278,66 +255,56 @@ export const actualizarProducto = async (req, res) => {
     } = req.body;
 
     if (stock < 0) {
-
       return res.status(400).json({
         mensaje: "El stock no puede ser negativo"
       });
-
     }
 
     // ============================
-    // BUSCAR EL PRODUCTO
+    // BUSCAR EL PRODUCTO (Stock actual)
     // ============================
-
-    const { data: producto } = await supabase
+    const { data: productoViejo } = await supabase
       .schema("catalogo")
       .from("producto")
       .select(`
         id_producto,
-        id_negocio
+        id_negocio,
+        stock
       `)
       .eq("id_producto", id)
       .single();
 
-    if (!producto) {
-
+    if (!productoViejo) {
       return res.status(404).json({
         mensaje: "Producto no encontrado"
       });
-
     }
 
     // ============================
     // VALIDAR QUE EL NEGOCIO ES DEL VENDEDOR
     // ============================
-
     const { data: negocio } = await supabase
       .schema("negocio")
       .from("negocio")
       .select("id_negocio")
-      .eq("id_negocio", producto.id_negocio)
+      .eq("id_negocio", productoViejo.id_negocio)
       .eq("id_perfil", req.user.id)
       .single();
 
     if (!negocio) {
-
       return res.status(403).json({
         mensaje: "No puedes modificar este producto"
       });
-
     }
 
     // ============================
     // CALCULAR ESTADO
     // ============================
-
-    const estado_producto =
-      calcularEstadoProducto(stock);
+    const estado_producto = calcularEstadoProducto(stock);
 
     // ============================
-    // ACTUALIZAR
+    // ACTUALIZAR PRODUCTO
     // ============================
-
     const { error } = await supabase
       .schema("catalogo")
       .from("producto")
@@ -354,9 +321,28 @@ export const actualizarProducto = async (req, res) => {
       .eq("id_producto", id);
 
     if (error) {
-
       return res.status(400).json(error);
+    }
 
+    // ============================
+    // REGISTRAR ENTRADA SI EL STOCK AUMENTÓ
+    // ============================
+    const stockAnterior = productoViejo.stock;
+    const stockNuevo = stock;
+
+    if (stockNuevo > stockAnterior) {
+      const diferencia = stockNuevo - stockAnterior;
+      await supabase
+        .schema("catalogo")
+        .from("movimiento_stock")
+        .insert([
+          {
+            id_producto: id,
+            tipo_movimiento: "ENTRADA",
+            cantidad_productos: diferencia,
+            motivo: "Actualización de stock (Ingreso de mercancía)"
+          }
+        ]);
     }
 
     res.json({
@@ -364,23 +350,17 @@ export const actualizarProducto = async (req, res) => {
     });
 
   } catch (error) {
-
     res.status(500).json(error);
-
   }
-
 };
 
 export const eliminarProducto = async (req, res) => {
-
   try {
-
     const { id } = req.params;
 
     // ============================
     // BUSCAR EL PRODUCTO
     // ============================
-
     const { data: producto } = await supabase
       .schema("catalogo")
       .from("producto")
@@ -392,17 +372,14 @@ export const eliminarProducto = async (req, res) => {
       .single();
 
     if (!producto) {
-
       return res.status(404).json({
         mensaje: "Producto no encontrado"
       });
-
     }
 
     // ============================
     // VALIDAR QUE EL NEGOCIO ES DEL VENDEDOR
     // ============================
-
     const { data: negocio } = await supabase
       .schema("negocio")
       .from("negocio")
@@ -412,17 +389,14 @@ export const eliminarProducto = async (req, res) => {
       .single();
 
     if (!negocio) {
-
       return res.status(403).json({
         mensaje: "No puedes eliminar este producto"
       });
-
     }
 
     // ============================
     // ELIMINAR
     // ============================
-
     const { error } = await supabase
       .schema("catalogo")
       .from("producto")
@@ -430,9 +404,7 @@ export const eliminarProducto = async (req, res) => {
       .eq("id_producto", id);
 
     if (error) {
-
       return res.status(400).json(error);
-
     }
 
     res.json({
@@ -440,11 +412,8 @@ export const eliminarProducto = async (req, res) => {
     });
 
   } catch (error) {
-
     res.status(500).json(error);
-
   }
-
 };
 
 export const obtenerProductosPorNegocioId = async (req, res) => {

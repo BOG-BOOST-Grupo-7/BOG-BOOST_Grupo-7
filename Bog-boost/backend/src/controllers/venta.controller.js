@@ -697,7 +697,6 @@ export const misCompras = async (req, res) => {
 
 export const misVentas = async (req, res) => {
   try {
-    // 1. Obtener los negocios del vendedor autenticado
     const { data: negocios, error: errorNegocios } = await supabase
       .schema("negocio")
       .from("negocio")
@@ -714,7 +713,6 @@ export const misVentas = async (req, res) => {
 
     const idsNegocios = negocios.map(n => n.id_negocio);
 
-    // 2. Consultar desde la tabla venta filtrando por los negocios del vendedor
     const { data: ventas, error } = await supabase
       .schema("ventas")
       .from("venta")
@@ -733,10 +731,8 @@ export const misVentas = async (req, res) => {
       return res.status(400).json(error);
     }
 
-    // 3. Enriquecer cada venta con sus detalles, productos, medio de pago y método de envío (igual que misCompras)
     const ventasEnriquecidas = await Promise.all(
       ventas.map(async (venta) => {
-        // A. Buscar medio de pago
         let medio_pago = null;
         if (venta.id_medio_pago) {
           const { data: mp } = await supabase
@@ -748,7 +744,6 @@ export const misVentas = async (req, res) => {
           medio_pago = mp;
         }
 
-        // B. Buscar método de envío
         let metodo_envio = null;
         if (venta.id_metodo_envio) {
           const { data: me } = await supabase
@@ -760,14 +755,24 @@ export const misVentas = async (req, res) => {
           metodo_envio = me;
         }
 
-        // C. Traer los detalles de la venta
+        // Consultamos el perfil del cliente de forma segura y separada
+        let perfil = null;
+        if (venta.id_perfil) {
+          const { data: pf } = await supabase
+            .schema("cliente")
+            .from("perfil")
+            .select("primer_nombre, segundo_nombre, primer_apellido, segundo_apellido")
+            .eq("id_perfil", venta.id_perfil)
+            .maybeSingle();
+          perfil = pf;
+        }
+
         const { data: detalles } = await supabase
           .schema("ventas")
           .from("detalle_venta")
           .select("*")
           .eq("id_venta", venta.id_venta);
 
-        // D. Para cada detalle, traer la información del producto
         const detalle_venta = await Promise.all(
           (detalles || []).map(async (detalle) => {
             let producto = null;
@@ -787,10 +792,20 @@ export const misVentas = async (req, res) => {
           })
         );
 
+        // Normalizamos el seguimiento asegurando que si viene como objeto o array vacío, se adapte
+        let seguimientoArray = venta.seguimiento;
+        if (!seguimientoArray || (Array.isArray(seguimientoArray) && seguimientoArray.length === 0)) {
+          seguimientoArray = [{ estado_seguimiento: "PENDIENTE", id_venta: venta.id_venta, id_seguimiento: null }];
+        } else if (!Array.isArray(seguimientoArray)) {
+          seguimientoArray = [seguimientoArray];
+        }
+
         return {
           ...venta,
+          seguimiento: seguimientoArray,
           medio_pago,
           metodo_envio,
+          perfil, // <--- Aquí inyectamos el perfil del cliente intacto para el modal
           detalle_venta
         };
       })

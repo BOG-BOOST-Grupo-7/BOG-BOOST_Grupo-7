@@ -130,26 +130,41 @@ export const obtenerSeguimientoPorId = async (req, res) => {
 
 export const actualizarSeguimiento = async (req, res) => {
   try {
-    const { id } = req.params; // Aquí asumimos que 'id' es el id_venta o id_seguimiento
+    const { id } = req.params; // Puede venir el id_seguimiento o el id_venta
     const { estado_seguimiento } = req.body;
 
-    let idVenta = id;
-    let idSeguimiento = null;
+    let idVenta = null;
 
-    // 1. Verificar si el 'id' enviado es un id_seguimiento existente o un id_venta
-    const { data: segExistente } = await supabase
+    // 1. Determinar si el ID recibido es un id_seguimiento o un id_venta
+    // Intentamos buscar primero si es un id_seguimiento
+    const { data: segPorId } = await supabase
       .schema("ventas")
       .from("seguimiento")
-      .select("id_seguimiento, id_venta")
+      .select("id_venta")
       .eq("id_seguimiento", id)
       .maybeSingle();
 
-    if (segExistente) {
-      idSeguimiento = segExistente.id_seguimiento;
-      idVenta = segExistente.id_venta;
+    if (segPorId) {
+      idVenta = segPorId.id_venta;
+    } else {
+      // Si no, asumimos que el id enviado es directamente el id_venta
+      const { data: ventaDirecta } = await supabase
+        .schema("ventas")
+        .from("venta")
+        .select("id_venta")
+        .eq("id_venta", id)
+        .maybeSingle();
+
+      if (ventaDirecta) {
+        idVenta = ventaDirecta.id_venta;
+      }
     }
 
-    // 2. Obtener la venta para saber a qué negocio pertenece y validar propiedad
+    if (!idVenta) {
+      return res.status(404).json({ mensaje: "No se encontró la venta o el seguimiento asociado" });
+    }
+
+    // 2. Obtener la venta para validar a qué negocio pertenece
     const { data: venta, error: errorVenta } = await supabase
       .schema("ventas")
       .from("venta")
@@ -174,41 +189,25 @@ export const actualizarSeguimiento = async (req, res) => {
       return res.status(403).json({ mensaje: "No puedes modificar seguimientos de otros negocios" });
     }
 
-    // 4. Preparar los datos a actualizar / insertar
-    const datosActualizar = { 
+    // 4. Preparar datos y hacer UPSERT aprovechando la restricción unique (id_venta)
+    const datosUpsert = {
+      id_venta: idVenta,
       estado_seguimiento,
       fecha_entrega: estado_seguimiento === "ENTREGADO" ? new Date() : null
     };
 
-    let resultado;
+    const { data, error } = await supabase
+      .schema("ventas")
+      .from("seguimiento")
+      .upsert(datosUpsert, { onConflict: "id_venta" })
+      .select();
 
-    if (idSeguimiento) {
-      // Si ya existía el seguimiento, lo actualizamos por su ID
-      const { data, error } = await supabase
-        .schema("ventas")
-        .from("seguimiento")
-        .update(datosActualizar)
-        .eq("id_seguimiento", idSeguimiento)
-        .select();
-
-      if (error) return res.status(400).json(error);
-      resultado = data;
-    } else {
-      // Si no existía seguimiento previo para esta venta, lo creamos
-      const { data, error } = await supabase
-        .schema("ventas")
-        .from("seguimiento")
-        .insert({
-          id_venta: idVenta,
-          ...datosActualizar
-        })
-        .select();
-
-      if (error) return res.status(400).json(error);
-      resultado = data;
+    if (error) {
+      console.error("Error en upsert de seguimiento:", error);
+      return res.status(400).json(error);
     }
 
-    return res.json(resultado);
+    return res.json(data);
 
   } catch (error) {
     console.error("Error crítico en actualizarSeguimiento:", error);

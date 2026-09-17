@@ -65,8 +65,22 @@
 }
 
 /* ===============================
-   FILTRO
+   BARRA DE ACCIÓN Y PESTAÑAS
 ================================== */
+
+.action-bar-tabs {
+    margin-top: 20px;
+    margin-bottom: 20px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.tabs-group {
+    display: flex;
+    gap: 10px;
+}
 
 .action-bar{
     display:flex;
@@ -98,6 +112,45 @@
 .filter-select:focus{
     outline:none;
     border-color:#ff9800;
+}
+
+/* ===============================
+   BOTONES E ICONOS
+================================== */
+
+.btn-with-icon,
+.btn-green {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* Clase única y exclusiva para forzar el tamaño corto */
+button.btn-green.btn-nuevo-prod-corto {
+    padding: 18px 30px !important;    /* Ligeramente más alto y ancho */
+    font-size: 14px !important;      /* Letra un poco más grande */
+    white-space: nowrap !important;
+    width: auto !important;
+}
+
+.btn-icon-action {
+    padding: 6px 10px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    border: none;
+    border-radius: 4px;
+}
+
+.btn-delete {
+    background-color: #e74c3c;
+    color: #fff;
+}
+
+.action-buttons-group {
+    display: flex;
+    gap: 8px;
 }
 
 /* ===============================
@@ -172,7 +225,7 @@
 }
 
 /* ===============================
-   MENSAJE VACÍO
+   MENSAJE VACÍO Y PRODUCTO
 ================================== */
 
 .sin-datos{
@@ -182,14 +235,23 @@
     font-size:17px;
 }
 
-/* ===============================
-   PRODUCTO
-================================== */
-
 .nombre-producto{
     display:flex;
     flex-direction:column;
     gap:4px;
+}
+
+.product-cell-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.product-thumb {
+    width: 35px;
+    height: 35px;
+    object-fit: cover;
+    border-radius: 4px;
 }
 
 .nombre-producto strong{
@@ -203,11 +265,38 @@
 }
 
 /* ===============================
+    PAGINACIÓN
+================================== */
+
+.pagination-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 1rem;
+    padding: 0.5rem 1rem;
+}
+
+.pagination-info {
+    font-size: 0.9rem;
+    color: #666;
+}
+
+.pagination-buttons {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.pagination-current {
+    margin: 0 0.5rem;
+    font-weight: bold;
+}
+
+/* ===============================
    RESPONSIVE
 ================================== */
 
 @media (max-width:900px){
-
     .movimientos-summary{
         grid-template-columns:repeat(2,1fr);
     }
@@ -215,11 +304,9 @@
     .action-bar{
         justify-content:flex-start;
     }
-
 }
 
 @media (max-width:768px){
-
     .lista-movimientos{
         width:98%;
         padding:10px;
@@ -240,11 +327,9 @@
     .movimientos-table{
         min-width:850px;
     }
-
 }
 
 @media (max-width:480px){
-
     .titulo-movimientos{
         font-size:24px;
     }
@@ -256,5 +341,4 @@
     .summary-card strong{
         font-size:20px;
     }
-
 }
