@@ -392,7 +392,7 @@ const MapaMercadoSVG = () => {
 <g class="puesto" id="p-159"><rect x="740" y="830" width="25" height="20"/><text x="752.5" y="840" class="texto-p">159</text></g>
 <g class="puesto" id="p-352"><rect x="740" y="850" width="25" height="20"/><text x="752.5" y="860" class="texto-p">352</text></g>
 
-// Row 351, 350, 349, 348 
+// Row 351, 350, 349, 348 //
 <g class="puesto" id="p-351"><rect x="875" y="825" width="25" height="20"/><text x="887.5" y="835" class="texto-p">351</text></g>
 <g class="puesto" id="p-350"><rect x="900" y="825" width="25" height="20"/><text x="912.5" y="835" class="texto-p">350</text></g>
 <g class="puesto" id="p-349"><rect x="925" y="825" width="25" height="20"/><text x="937.5" y="835" class="texto-p">349</text></g>
