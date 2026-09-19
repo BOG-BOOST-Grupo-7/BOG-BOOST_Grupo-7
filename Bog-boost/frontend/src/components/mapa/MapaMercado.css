@@ -1,115 +1,143 @@
-.contenedor-mapa {
-  padding: 10px;
-  max-width: 350px;
-  margin: 0 auto;
-  overflow: hidden;
+/* Página principal */
+.pagina-mapa {
+  width: 100vw;
+  min-height: 100vh;
+  margin: 0;
+  padding: 15px;
+  box-sizing: border-box;
+  background: #f4f4f6;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-family: Arial, sans-serif;
 }
 
-.leyenda {
-  color: #666;
-  margin-bottom: 10px;
-  font-size: 14px;
+.pagina-mapa h1 {
+  margin: 0 0 10px;
+  color: #333;
+  font-size: 24px;
 }
 
-.mapa-contenedor {
-  position: relative;
-  width: 580px; 
-  height: 520px; 
-  border: 1px solid #ccc;
-  background-color: #f9f9f9;
-  margin: 0 auto;
-  border-radius: 8px;
-  overflow: hidden;
+.barra-controles {
+  margin-bottom: 12px;
+  display: flex;
+  gap: 8px;
 }
 
-.puesto {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background-color: #4CAF50;
-  color: white;
-  border: none;
+.barra-controles button {
+  padding: 6px 16px;
+  font-size: 16px;
   font-weight: bold;
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s ease;
-  font-size: 10px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  border: 1px solid #bbb;
+  border-radius: 4px;
+  background: #ffffff;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 
-.puesto:hover {
-  transform: scale(1.15);
-  background-color: #45a049;
-}
-
-.puesto-activo {
-  background-color: #2196F3;
-  box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.4);
-}
-
-/* modal  */
-.modal-fondo {
-  position: fixed;
-  top: 0;
-  left: 0;
+/* Contenedor padre con Scrollbox */
+.contenedor-central {
   width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
+  max-width: 1300px;
+  height: 80vh;
+  overflow: auto;
+  border: 2px solid #555;
+  border-radius: 6px;
+  background: #ffffff;
+  box-sizing: border-box;
+}
+
+/* Envoltorio que CENTRA perfectamente el SVG */
+.envoltorio-escalado {
   display: flex;
-  align-items: center;
   justify-content: center;
-  z-index: 1000;
+  align-items: center;
+  min-width: 100%;
+  min-height: 100%;
+  padding: 20px;
+  box-sizing: border-box;
 }
 
-.modal-contenido {
-  background-color: white;
-  padding: 30px;
-  border-radius: 12px;
-  max-width: 450px;
-  width: 90%;
-  position: relative;
-  box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+/* SVG del Mapa */
+.lienzo-mapa-svg {
+  width: 1200px;
+  height: 850px;
+  transform-origin: center center;
+  transition: transform 0.15s ease-out;
+  background: #ffffff;
 }
 
-.modal-cerrar {
-  position: absolute;
-  top: 12px;
-  right: 15px;
-  background: none;
-  border: none;
-  font-size: 22px;
+/* ESTILOS DE LOS PUESTOS DENTRO DEL SVG */
+.puesto-svg {
   cursor: pointer;
-  color: #888;
 }
 
-.modal-cerrar:hover {
-  color: #000;
+.puesto-svg rect {
+  stroke: #333333;
+  stroke-width: 1px;
+  transition: all 0.15s ease;
 }
 
-.puesto-disponible {
-  color: #2e7d32;
+.puesto-svg.disponible rect {
+  fill: #ffffff;
+}
+
+.puesto-svg.ocupado rect {
+  fill: #f39c12; /* Naranja de ocupado */
+  stroke: #d35400;
+}
+
+.texto-puesto {
+  font-size: 8px;
   font-weight: bold;
+  fill: #000000;
+  text-anchor: middle;
+  dominant-baseline: central;
+  user-select: none;
+  pointer-events: none;
+}
+
+.puesto-svg.ocupado .texto-puesto {
+  fill: #ffffff;
+}
+
+/* Efecto al pasar el cursor */
+.puesto-svg:hover rect {
+  stroke: #e67e22;
+  stroke-width: 2.5px;
+  filter: drop-shadow(0px 0px 3px rgba(230, 126, 34, 0.8));
+}
+
+/* ESTILOS DE TEXTOS DE REFERENCIA */
+.label-icono {
+  font-size: 26px;
+  text-anchor: middle;
+}
+
+.label-ref {
+  font-size: 11px;
+  font-weight: bold;
+  fill: #333;
+  text-anchor: middle;
+}
+
+.label-ref-sm {
+  font-size: 10px;
+  font-weight: bold;
+  fill: #333;
+  text-anchor: middle;
+}
+
+.label-ref-lg {
+  font-size: 12px;
+  font-weight: bold;
+  fill: #222;
+  text-anchor: middle;
 }
 
 .cargando {
-  text-align: center;
+  padding: 80px;
+  font-size: 18px;
   color: #666;
-}
-
-.error {
-  color: #d32f2f;
   text-align: center;
-}
-
-h3 {
-  margin-top: 0;
-  color: #333;
-}
-
-hr {
-  border: none;
-  border-top: 1px solid #eee;
-  margin: 10px 0 15px;
 }

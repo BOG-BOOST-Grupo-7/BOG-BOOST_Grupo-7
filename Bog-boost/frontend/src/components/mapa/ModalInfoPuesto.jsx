@@ -1,48 +1,38 @@
-// Este archivo es para crear los modal con la infromacion de cada puesto 
+import './ModalInfoPuesto.css';
 
-import React, { useEffect, useState } from 'react';
-import { getDatosPuesto } from '../../api/mapaApis';
+const ModalInfoPuesto = ({ puesto, negocio, alCerrar }) => {
+  if (!puesto) return null;
 
-const ModalInfoPuesto = ({ abierto, alCerrar, numeroPuesto }) => {
-  const [datos, setDatos] = useState(null);
-  const [cargando, setCargando] = useState(false);
-
-  useEffect(() => {
-    if (abierto && numeroPuesto) {
-      setCargando(true);
-      setDatos(null);
-      getDatosPuesto(numeroPuesto)
-        .then((data) => setDatos(data))
-        .catch(() => setDatos({ error: true }))
-        .finally(() => setCargando(false));
-    }
-  }, [abierto, numeroPuesto]);
-
-  if (!abierto) return null;
+  const estaOcupado = negocio && negocio.estado === 'aceptado';
 
   return (
     <div className="modal-fondo" onClick={alCerrar}>
       <div className="modal-contenido" onClick={(e) => e.stopPropagation()}>
-        <h3>📦 Puesto N° {numeroPuesto}</h3>
-
-        {cargando ? (
-          <p>Cargando información...</p>
-        ) : datos?.sin_datos || (!datos?.nombre_negocio && !datos?.propietario) ? (
-          <div className="puesto-disponible">
-            <p>✅ <strong>Puesto Disponible</strong></p>
-            <p>No hay información registrada para este puesto.</p>
+        <button className="boton-cerrar" onClick={alCerrar}>×</button>
+        
+        <h2>Puesto N° {puesto.numero}</h2>
+        
+        {estaOcupado ? (
+          <div className="info-negocio">
+            <div className="insignia ocupado">Ocupado</div>
+            <p><strong>Propietario:</strong> {negocio.nombre_propietario || 'No especificado'}</p>
+            <p><strong>Nombre del Negocio:</strong> {negocio.nombre_negocio || 'Sin nombre'}</p>
+            <p>
+              <strong>Categorías / Productos:</strong>{' '}
+              {Array.isArray(negocio.categorias)
+                ? negocio.categorias.join(', ')
+                : negocio.categorias || 'No especificadas'}
+            </p>
+            {negocio.descripcion && (
+              <p><strong>Descripción:</strong> {negocio.descripcion}</p>
+            )}
           </div>
-        ) : datos?.error ? (
-          <p>❌ Error al cargar los datos.</p>
         ) : (
-          <div className="datos-puesto">
-            <p><strong>🏪 Negocio:</strong> {datos.nombre_negocio || 'Sin nombre'}</p>
-            <p><strong>👤 Propietario:</strong> {datos.propietario || 'No registrado'}</p>
-            <p><strong>🛒 Vende:</strong> {datos.descripcion || 'Sin descripción'}</p>
+          <div className="info-disponible">
+            <div className="insignia disponible">Disponible</div>
+            <p>Este puesto se encuentra libre para ser asignado tras el registro y aprobación del administrador.</p>
           </div>
         )}
-
-        <button className="btn-cerrar" onClick={alCerrar}>Cerrar</button>
       </div>
     </div>
   );

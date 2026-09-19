@@ -1,0 +1,93 @@
+/* Contenedor principal */
+.mapa-pagina {
+  width: 100%;
+  min-height: 100vh;
+  padding: 20px;
+  background: #f9f9f9;
+}
+
+.mapa-pagina h1 {
+  text-align: center;
+  color: #333;
+  margin-bottom: 20px;
+}
+
+/* Controles de zoom */
+.mapa-controles {
+  text-align: center;
+  margin-bottom: 15px;
+}
+
+.mapa-controles button {
+  margin: 0 5px;
+  padding: 8px 16px;
+  font-size: 16px;
+  cursor: pointer;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.mapa-controles button:hover {
+  background: #f0f0f0;
+}
+
+/* Área de visualización */
+.mapa-viewport {
+  overflow: auto;
+  border: 2px solid #ccc;
+  background: #fff;
+  position: relative;
+}
+
+/* Contenido escalable */
+.mapa-contenido {
+  position: relative;
+  min-width: 1200px;
+  min-height: 900px;
+  transform-origin: top left;
+}
+
+/* Referencias: nombres */
+.referencia {
+  position: absolute;
+  font-weight: bold;
+  color: #555;
+  font-size: 13px;
+}
+
+.monserrate { top: 10px; left: 100px; }
+.museo { top: 10px; left: 300px; }
+.planetario { top: 10px; left: 500px; }
+.colpatria { top: 10px; left: 700px; }
+
+/* Etiquetas de entrada */
+.etiqueta-entrada {
+  position: absolute;
+  font-size: 12px;
+  color: #666;
+  background: rgba(255,255,255,0.8);
+  padding: 2px 6px;
+}
+
+.derecha { top: 200px; right: 10px; text-align: right; }
+.abajo { bottom: 10px; left: 50%; transform: translateX(-50%); }
+
+/* Zona de aseo */
+.zona-aseo {
+  position: absolute;
+  bottom: 50px;
+  right: 50px;
+  background: #eee;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+/* Cargando */
+.mapa-cargando {
+  text-align: center;
+  padding: 40px;
+  font-size: 18px;
+  color: #666;
+}

@@ -1,35 +1,27 @@
-// Este archivo esta para crear las casillas de los puestos 
-import React from 'react';
 import './Puesto.css';
 
-const Puesto = ({ numero, x, y, alHacerClick }) => {
+const Puesto = ({ datos, negocio, alHacerClic }) => {
+  // Ignorar zonas que son nombres de referencia y no puestos
+  const zonasNoPuesto = ['ASEO','BAÑOS','MONSERRATE','MUSEO','PLANETARIO','TORRE_COLPATRIA','ENTRADA_Cra_7','ENTRADA_Calle_24','B'];
+  if (zonasNoPuesto.includes(String(datos.numero))) return null;
+
+  // Un puesto está ocupado si tiene un negocio asignado con estado 'aceptado'
+  const esOcupado = Boolean(negocio && negocio.estado === 'aceptado');
+
   return (
-    <g className="puesto-en-mapa" onClick={() => alHacerClick(numero)}>
-      {/* Cuadro del puesto */}
-      <rect
-        x={x - 22}
-        y={y - 12}
-        width="44"
-        height="24"
-        fill="#fff8dc"
-        stroke="#b8860b"
-        strokeWidth="1.5"
-        rx="3"
-        className="puesto-casilla"
-      />
-      {/* Número del puesto */}
-      <text
-        x={x}
-        y={y + 4}
-        textAnchor="middle"
-        fontSize="11"
-        fontWeight="bold"
-        fill="#333"
-        className="numero-puesto"
-      >
-        {numero}
-      </text>
-    </g>
+    <div
+      className={`puesto ${esOcupado ? 'ocupado' : 'disponible'}`}
+      onClick={alHacerClic}
+      style={{
+        left: `${datos.x}px`,
+        top: `${datos.y}px`,
+        width: `${datos.ancho}px`,
+        height: `${datos.alto}px`
+      }}
+      title={`Puesto ${datos.numero} - ${esOcupado ? 'Ocupado' : 'Disponible'}`}
+    >
+      {datos.numero}
+    </div>
   );
 };
 
