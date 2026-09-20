@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../supabase';
-import Puesto from '../components/mapa/Puesto';
+import MapaSVG from '../components/mapa/MapaSVG';
 import ModalInfoPuesto from '../components/mapa/ModalInfoPuesto';
 import './MapaMercadoPagina.css';
 
@@ -9,111 +9,99 @@ const MapaMercadoPagina = () => {
   const [puestos, setPuestos] = useState([]);
   const [negocios, setNegocios] = useState([]);
   const [puestoSeleccionado, setPuestoSeleccionado] = useState(null);
-  const [negocioSeleccionado, setNegocioSeleccionado] = useState(null);
   const [cargando, setCargando] = useState(true);
+
+  const cargarPuestos = useCallback(async () => {
+    const { data, error } = await supabase
+      .from('puestos')
+      .select('*')
+      .order('id', { ascending: true });
+    if (error) console.error('Error puestos:', error);
+    else setPuestos(data || []);
+  }, []);
+
+  const cargarNegocios = useCallback(async () => {
+    const { data, error } = await supabase
+      .from('negocios')
+      .select('*')
+      .eq('estado', 'aceptado');
+    if (error) console.error('Error negocios:', error);
+    else setNegocios(data || []);
+  }, []);
 
   useEffect(() => {
     const cargarTodo = async () => {
       setCargando(true);
-
-      // Cargar puestos
-      const { data: listaPuestos, error: errorPuestos } = await supabase
-        .from('puestos')
-        .select('*');
-
-      if (errorPuestos) {
-        console.error('Error puestos:', errorPuestos);
-      } else {
-        setPuestos(listaPuestos || []);
-      }
-
-      // Cargar negocios aceptados
-      const { data: listaNegocios, error: errorNegocios } = await supabase
-        .from('negocios')
-        .select('*')
-        .eq('estado', 'aceptado');
-
-      if (errorNegocios) {
-        console.error('Error negocios:', errorNegocios);
-      } else {
-        setNegocios(listaNegocios || []);
-      }
-
+      await Promise.all([cargarPuestos(), cargarNegocios()]);
       setCargando(false);
     };
-
     cargarTodo();
+  }, [cargarPuestos, cargarNegocios]);
 
-    // Tiempo real
+  useEffect(() => {
     const canal = supabase
       .channel('cambios-mapa')
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'negocios' },
-        cargarTodo
+        () => cargarNegocios()
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'puestos' },
+        () => cargarPuestos()
       )
       .subscribe();
 
     return () => supabase.removeChannel(canal);
-  }, []);
+  }, [cargarNegocios, cargarPuestos]);
 
-  const manejarClic = (puesto) => {
-    const negocio = negocios.find(
-      n => String(n.numero_puesto) === String(puesto.numero)
-    );
-    setPuestoSeleccionado(puesto);
-    setNegocioSeleccionado(negocio);
+  const obtenerNegocio = (numeroPuesto) =>
+    negocios.find((n) => String(n.numero_puesto) === String(numeroPuesto));
+
+  const manejarClicPuesto = (puesto) => {
+    const negocio = obtenerNegocio(puesto.numero);
+    setPuestoSeleccionado({ ...puesto, negocio });
   };
 
-  const cerrarModal = () => {
-    setPuestoSeleccionado(null);
-    setNegocioSeleccionado(null);
-  };
+  const cerrarModal = () => setPuestoSeleccionado(null);
+
+  const acercar = () => setEscala((p) => Math.min(p + 0.15, 3));
+  const alejar = () => setEscala((p) => Math.max(p - 0.15, 0.5));
+  const restablecer = () => setEscala(1);
 
   if (cargando) return <div className="mapa-cargando">Cargando mapa...</div>;
 
   return (
     <div className="mapa-pagina">
       <h1>Mapa — Mercado de Pulgas San Alejo</h1>
-      
+
       <div className="mapa-controles">
-        <button onClick={() => setEscala(p => Math.min(p + 0.2, 2.5))}>➕</button>
-        <button onClick={() => setEscala(p => Math.max(p - 0.2, 0.6))}>➖</button>
-        <button onClick={() => setEscala(1)}>↺ Restablecer</button>
+        <button onClick={acercar} title="Acercar">➕</button>
+        <button onClick={alejar} title="Alejar">➖</button>
+        <button onClick={restablecer} title="Restablecer">↺</button>
+        <span className="zoom-indicador">{Math.round(escala * 100)}%</span>
       </div>
 
       <div className="mapa-viewport">
-        <div className="mapa-contenido" style={{ transform: `scale(${escala})`, transformOrigin: 'top left' }}>
-          {/* Referencias */}
-          <div className="referencia monserrate">MONSERRATE</div>
-          <div className="referencia museo">MUSEO DE ARTE MODERNO</div>
-          <div className="referencia planetario">PLANETARIO DISTRITAL</div>
-          <div className="referencia colpatria">TORRE COLPATRIA</div>
-          
-          <div className="etiqueta-entrada derecha">ENTRADA Calle 24 ←</div>
-          <div className="etiqueta-entrada abajo">↑ ENTRADA Cra 7</div>
-          <div className="zona-aseo">ASEO</div>
-
-          {/* Puestos */}
-          {puestos.map(puesto => {
-            const negocio = negocios.find(
-              n => String(n.numero_puesto) === String(puesto.numero)
-            );
-            return (
-              <Puesto
-                key={puesto.id}
-                datos={puesto}
-                negocio={negocio}
-                alHacerClic={manejarClic}
-              />
-            );
-          })}
+        <div
+          className="mapa-contenido"
+          style={{
+            transform: `scale(${escala})`,
+            transformOrigin: 'top center',
+          }}
+        >
+          <MapaSVG
+            puestos={puestos}
+            obtenerNegocio={obtenerNegocio}
+            alHacerClicPuesto={manejarClicPuesto}
+          />
         </div>
       </div>
 
       <ModalInfoPuesto
         puesto={puestoSeleccionado}
-        negocio={negocioSeleccionado}
+        negocio={puestoSeleccionado?.negocio}
         alCerrar={cerrarModal}
       />
     </div>

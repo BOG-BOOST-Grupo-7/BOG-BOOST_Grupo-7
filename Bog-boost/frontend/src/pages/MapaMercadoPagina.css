@@ -1,93 +1,91 @@
-/* Contenedor principal */
 .mapa-pagina {
-  width: 100%;
+  width: 100vw;
   min-height: 100vh;
-  padding: 20px;
-  background: #f9f9f9;
+  padding: 12px;
+  box-sizing: border-box;
+  background: #f4f4f6;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-family: Arial, sans-serif;
 }
 
 .mapa-pagina h1 {
-  text-align: center;
+  margin: 0 0 10px;
   color: #333;
-  margin-bottom: 20px;
+  font-size: 20px;
 }
 
-/* Controles de zoom */
 .mapa-controles {
-  text-align: center;
-  margin-bottom: 15px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 10px;
 }
 
 .mapa-controles button {
-  margin: 0 5px;
-  padding: 8px 16px;
+  width: 40px;
+  height: 40px;
   font-size: 16px;
+  font-weight: bold;
   cursor: pointer;
+  border: 1px solid #bbb;
+  border-radius: 6px;
   background: #fff;
-  border: 1px solid #ddd;
-  border-radius: 4px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: background 0.15s;
 }
-
 .mapa-controles button:hover {
-  background: #f0f0f0;
+  background: #f39c12;
+  color: #fff;
+  border-color: #f39c12;
 }
 
-/* Área de visualización */
-.mapa-viewport {
-  overflow: auto;
-  border: 2px solid #ccc;
-  background: #fff;
-  position: relative;
-}
-
-/* Contenido escalable */
-.mapa-contenido {
-  position: relative;
-  min-width: 1200px;
-  min-height: 900px;
-  transform-origin: top left;
-}
-
-/* Referencias: nombres */
-.referencia {
-  position: absolute;
+.zoom-indicador {
   font-weight: bold;
   color: #555;
-  font-size: 13px;
-}
-
-.monserrate { top: 10px; left: 100px; }
-.museo { top: 10px; left: 300px; }
-.planetario { top: 10px; left: 500px; }
-.colpatria { top: 10px; left: 700px; }
-
-/* Etiquetas de entrada */
-.etiqueta-entrada {
-  position: absolute;
-  font-size: 12px;
-  color: #666;
-  background: rgba(255,255,255,0.8);
-  padding: 2px 6px;
-}
-
-.derecha { top: 200px; right: 10px; text-align: right; }
-.abajo { bottom: 10px; left: 50%; transform: translateX(-50%); }
-
-/* Zona de aseo */
-.zona-aseo {
-  position: absolute;
-  bottom: 50px;
-  right: 50px;
-  background: #eee;
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 12px;
-}
-
-/* Cargando */
-.mapa-cargando {
+  min-width: 55px;
   text-align: center;
-  padding: 40px;
+}
+
+.mapa-viewport {
+  width: 100%;
+  max-width: 1600px;
+  height: calc(100vh - 130px);
+  overflow: auto;
+  border: 2px solid #555;
+  border-radius: 6px;
+  background: #fff;
+  box-sizing: border-box;
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.mapa-contenido {
+  transition: transform 0.15s ease-out;
+  transform-origin: top center;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 10px;
+  min-width: 100%;
+  box-sizing: border-box;
+}
+
+/* Aquí está la regla que buscabas 👇 */
+.mapa-svg {
+  width: 100%;
+  max-width: 1600px;
+  height: auto;
+  display: block;
+  background: #fff;
+}
+
+.mapa-cargando {
+  padding: 80px;
+  text-align: center;
   font-size: 18px;
   color: #666;
 }
