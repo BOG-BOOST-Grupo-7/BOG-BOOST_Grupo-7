@@ -2,7 +2,7 @@ const MapaSVG = ({ puestos, obtenerNegocio, alHacerClicPuesto }) => {
   return (
     <svg
       className="mapa-svg"
-      viewBox="0 0 2100 1000"
+      viewBox="-100 -100 2300 1200"
       xmlns="http://www.w3.org/2000/svg"
       preserveAspectRatio="xMidYMid meet"
     >
@@ -14,7 +14,7 @@ const MapaSVG = ({ puestos, obtenerNegocio, alHacerClicPuesto }) => {
 
       {/* MUSEO DE ARTE MODERNO — mueve a la izquierda junto al bloque azul */}
 <g transform="translate(580, 20)">
-  <text x="60" y="30" textAnchor="middle" fontSize="32">🏛️</text>
+  <text x="60" y="30" textAnchor="middle" fontSize="80">🏛️</text>
   <text x="60" y="55" className="label-ref" textAnchor="middle">
     MUSEO DE
   </text>
@@ -25,15 +25,15 @@ const MapaSVG = ({ puestos, obtenerNegocio, alHacerClicPuesto }) => {
 
 {/* MONSERRATE — se queda igual, arriba de los puestos 34-31 */}
 <g transform="translate(1180, 5)">
-  <text x="60" y="30" textAnchor="middle" fontSize="34">⛪</text>
-  <text x="60" y="55" className="label-ref-lg" textAnchor="middle">
+  <text x="60" y="30" textAnchor="middle" fontSize="80">⛪</text>
+  <text x="60" y="55" className="label-ref-lg" textAnchor="middle" style={{ fontSize: '13px' }}>
     MONSERRATE
   </text>
 </g>
 
-{/* PLANETARIO — mueve a la izquierda junto al bloque azul */}
-<g transform="translate(150, 420)">
-  <text x="45" y="20" textAnchor="middle" fontSize="30">🪐</text>
+{/* PLANETARIO DISTRITAL — un poco más a la derecha */}
+<g transform="translate(80, 420)">
+  <text x="45" y="20" textAnchor="middle" fontSize="80">🪐</text>
   <text x="45" y="45" className="label-ref-sm" textAnchor="middle">
     PLANETARIO
   </text>
@@ -44,7 +44,7 @@ const MapaSVG = ({ puestos, obtenerNegocio, alHacerClicPuesto }) => {
 
 {/* TORRE COLPATRIA — ajusta según el nuevo bloque azul */}
 <g transform="translate(490, 940)">
-  <text x="60" y="15" textAnchor="middle" fontSize="26">🏙️</text>
+  <text x="60" y="15" textAnchor="middle" fontSize="80">🏢</text>
   <text x="60" y="38" className="label-ref-sm" textAnchor="middle">
     TORRE
   </text>
@@ -54,9 +54,9 @@ const MapaSVG = ({ puestos, obtenerNegocio, alHacerClicPuesto }) => {
 </g>
 
 {/* ASEO — al lado derecho del puesto 24 */}
-<rect x="1555" y="238" width="60" height="30" fill="#000" />
+<rect x="1595" y="238" width="60" height="30" fill="#000" />
 <text
-  x="1585"
+  x="1625"
   y="258"
   fill="#fff"
   fontSize="11"
@@ -67,35 +67,54 @@ const MapaSVG = ({ puestos, obtenerNegocio, alHacerClicPuesto }) => {
   ASEO
 </text>
 
-{/* ENTRADA Calle 24 — se mueve a la izquierda */}
+{/* ENTRADA Calle 24 — derecha, rotada, más cerca de las casillas */}
 <text
-  x="1800"
+  x="1750"
   y="220"
   className="label-ref"
   textAnchor="middle"
-  transform="rotate(90 1800 220)"
+  transform="rotate(90 1750 220)"
 >
   ENTRADA Calle 24
 </text>
 
-{/* Zona bicicletas — se mueve junto al bloque azul */}
-<g transform="translate(430, 620)">
+{/* Zona bicicletas + panel de servicios — corrida a la izquierda */}
+<g transform="translate(440, 640)">
   <rect x="0" y="0" width="260" height="220" fill="#000" />
-  <text x="130" y="110" textAnchor="middle" fontSize="56" fill="#fff">🚲</text>
-  {/* textos del panel... */}
+  <text x="130" y="110" textAnchor="middle" fontSize="36" fill="#fff">🚲</text>
+  <text x="240" y="50" textAnchor="middle" fontSize="9" fill="#fff" fontFamily="Arial">CARNE</text>
+  <text x="240" y="75" textAnchor="middle" fontSize="9" fill="#fff" fontFamily="Arial">BOYACÁ</text>
+  <text x="240" y="100" textAnchor="middle" fontSize="9" fill="#fff" fontFamily="Arial">LECHONA</text>
+  <text x="240" y="125" textAnchor="middle" fontSize="9" fill="#fff" fontFamily="Arial">JEEP</text>
+  <text x="240" y="150" textAnchor="middle" fontSize="9" fill="#fff" fontFamily="Arial">FRUTAS</text>
+  <text x="240" y="175" textAnchor="middle" fontSize="9" fill="#fff" fontFamily="Arial">ACHIRAS</text>
+  <text x="240" y="200" textAnchor="middle" fontSize="9" fill="#fff" fontFamily="Arial">POSTRES</text>
+  <text x="165" y="50" textAnchor="middle" fontSize="9" fill="#fff" fontFamily="Arial">VINOS</text>
+  <text x="165" y="75" textAnchor="middle" fontSize="9" fill="#fff" fontFamily="Arial">SAPICON</text>
+  <text x="165" y="100" textAnchor="middle" fontSize="9" fill="#fff" fontFamily="Arial">COOP</text>
+  <text x="165" y="125" textAnchor="middle" fontSize="9" fill="#fff" fontFamily="Arial">CAKE</text>
+  <text x="165" y="150" textAnchor="middle" fontSize="9" fill="#fff" fontFamily="Arial">BEBIDAS</text>
 </g>
 
-{/* BAÑOS — se mueve a la izquierda */}
-<g transform="translate(1000, 900)">
+{/* BAÑOS — más a la izquierda */}
+<g transform="translate(1150, 990)">
   <rect x="0" y="0" width="60" height="26" fill="#fff" stroke="#000" strokeWidth="1.2" />
-  <text x="30" y="17" fill="#000" fontSize="10" fontWeight="bold" textAnchor="middle" fontFamily="Arial">
+  <text
+    x="30"
+    y="17"
+    fill="#000"
+    fontSize="10"
+    fontWeight="bold"
+    textAnchor="middle"
+    fontFamily="Arial"
+  >
     BAÑOS
   </text>
-  <text x="80" y="20" textAnchor="middle" fontSize="16">👨‍👩</text>
+  <text x="80" y="20" textAnchor="middle" fontSize="16">🚻</text>
 </g>
 
-{/* ENTRADA Cra 7 */}
-<text x="780" y="985" className="label-ref-lg" textAnchor="middle">
+{/* ENTRADA Cra 7 — corrido a la derecha */}
+<text x="1080" y="1050" className="label-ref-lg" textAnchor="middle">
   ENTRADA Cra 7
 </text>  
 
