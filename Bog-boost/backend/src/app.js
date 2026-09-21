@@ -1,6 +1,8 @@
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
+import swaggerUi from "swagger-ui-express";
+import swaggerSpec from "./config/swagger.js"
 
 import authRoutes from "./routes/auth.routes.js";
 import rolRoutes from "./routes/rol.routes.js";
@@ -21,6 +23,7 @@ import detalleVentaRoutes from "./routes/detalleVenta.routes.js";
 import seguimientoRoutes from "./routes/seguimiento.routes.js";
 import uploadRoutes from "./routes/upload.routes.js";
 import buscadorRoutes from "./routes/buscador.routes.js";
+import mapaRoutes from "./routes/mapa.routes.js";
 
 const app = express();
 
@@ -32,6 +35,8 @@ app.use(cors({
 app.use(express.json());
 
 app.use(cookieParser());
+
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 app.use("/api/auth", authRoutes);
 app.use("/api/roles", rolRoutes);
@@ -52,5 +57,6 @@ app.use("/api/detalles-venta", detalleVentaRoutes);
 app.use("/api/seguimientos", seguimientoRoutes);
 app.use("/api/upload", uploadRoutes);
 app.use("/api", buscadorRoutes);
+app.use("/api/mapa", mapaRoutes);
 
 export default app;
