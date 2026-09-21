@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import {
     FaPlus,
     FaEdit,
-    FaTrash
+    FaTrash,
+    FaTimes
 } from "react-icons/fa";
 
 import {
@@ -15,413 +16,183 @@ import {
 import "../styles/PerfilNegocio.css";
 
 export default function ModalCategorias({
-
     abierto,
-    onClose
-
+    onClose,
+    categoriaAEditar
 }) {
-
     const [categorias, setCategorias] = useState([]);
-
     const [editando, setEditando] = useState(null);
-
     const [formulario, setFormulario] = useState({
-
         nombre_categoria: "",
         id_categoria_padre: ""
-
     });
+    const [errorValidacion, setErrorValidacion] = useState("");
 
     useEffect(() => {
-
         if (abierto) {
-
             cargarCategorias();
-            limpiarFormulario();
-
+            if (categoriaAEditar) {
+                setEditando(categoriaAEditar.id_categoria);
+                setFormulario({
+                    nombre_categoria: categoriaAEditar.nombre_categoria || "",
+                    id_categoria_padre: categoriaAEditar.id_categoria_padre || ""
+                });
+            } else {
+                limpiarFormulario();
+            }
         }
-
-    }, [abierto]);
+    }, [abierto, categoriaAEditar]);
 
     const cargarCategorias = async () => {
-
         try {
-
             const data = await obtenerCategorias();
-
             setCategorias(data);
-
         } catch (error) {
-
             console.error(error);
+        }
+    };
 
+    const validarFormulario = () => {
+        const nombreLimpio = formulario.nombre_categoria.trim();
+
+        if (!nombreLimpio) {
+            setErrorValidacion("El nombre de la categoría es obligatorio.");
+            return false;
         }
 
+        if (nombreLimpio.length < 2) {
+            setErrorValidacion("El nombre debe tener al menos 2 caracteres.");
+            return false;
+        }
+
+        const regexValido = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/;
+        if (!regexValido.test(nombreLimpio)) {
+            setErrorValidacion("El nombre de la categoría solo debe contener letras.");
+            return false;
+        }
+
+        if (editando && String(formulario.id_categoria_padre) === String(editando)) {
+            setErrorValidacion("Una categoría no puede ser padre de sí misma.");
+            return false;
+        }
+
+        setErrorValidacion("");
+        return true;
     };
 
     const guardar = async () => {
+        if (!validarFormulario()) return;
 
         try {
+            const datosAEnviar = {
+                ...formulario,
+                nombre_categoria: formulario.nombre_categoria.trim()
+            };
 
             if (editando) {
-
-                await actualizarCategoria(
-
-                    editando,
-                    formulario
-
-                );
-
+                await actualizarCategoria(editando, datosAEnviar);
             } else {
-
-                await crearCategoria(formulario);
-
+                await crearCategoria(datosAEnviar);
             }
 
             limpiarFormulario();
-
-            cargarCategorias();
-
+            onClose();
         } catch (error) {
-
             console.error(error);
-
         }
-
-    };
-
-    const editar = (categoria) => {
-
-        setEditando(categoria.id_categoria);
-
-        setFormulario({
-
-            nombre_categoria: categoria.nombre_categoria,
-            id_categoria_padre: categoria.id_categoria_padre || ""
-
-        });
-
-    };
-
-    const eliminar = async (id) => {
-
-        if (!window.confirm("¿Eliminar esta categoría?")) {
-
-            return;
-
-        }
-
-        try {
-
-            await eliminarCategoria(id);
-
-            cargarCategorias();
-
-        } catch (error) {
-
-            console.error(error);
-
-        }
-
     };
 
     const limpiarFormulario = () => {
-
         setFormulario({
-
             nombre_categoria: "",
             id_categoria_padre: ""
-
         });
-
         setEditando(null);
-
+        setErrorValidacion("");
     };
 
     if (!abierto) return null;
 
     return (
-
-        <div className="modal-overlay">
-
-            <div className="modal-content">
-
+        <div className="modal-overlay" onClick={onClose}>
+            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
                 <div className="modal-header">
-
                     <h2>
-
-                        {
-
-                            editando
-                                ? "Editar categoría"
-                                : "Administrar categorías"
-
-                        }
-
+                        {editando ? "Actualizar Categoría" : "Administrar Categorías"}
                     </h2>
-
+                    <button className="modal-close" onClick={onClose}>
+                        <FaTimes />
+                    </button>
                 </div>
 
                 <div className="modal-body">
+                    {errorValidacion && (
+                        <div className="error-message" style={{ color: "#d9534f", marginBottom: "15px", fontSize: "0.9rem", fontWeight: "500" }}>
+                            {errorValidacion}
+                        </div>
+                    )}
 
                     <div className="form-group">
-
-                        <label>
-
-                            Nombre
-
-                        </label>
-
+                        <label>Nombre</label>
                         <input
-
+                            type="text"
                             value={formulario.nombre_categoria}
-
-                            onChange={(e) =>
-
+                            onChange={(e) => {
+                                const valorSinNumeros = e.target.value.replace(/[0-9]/g, "");
                                 setFormulario({
-
                                     ...formulario,
-                                    nombre_categoria: e.target.value
-
-                                })
-
-                            }
-
+                                    nombre_categoria: valorSinNumeros
+                                });
+                                if (errorValidacion) setErrorValidacion("");
+                            }}
+                            placeholder="Ej. Ropa,  Mascotas..."
                         />
-
                     </div>
 
                     <div className="form-group">
-
-                        <label>
-
-                            Categoría padre
-
-                        </label>
-
+                        <label>Categoría padre</label>
                         <select
-
                             value={formulario.id_categoria_padre}
-
                             onChange={(e) =>
-
                                 setFormulario({
-
                                     ...formulario,
                                     id_categoria_padre: e.target.value
-
                                 })
-
                             }
-
                         >
-
-                            <option value="">
-
-                                Ninguna
-
-                            </option>
-
-                            {
-
-                                categorias
-
-                                    .filter(
-
-                                        c => c.id_categoria !== editando
-
-                                    )
-
-                                    .map(categoria => (
-
-                                        <option
-
-                                            key={categoria.id_categoria}
-
-                                            value={categoria.id_categoria}
-
-                                        >
-
-                                            {categoria.nombre_categoria}
-
+                            <option value="">Ninguna</option>
+                            {categorias
+                                .filter((cat) => editando !== cat.id_categoria)
+                                .map((cat) => {
+                                    const esHija = Boolean(cat.id_categoria_padre);
+                                    return (
+                                        <option key={cat.id_categoria} value={cat.id_categoria}>
+                                            {esHija ? `└─ ${cat.nombre_categoria}` : cat.nombre_categoria}
                                         </option>
-
-                                    ))
-
-                            }
-
+                                    );
+                                })}
                         </select>
-
                     </div>
-
-                    <div className="acciones-formulario">
-
-                        <button
-                            className="btn-green"
-                            onClick={guardar}
-                        >
-                            {editando ? (
-                                <>
-                                    <FaEdit />
-                                    Actualizar
-                                </>
-                            ) : (
-                                <>
-                                    <FaPlus />
-                                    Guardar
-                                </>
-                            )}
-                        </button>
-
-                        {editando && (
-                            <button
-                                className="btn-orange"
-                                onClick={limpiarFormulario}
-                            >
-                                Cancelar
-                            </button>
-                        )}
-
-                    </div>
-
-                    <div className="lista-categorias">
-
-                        {
-
-                            categorias.length === 0 ? (
-
-                                <p className="sin-categorias">
-
-                                    No existen categorías.
-
-                                </p>
-
-                            ) : (
-
-                                categorias.map(categoria => (
-
-                                    <div
-
-                                        className="categoria-card"
-
-                                        key={categoria.id_categoria}
-
-                                    >
-
-                                        <h4>
-
-                                            {categoria.nombre_categoria}
-
-                                        </h4>
-
-                                        <p>
-
-                                            <strong>
-
-                                                Categoría padre:
-
-                                            </strong>{" "}
-
-                                            {
-
-                                                categoria.id_categoria_padre
-
-                                                    ? categorias.find(
-
-                                                        c =>
-
-                                                            c.id_categoria ===
-
-                                                            categoria.id_categoria_padre
-
-                                                    )?.nombre_categoria ||
-
-                                                    "No encontrada"
-
-                                                    : "Ninguna"
-
-                                            }
-
-                                        </p>
-
-                                        <div className="acciones-categoria">
-
-                                            <button
-
-                                                className="btn-orange"
-
-                                                onClick={() =>
-
-                                                    editar(categoria)
-
-                                                }
-
-                                            >
-
-                                                <FaEdit />
-
-                                            </button>
-
-                                            <button
-
-                                                className="btn-delete"
-
-                                                onClick={() =>
-
-                                                    eliminar(
-
-                                                        categoria.id_categoria
-
-                                                    )
-
-                                                }
-
-                                            >
-
-                                                <FaTrash />
-
-                                            </button>
-
-                                        </div>
-
-                                    </div>
-
-                                ))
-
-                            )
-
-                        }
-
-                    </div>
-
                 </div>
 
                 <div className="modal-footer">
-
                     <button
-
+                        type="button"
                         className="btn-orange"
-
-                        onClick={() => {
-
-                            limpiarFormulario();
-
-                            onClose();
-
-                        }}
-
+                        style={{ backgroundColor: "#e23e0c" }}
+                        onClick={onClose}
                     >
-
-                        Cerrar
-
+                        Cancelar
                     </button>
-
+                    <button
+                        type="button"
+                        className="btn-orange"
+                        onClick={guardar}
+                    >
+                        {editando ? "Actualizar" : "Guardar"}
+                    </button>
                 </div>
-
             </div>
-
         </div>
-
     );
-
 }

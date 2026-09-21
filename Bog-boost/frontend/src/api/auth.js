@@ -15,3 +15,11 @@ export const me = () => {
 export const logoutUser = () => {
   return axiosClient.post("auth/logout");
 };
+
+export const recuperarPasswordRequest = (email) => {
+  return axiosClient.post("auth/recuperar-password", { email });
+};
+
+export const cambiarPasswordRequest = (password) => {
+  return axiosClient.put("auth/cambiar-password", { password });
+};

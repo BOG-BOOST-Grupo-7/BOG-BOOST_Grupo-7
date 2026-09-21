@@ -82,3 +82,11 @@ export const eliminarProducto = async (id) => {
     return data;
 
 };
+
+/* ==========================
+   OBTENER PRODUCTOS POR NEGOCIO
+========================== */
+export const obtenerProductosPorNegocio = async (idNegocio) => {
+    const { data } = await axiosClient.get(`/producto/negocio/${idNegocio}`);
+    return data;
+};

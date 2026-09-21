@@ -73,7 +73,7 @@
 }
 
 .estado-disponible{
-    background:#2ecc71;
+    background:#21b15d;
     color:white;
     padding:6px 15px;
     border-radius:30px;
@@ -132,7 +132,7 @@
 }
 
 .btn-comprar:hover{
-    background:#e4a834;
+    background:#f39c12;
 }
 
 .info-negocio{
@@ -145,7 +145,7 @@
     cursor:pointer;
 }
 
-.logo-negocio{
+.logo-negocioo{
     width:60px;
     height:60px;
     border-radius:50%;

@@ -2,7 +2,6 @@ import supabase from "../services/supabase.js";
 
 export const listarNegocios = async (req, res) => {
   try {
-
     const { estado } = req.query;
 
     let query = supabase
@@ -17,10 +16,6 @@ export const listarNegocios = async (req, res) => {
       query = query.eq("estado_negocio", estado);
     }
 
-    // ==========================
-    // Obtener negocios
-    // ==========================
-
     const { data: negocios, error } = await query;
 
     if (error) {
@@ -29,13 +24,29 @@ export const listarNegocios = async (req, res) => {
     }
 
     // ==========================
-    // Obtener perfiles
+    // Obtener productos desde catalogo.producto
     // ==========================
+    const negocioIds = negocios.map((n) => n.id_negocio);
+    let productos = [];
 
-    const {
-      data: perfiles,
-      error: errorPerfiles
-    } = await supabase
+    if (negocioIds.length > 0) {
+      const { data: prods, error: errorProds } = await supabase
+        .schema("catalogo")
+        .from("producto")
+        .select("*")
+        .in("id_negocio", negocioIds);
+
+      if (errorProds) {
+        console.error("ERROR PRODUCTOS:", errorProds);
+      } else {
+        productos = prods || [];
+      }
+    }
+
+    // ==========================
+    // Obtener perfiles (solo nombre)
+    // ==========================
+    const { data: perfiles, error: errorPerfiles } = await supabase
       .schema("cliente")
       .from("perfil")
       .select(`
@@ -54,15 +65,12 @@ export const listarNegocios = async (req, res) => {
     // ==========================
     // Obtener correos desde auth.users
     // ==========================
-
     const usuarios = [];
 
     for (const perfil of perfiles) {
-
-      const { data, error } =
-        await supabase.auth.admin.getUserById(
-          perfil.id_perfil
-        );
+      const { data, error } = await supabase.auth.admin.getUserById(
+        perfil.id_perfil
+      );
 
       if (error) {
         console.error(error);
@@ -72,15 +80,12 @@ export const listarNegocios = async (req, res) => {
         id_perfil: perfil.id_perfil,
         email: data?.user?.email ?? null
       });
-
     }
 
     // ==========================
-    // Unir negocio + perfil
+    // Unir negocio + perfil + productos
     // ==========================
-
     const resultado = negocios.map((negocio) => {
-
       const perfil = perfiles.find(
         (p) => p.id_perfil === negocio.id_perfil
       );
@@ -89,26 +94,30 @@ export const listarNegocios = async (req, res) => {
         (u) => u.id_perfil === negocio.id_perfil
       );
 
+      const productosDelNegocio = productos.filter(
+        (p) => p.id_negocio === negocio.id_negocio
+      );
+
       return {
         ...negocio,
+        productos: productosDelNegocio,
         perfil: {
-          ...perfil,
+          primer_nombre: perfil?.primer_nombre ?? null,
+          segundo_nombre: perfil?.segundo_nombre ?? null,
+          primer_apellido: perfil?.primer_apellido ?? null,
+          segundo_apellido: perfil?.segundo_apellido ?? null,
           correo: usuario?.email ?? null
         }
       };
-
     });
 
     res.json(resultado);
 
   } catch (error) {
-
     console.error(error);
-
     res.status(500).json({
       mensaje: "Error interno del servidor"
     });
-
   }
 };
 
@@ -116,27 +125,93 @@ export const obtenerNegocioPorId = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const { data, error } = await supabase
+    const { data: negocio, error } = await supabase
       .schema("negocio")
       .from("negocio")
       .select(`
-            *,
-            puesto(*)
-          `)
-      .eq(
-        "id_negocio",
-        id
-      )
+        *,
+        puesto(*)
+      `)
+      .eq("id_negocio", id)
       .single();
 
     if (error) {
       return res.status(404).json(error);
     }
 
-    res.json(data);
+    // ==========================
+    // Obtener productos específicos de este negocio
+    // ==========================
+    const { data: productos, error: errorProds } = await supabase
+      .schema("catalogo")
+      .from("producto")
+      .select("*")
+      .eq("id_negocio", id);
+
+    if (errorProds) {
+      console.error("ERROR PRODUCTOS POR ID:", errorProds);
+    }
+
+    // ==========================
+    // Obtener el perfil del propietario
+    // ==========================
+    let perfilData = null;
+    let emailUser = null;
+
+    if (negocio.id_perfil) {
+      const { data: perfil, error: errorPerfil } = await supabase
+        .schema("cliente")
+        .from("perfil")
+        .select(`
+          id_perfil,
+          primer_nombre,
+          segundo_nombre,
+          primer_apellido,
+          segundo_apellido
+        `)
+        .eq("id_perfil", negocio.id_perfil)
+        .single();
+
+      if (errorPerfil) {
+        console.error("ERROR PERFIL POR ID:", errorPerfil);
+      } else {
+        perfilData = perfil;
+
+        // Obtener correo desde Supabase Auth
+        const { data: authData, error: errorAuth } = await supabase.auth.admin.getUserById(
+          negocio.id_perfil
+        );
+
+        if (errorAuth) {
+          console.error("ERROR AUTH USER BY ID:", errorAuth);
+        } else {
+          emailUser = authData?.user?.email ?? null;
+        }
+      }
+    }
+
+    // ==========================
+    // Estructurar respuesta final igual que en listarNegocios
+    // ==========================
+    const negocioCompleto = {
+      ...negocio,
+      productos: productos || [],
+      perfil: {
+        primer_nombre: perfilData?.primer_nombre ?? null,
+        segundo_nombre: perfilData?.segundo_nombre ?? null,
+        primer_apellido: perfilData?.primer_apellido ?? null,
+        segundo_apellido: perfilData?.segundo_apellido ?? null,
+        correo: emailUser
+      }
+    };
+
+    res.json(negocioCompleto);
 
   } catch (error) {
-    res.status(500).json(error);
+    console.error(error);
+    res.status(500).json({
+      mensaje: "Error interno del servidor"
+    });
   }
 };
 
@@ -196,10 +271,7 @@ export const crearNegocio = async (req, res) => {
       .schema("negocio")
       .from("negocio")
       .select("id_negocio")
-      .eq(
-        "id_perfil",
-        req.user.id
-      )
+      .eq("id_perfil", req.user.id)
       .maybeSingle();
 
     if (errorBusqueda) {
@@ -212,6 +284,7 @@ export const crearNegocio = async (req, res) => {
       });
     }
 
+    // Crear el negocio con estado PENDIENTE
     const {
       data: negocio,
       error
@@ -220,16 +293,12 @@ export const crearNegocio = async (req, res) => {
       .from("negocio")
       .insert([
         {
-          id_perfil:
-            req.user.id,
-
+          id_perfil: req.user.id,
           nombre_negocio,
           descripcion_negocio,
           telefono_negocio,
           logo,
-
-          estado_negocio:
-            "PENDIENTE"
+          estado_negocio: "PENDIENTE"
         }
       ])
       .select()
@@ -242,6 +311,7 @@ export const crearNegocio = async (req, res) => {
     console.log("Usuario:", req.user.id);
     console.log("Negocio:", negocio);
 
+    // Registrar el puesto asociado al negocio
     const {
       error: errorPuesto
     } = await supabase
@@ -249,9 +319,7 @@ export const crearNegocio = async (req, res) => {
       .from("puesto")
       .insert([
         {
-          id_negocio:
-            negocio.id_negocio,
-
+          id_negocio: negocio.id_negocio,
           numero_puesto
         }
       ]);
@@ -259,6 +327,46 @@ export const crearNegocio = async (req, res) => {
     if (errorPuesto) {
       return res.status(400).json(errorPuesto);
     }
+
+    // --- NOTIFICAR A LOS ADMINISTRADORES Y SUPER_ADMINS ---
+    try {
+      // 1. Buscar los IDs de los roles 'SUPER_ADMIN' y 'ADMINISTRADOR'
+      const { data: rolesAdmins, error: errorRoles } = await supabase
+        .schema("cliente")
+        .from("rol")
+        .select("id_rol")
+        .in("nombre_rol", ["SUPER_ADMIN", "ADMINISTRADOR"]);
+
+      if (!errorRoles && rolesAdmins && rolesAdmins.length > 0) {
+        const idsRoles = rolesAdmins.map((r) => r.id_rol);
+
+        // 2. Buscar directamente en cliente.perfil los usuarios que tengan esos id_rol
+        const { data: perfilesAdmins, error: errorPerfiles } = await supabase
+          .schema("cliente")
+          .from("perfil")
+          .select("id_perfil")
+          .in("id_rol", idsRoles);
+
+        if (!errorPerfiles && perfilesAdmins && perfilesAdmins.length > 0) {
+          // 3. Crear el arreglo de notificaciones para cada administrador encontrado
+          const notificacionesAdmins = perfilesAdmins.map((admin) => ({
+            id_perfil: admin.id_perfil,
+            mensaje: `Hay una nueva solicitud de negocio pendiente: "${nombre_negocio}".`,
+            tipo: "SISTEMA"
+          }));
+
+          // 4. Insertar las notificaciones de forma masiva
+          await supabase
+            .schema("cliente")
+            .from("notificacion")
+            .insert(notificacionesAdmins);
+        }
+      }
+    } catch (errorNotif) {
+      // Capturamos cualquier error de notificación para que no afecte la respuesta principal
+      console.error("Error al enviar notificaciones a los administradores:", errorNotif);
+    }
+    // -----------------------------------------------------
 
     res.status(201).json({
       mensaje: "Negocio creado correctamente",

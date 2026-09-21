@@ -1,19 +1,30 @@
 /* ===================================
-   CONTENEDOR GENERAL
+   CONTENEDOR GENERAL (Más compacto)
 =================================== */
 
 .perfil-container {
-    max-width: 800px;
-    margin: 50px auto;
-    padding: 20px;
+    max-width: 750px;
+    margin: 30px auto;
+    padding: 15px;
+    font-family: inherit;
+}
+
+.perfil-header-container {
+    text-align: center;
+    margin-bottom: 25px;
 }
 
 .perfil-title {
-    text-align: center;
-    font-size: 2rem;
-    margin-bottom: 30px;
+    font-size: 26px;
+    font-weight: 700;
+    color: #111;
+    margin-bottom: 4px;
     font-family: Georgia, serif;
-    color: #000;
+}
+
+.perfil-subtitle {
+    font-size: 13px;
+    color: #666;
 }
 
 /* ===================================
@@ -21,19 +32,15 @@
 =================================== */
 
 .perfil-card {
-    background: #f4eadc;
-    border: 2px solid #000;
-    border-radius: 24px;
-
-    padding: 25px;
-
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 30px;
     display: flex;
-    justify-content: center;
+    justify-content: space-between;
     align-items: flex-start;
-    gap: 30px;
-
-    max-width: 700px;
-    margin: 0 auto;
+    gap: 35px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
 }
 
 /* ===================================
@@ -44,22 +51,24 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-
-    min-width: 180px;
+    min-width: 160px;
 }
 
 .avatar-container {
     position: relative;
-
-    width: 170px;
-    height: 170px;
-
-    border: 3px dashed #f8b94e;
+    width: 120px;
+    height: 120px;
+    border: 3px solid #f5b952;
     border-radius: 50%;
-
     overflow: hidden;
     cursor: pointer;
-    background: white;
+    background: #f8fafc;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06);
+    transition: transform 0.2s ease;
+}
+
+.avatar-container:hover {
+    transform: scale(1.02);
 }
 
 .avatar-image,
@@ -67,23 +76,30 @@
     width: 100%;
     height: 100%;
     border-radius: 50%;
+    object-fit: cover;
+}
+
+.avatar-circle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f5b95220;
+    color: #d99a30;
+    font-size: 42px;
+    font-weight: bold;
 }
 
 .avatar-overlay {
     position: absolute;
     inset: 0;
-
-    background: rgba(0, 0, 0, 0.55);
-
+    background: rgba(0, 0, 0, 0.6);
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
-
     color: white;
-
     opacity: 0;
-    transition: 0.3s;
+    transition: opacity 0.25s ease;
 }
 
 .avatar-container:hover .avatar-overlay {
@@ -91,20 +107,21 @@
 }
 
 .avatar-overlay i {
-    font-size: 38px;
-    margin-bottom: 10px;
+    font-size: 24px;
+    margin-bottom: 4px;
 }
 
 .avatar-overlay p {
-    font-size: 14px;
+    font-size: 11px;
     text-align: center;
-    padding: 0 10px;
+    margin: 0;
+    font-weight: 500;
 }
 
 .avatar-texto {
-    margin-top: 15px;
-    font-size: 14px;
-    color: #666;
+    margin-top: 10px;
+    font-size: 12px;
+    color: #64748b;
     text-align: center;
 }
 
@@ -113,102 +130,102 @@
 =================================== */
 
 .perfil-info {
-    width: 350px;
+    flex: 1;
+    width: 100%;
 }
 
-.info-field,
-.campo {
+.perfil-field-wrapper {
+    display: flex;
+    flex-direction: column;
+}
+
+.info-field {
     display: flex;
     flex-direction: column;
     gap: 4px;
 }
 
-.info-field label,
-.campo label {
-    font-weight: bold;
-    font-size: 14px;
-    color: #000;
+.info-field label {
+    font-weight: 600;
+    font-size: 12px;
+    color: #475569;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
-.info-field label i,
-.campo label i {
-    color: #f8b94e;
-    font-size: 15px;
-    width: 20px;
+.info-field label i {
+    color: #f5b952;
+    font-size: 13px;
+    width: 14px;
 }
 
 /* ===================================
-   CAMPOS
+   CAMPOS DE TEXTO E INPUTS
 =================================== */
 
-.field-value,
-.campo-contenido {
-    padding: 10px 16px;
-    background-color: #fff;
-
-    border: 2px solid #000;
-    border-radius: 12px;
-
-    min-height: 48px;
-
+.field-value {
+    padding: 8px 12px;
+    background-color: #f8fafc;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    min-height: 38px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-
-    transition: all 0.3s;
+    transition: all 0.2s ease;
 }
 
-.field-value:hover,
-.campo-contenido:hover {
-    border-color: #f8b94e;
+.field-value:hover {
+    border-color: #94a3b8;
 }
 
-.field-text,
-.campo-contenido span {
+.readonly-field {
+    background-color: #f1f5f9;
+    opacity: 0.8;
+}
+
+.field-text {
     flex: 1;
-    color: #1a1a1a;
+    color: #1e293b;
+    font-size: 14px;
     word-break: break-word;
 }
 
-.field-input-edit,
-.campo-contenido input {
+.field-input-edit {
     flex: 1;
     border: none;
     outline: none;
     background: transparent;
-    font-size: 15px;
-    color: #1a1a1a;
+    font-size: 14px;
+    color: #1e293b;
+    width: 100%;
 }
 
 /* ===================================
-   BOTÓN EDITAR
+   BOTÓN EDITAR CAMPO
 =================================== */
 
-.btn-edit-field,
-.btn-editar,
-.campo-contenido button {
-    background: none;
+.btn-edit-field {
+    background: transparent;
     border: none;
-
     cursor: pointer;
-
-    padding: 6px 10px;
-    border-radius: 8px;
-
-    opacity: 0.5;
-
-    transition: all 0.3s;
+    padding: 4px 8px;
+    border-radius: 6px;
+    color: #64748b;
+    transition: all 0.2s;
 }
 
-.btn-edit-field:hover,
-.btn-editar:hover,
-.campo-contenido button:hover {
-    opacity: 1;
-    background-color: #f8b94e;
-    transform: scale(1.1);
+.btn-edit-field:hover {
+    background-color: #e2e8f0;
+    color: #0f172a;
+}
+
+.btn-edit-field.active {
+    background-color: #f5b95220;
+    color: #d99a30;
 }
 
 /* ===================================
@@ -217,151 +234,80 @@
 
 .field-divider {
     border: none;
-    border-top: 1px solid rgba(0, 0, 0, 0.1);
-    margin: 12px 0;
+    border-top: 1px solid #f1f5f9;
+    margin: 8px 0;
 }
 
 /* ===================================
-   BOTONES DE ACCIÓN
+   BOTONES DE ACCIÓN PRINCIPALES
 =================================== */
 
 .perfil-actions {
     display: flex;
-    gap: 15px;
-    margin-top: 20px;
+    gap: 12px;
+    margin-top: 18px;
     flex-wrap: wrap;
 }
 
 .btn-guardar {
-    background-color: #f8b94e;
-    border: 2px solid #000;
-
-    border-radius: 25px;
-
-    padding: 12px 30px;
-
-    font-weight: bold;
-    font-size: 14px;
-
+    background-color: #f5b952;
+    border: none;
+    border-radius: 10px;
+    padding: 10px 20px;
+    font-weight: 600;
+    font-size: 13px;
     cursor: pointer;
-
-    transition: all 0.3s;
-
+    transition: all 0.2s ease;
     display: inline-flex;
     align-items: center;
-    gap: 8px;
-
-    color: #000;
+    gap: 6px;
+    color: #1e293b;
+    box-shadow: 0 2px 4px rgba(245, 185, 82, 0.2);
 }
 
 .btn-guardar:hover {
-    background-color: #e6a73a;
-    transform: scale(1.03);
-    box-shadow: 0 4px 12px rgba(248, 185, 78, 0.3);
-}
-
-.btn-guardar:active {
-    transform: scale(0.97);
-}
-
-.btn-eliminar {
-    background-color: #ff6b6b;
-    border: 2px solid #000;
-
-    border-radius: 25px;
-
-    padding: 12px 30px;
-
-    font-weight: bold;
-    font-size: 14px;
-
-    cursor: pointer;
-
-    transition: all 0.3s;
-
-    color: #000;
-}
-
-.btn-eliminar:hover {
-    background-color: #e55555;
-    transform: scale(1.03);
-    box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3);
-}
-
-.btn-eliminar:active {
-    transform: scale(0.97);
+    background-color: #e5a840;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(245, 185, 82, 0.3);
 }
 
 .btn-danger {
-  background-color: #ff6b6b;
-  border: 2px solid #000;
-  border-radius: 25px;
-  padding: 10px 30px;
-  font-weight: bold;
-  font-size: 14px;
-  cursor: pointer;
-  transition: all 0.3s;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  color: #000;
+    background-color: #fee2e2;
+    border: none;
+    border-radius: 10px;
+    padding: 10px 20px;
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: #dc2626;
 }
 
 .btn-danger:hover {
-  background-color: #e55555;
-  transform: scale(1.03);
-  box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3);
-}
-
-.btn-danger:active {
-  transform: scale(0.97);
+    background-color: #fecaca;
+    transform: translateY(-1px);
 }
 
 /* ===================================
    RESPONSIVE
 =================================== */
 
-@media (max-width: 900px) {
-
+@media (max-width: 850px) {
     .perfil-card {
         flex-direction: column;
         align-items: center;
+        padding: 20px;
     }
 
     .avatar-section {
         width: 100%;
+        margin-bottom: 15px;
     }
 
     .perfil-info {
         width: 100%;
-    }
-}
-
-@media (max-width: 768px) {
-
-    .perfil-container {
-        padding: 10px;
-    }
-
-    .perfil-card {
-        padding: 20px;
-    }
-
-    .avatar-container {
-        width: 180px;
-        height: 180px;
-    }
-
-    .avatar-circle {
-        font-size: 60px;
-    }
-
-    .perfil-actions {
-        flex-direction: column;
-    }
-
-    .perfil-actions button {
-        width: 100%;
-        justify-content: center;
     }
 }

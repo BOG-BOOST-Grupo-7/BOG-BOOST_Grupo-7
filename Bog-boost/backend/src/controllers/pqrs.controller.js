@@ -107,9 +107,9 @@ export const listarPQRS = async (req, res) => {
 
 export const crearPQRS = async (req, res) => {
   try {
-
     const { mensaje_pqrs } = req.body;
 
+    // 1. Insertar el PQRS en la base de datos
     const { data, error } = await supabase
       .schema("cliente")
       .from("pqrs")
@@ -125,10 +125,53 @@ export const crearPQRS = async (req, res) => {
       return res.status(400).json(error);
     }
 
-    res.status(201).json(data);
+    const nuevoPQRS = data[0];
+
+    try {
+      // 2. Obtener los id_rol correspondientes a SUPER_ADMIN y ADMINISTRADOR
+      const { data: roles, error: errorRoles } = await supabase
+        .schema("cliente")
+        .from("rol")
+        .select("id_rol")
+        .in("nombre_rol", ["SUPER_ADMIN", "ADMINISTRADOR"]);
+
+      if (!errorRoles && roles && roles.length > 0) {
+        const idsRoles = roles.map((rol) => rol.id_rol);
+
+        // 3. Obtener los perfiles (usuarios) que tienen esos roles
+        const { data: perfilesAdmins, error: errorAdmins } = await supabase
+          .schema("cliente")
+          .from("perfil")
+          .select("id_perfil")
+          .in("id_rol", idsRoles);
+
+        if (!errorAdmins && perfilesAdmins && perfilesAdmins.length > 0) {
+          // 4. Preparar las notificaciones respetando las columnas de tu tabla
+          const notificaciones = perfilesAdmins.map((admin) => ({
+            id_perfil: admin.id_perfil,
+            mensaje: "Se ha creado un nuevo PQRS que requiere atención.",
+            tipo: "ALERTA", // Opciones permitidas: 'INFORMATIVA', 'ALERTA', 'PROMOCION', 'SISTEMA'
+            estado_notificacion: false
+          }));
+
+          // 5. Insertar las notificaciones en bloque en la tabla cliente.notificacion
+          await supabase
+            .schema("cliente")
+            .from("notificacion")
+            .insert(notificaciones);
+        }
+      }
+    } catch (notifError) {
+      // Si ocurre un error enviando la notificación, no interrumpimos la respuesta del PQRS
+      console.error("Error al enviar notificaciones a los administradores:", notifError);
+    }
+
+    // Responder exitosamente con el PQRS creado
+    res.status(201).json(nuevoPQRS);
 
   } catch (error) {
-    res.status(500).json(error);
+    console.error("Error en crearPQRS:", error);
+    res.status(500).json({ mensaje: "Error interno del servidor", error });
   }
 };
 
@@ -226,10 +269,10 @@ export const listarMisPQRS = async (req, res) => {
 
 export const responderPQRS = async (req, res) => {
   try {
-
     const { id } = req.params;
     const { respuesta_pqrs } = req.body;
 
+    // 1. Actualizar el PQRS con la respuesta
     const { data, error } = await supabase
       .schema("cliente")
       .from("pqrs")
@@ -243,9 +286,33 @@ export const responderPQRS = async (req, res) => {
       return res.status(400).json(error);
     }
 
-    res.json(data);
+    const pqrsActualizado = data[0];
+
+    // 2. Enviar la notificación al cliente o vendedor que creó el PQRS
+    if (pqrsActualizado && pqrsActualizado.id_perfil) {
+      try {
+        await supabase
+          .schema("cliente")
+          .from("notificacion")
+          .insert([
+            {
+              id_perfil: pqrsActualizado.id_perfil, // El dueño del PQRS
+              mensaje: "Tu PQRS ha recibido una respuesta.",
+              tipo: "INFORMATIVA", // Valores permitidos: 'INFORMATIVA', 'ALERTA', 'PROMOCION', 'SISTEMA'
+              estado_notificacion: false
+            }
+          ]);
+      } catch (notifError) {
+        // Si falla la notificación, no interrumpimos la respuesta exitosa al administrador
+        console.error("Error al enviar la notificación al usuario:", notifError);
+      }
+    }
+
+    // Responder exitosamente con el PQRS actualizado
+    res.json(pqrsActualizado);
 
   } catch (error) {
-    res.status(500).json(error);
+    console.error("Error en responderPQRS:", error);
+    res.status(500).json({ mensaje: "Error interno del servidor", error });
   }
 };

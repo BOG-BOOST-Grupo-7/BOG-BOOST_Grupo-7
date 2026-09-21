@@ -14,8 +14,8 @@ from "../controllers/movimientoStock.controller.js";
 const router = Router();
 
 router.get("/", authMiddleware, vendedorMiddleware, listarMovimientos);
-router.get("/:id", authMiddleware, vendedorMiddleware, obtenerMovimientoPorId);
 router.get("/negocio-usuario", authMiddleware, vendedorMiddleware, obtenerNegocioPorUsuario);
+router.get("/:id", authMiddleware, vendedorMiddleware, obtenerMovimientoPorId);
 router.post("/crear", authMiddleware, vendedorMiddleware, crearMovimiento);
 
 export default router;

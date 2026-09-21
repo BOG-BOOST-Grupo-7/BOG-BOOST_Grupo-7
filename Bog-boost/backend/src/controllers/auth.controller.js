@@ -236,21 +236,22 @@ export const recuperarPassword = async (req, res) => {
     try {
       const { email } = req.body;
 
-      const { error } = await supabase.auth.resetPasswordForEmail(
-            email
-          );
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: "http://localhost:5173/cambiar-password" // Cambia esto según tu ruta de frontend
+      });
 
       if (error) {
         return res.status(400).json(error);
       }
+      
       res.json({
-        mensaje: "Correo enviado para recuperación"
+        mensaje: "Correo enviado para recuperación de contraseña"
       });
 
     } catch (error) {
       res.status(500).json(error);
     }
-  };
+};
 
 export const cambiarPassword = async (req, res) => {
     try {

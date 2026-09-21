@@ -92,14 +92,14 @@ function Header() {
 
         {rol === "SUPER_ADMIN" ? (
 
-          <a onClick={() => go("/admin")}>Inicio</a>
+          <a onClick={() => go("/admin")}>Panel Principal</a>
 
         ) : rol === "VENDEDOR" ? (
 
           <>
-            <a onClick={() => go("/vendedor")}>Inicio</a>
+            <a onClick={() => go("/vendedor")}>Perfil Negocio</a>
             <a onClick={() => go("/ventas")}>Ventas</a>
-            <a onClick={() => go("/stock")}>Stock</a>
+            <a onClick={() => go("/stock")}>Inventario y Stock</a>
           </>
 
         ) : (
@@ -117,7 +117,7 @@ function Header() {
                   setCatalogoOpen(!catalogoOpen);
                 }}
               >
-                Categorías <i className="fas fa-chevron-down"></i>
+                Categorías <i className={`fas fa-chevron-down dropdown-arrow ${catalogoOpen ? "rotate" : ""}`}></i>
               </a>
 
               <div className={`catalogo-dropdown ${catalogoOpen ? "show" : ""}`}>
@@ -126,9 +126,9 @@ function Header() {
                   categorias.map((cat) => (
                     <a
                       key={cat.id_categoria}
-                      onClick={() => go(`/catalogo/${cat.id_categoria}`)}
+                      onClick={() => go(`/categoria/${cat.id_categoria}`)}
                     >
-                      {cat.nombre_categoria}
+                      <i className="fas fa-tag"></i> {cat.nombre_categoria}
                     </a>
                   ))
                 ) : (
@@ -136,12 +136,6 @@ function Header() {
                     Cargando...
                   </span>
                 )}
-
-                <div className="dropdown-divider"></div>
-
-                <a onClick={() => go("/catalogo")}>
-                  Ver todos
-                </a>
 
               </div>
 
@@ -232,14 +226,14 @@ function Header() {
         {rol === "SUPER_ADMIN" ? (
 
           <a onClick={() => go("/admin")}>
-            Inicio
+            Panel Principal
           </a>
 
         ) : rol === "VENDEDOR" ? (
 
           <>
             <a onClick={() => go("/vendedor")}>
-              Inicio
+              Perfil Negocio
             </a>
 
             <a onClick={() => go("/ventas")}>
@@ -247,7 +241,7 @@ function Header() {
             </a>
 
             <a onClick={() => go("/stock")}>
-              Stock
+              Inventario y Stock
             </a>
           </>
 
@@ -267,7 +261,7 @@ function Header() {
                   setCatalogoOpen(!catalogoOpen);
                 }}
               >
-                Categorías
+                Categorías <i className={`fas fa-chevron-down dropdown-arrow ${catalogoOpen ? "rotate" : ""}`}></i>
               </a>
 
               <div
@@ -282,7 +276,7 @@ function Header() {
                         go(`/catalogo/${cat.id_categoria}`)
                       }
                     >
-                      {cat.nombre_categoria}
+                      <i className="fas fa-tag"></i> {cat.nombre_categoria}
                     </a>
                   ))
                 ) : (
@@ -290,12 +284,6 @@ function Header() {
                     No hay categorías
                   </span>
                 )}
-
-                <div className="dropdown-divider"></div>
-
-                <a onClick={() => go("/catalogo")}>
-                  Ver todos
-                </a>
 
               </div>
 
@@ -329,15 +317,11 @@ function Header() {
             </a>
 
             <a onClick={() => go("/historial")}>
-              Historial
-            </a>
-
-            <a onClick={() => go("/comentarios")}>
-              Comentarios
+              Historial/Compras
             </a>
 
             <a onClick={() => go("/contacto")}>
-              Contáctenos
+              Contáctenos/PQRS
             </a>
           </>
 
@@ -365,7 +349,7 @@ function Header() {
             </a>
 
             <a onClick={() => go("/ventas")}>
-              Ventas
+              Reportes
             </a>
           </>
 
@@ -376,12 +360,8 @@ function Header() {
               Perfil
             </a>
 
-            <a onClick={() => go("/productos")}>
-              Productos
-            </a>
-
             <a onClick={() => go("/contacto")}>
-              Contáctenos
+              Contáctenos/PQRS
             </a>
           </>
 

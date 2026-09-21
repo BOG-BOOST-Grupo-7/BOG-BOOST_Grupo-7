@@ -24,13 +24,10 @@ function Login() {
 
     try {
       const res = await loginUser({ email, password });
-
-      const {user, perfil } = res.data;
-
+      const { user, perfil } = res.data;
       login(user, perfil);
 
       const rol = perfil?.rol?.nombre_rol;
-
       const destino = location.state?.from;
 
       switch (rol) {
@@ -52,7 +49,6 @@ function Login() {
         err?.response?.data?.mensaje ||
         err?.message ||
         "Error al iniciar sesión";
-
       setError(msg);
     } finally {
       setLoading(false);
@@ -62,19 +58,19 @@ function Login() {
   return (
     <section className="registro-container">
       <div className="registro-card">
-
-        <h2 className="registro-title">
-          Iniciar Sesión
-        </h2>
+        <div className="auth-header">
+          <div className="auth-icon-badge">
+            <i className="fas fa-lock-open"></i>
+          </div>
+          <h2 className="registro-title">Bienvenido de nuevo</h2>
+          <p className="registro-subtitle">Ingresa a tu cuenta para continuar</p>
+        </div>
 
         <form onSubmit={handleSubmit} className="registro-form">
-
           <div className="form-group">
             <label>
-              <i className="fas fa-envelope"></i>
-              Correo
+              <i className="fas fa-envelope label-icon"></i> Correo electrónico
             </label>
-
             <input
               type="email"
               placeholder="tucorreo@ejemplo.com"
@@ -86,19 +82,16 @@ function Login() {
 
           <div className="form-group">
             <label>
-              <i className="fas fa-lock"></i>
-              Contraseña
+              <i className="fas fa-key label-icon"></i> Contraseña
             </label>
-
             <div className="password-wrapper">
               <input
                 type={showPassword ? "text" : "password"}
-                placeholder="Ingresa tu contraseña"
+                placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
               />
-
               <button
                 type="button"
                 className="toggle-password"
@@ -109,26 +102,34 @@ function Login() {
             </div>
           </div>
 
-          {error && <p className="error">{error}</p>}
+          {error && <div className="error-banner"><i className="fas fa-exclamation-circle"></i> {error}</div>}
 
           <button
             type="submit"
             className="btn-registrar"
             disabled={loading}
           >
-            <i className="fas fa-sign-in-alt"></i>
-            {loading ? "Ingresando..." : "Iniciar Sesión"}
+            {loading ? (
+              <>
+                <i className="fas fa-spinner fa-spin"></i> Ingresando...
+              </>
+            ) : (
+              <>
+                Iniciar Sesión <i className="fas fa-arrow-right"></i>
+              </>
+            )}
           </button>
-
         </form>
 
-        <div className="registro-links">
-          <Link to="/registro" className="link-login">
-            <i className="fas fa-user-plus"></i>
-            ¿No tienes cuenta? Regístrate
+        <div className="registro-links columnas">
+          <Link to="/recuperar-password" className="link-login">
+          ¿Olvidaste tu contraseña? <span>Recupérala aquí</span>
           </Link>
-        </div>
-
+          
+          <Link to="/registro" className="link-login">
+          ¿No tienes una cuenta? <span>Regístrate aquí</span>
+          </Link>
+          </div>
       </div>
     </section>
   );

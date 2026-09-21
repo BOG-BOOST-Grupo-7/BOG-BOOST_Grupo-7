@@ -1,5 +1,5 @@
-
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 
 // ============================================
@@ -7,6 +7,7 @@ import { useAuth } from "../../context/AuthContext";
 // ============================================
 import { subirLogo as subirLogoApi } from "../../api/uploadApi";
 import { registrarNegocio } from "../../api/negocioApi";
+import { obtenerMiPerfil } from "../../api/perfilApi";
 import {
     getAvailableStands,
     assignStandToBusiness,
@@ -16,6 +17,9 @@ import "../../styles/RegistrarNegocio.css";
 
 function RegistrarNegocio() {
     const { user } = useAuth();
+    const navigate = useNavigate();
+
+    const [cargandoPerfil, setCargandoPerfil] = useState(true);
 
     // ============================================
     // ESTADOS
@@ -35,6 +39,45 @@ function RegistrarNegocio() {
     const [cargandoPuestos, setCargandoPuestos] = useState(false);
 
     // ============================================
+    // VALIDAR PERFIL
+    // ============================================
+    useEffect(() => {
+        const verificarPerfil = async () => {
+            try {
+                const perfil = await obtenerMiPerfil();
+
+                const perfilIncompleto =
+                    !perfil.primer_nombre ||
+                    !perfil.primer_apellido ||
+                    !perfil.id_tipo_documento ||
+                    !perfil.numero_documento;
+
+                if (perfilIncompleto) {
+                    alert(
+                        "Por favor, completa la información de tu perfil personal antes de registrar un negocio."
+                    );
+
+                    navigate("/perfil");
+                    return;
+                }
+            } catch (error) {
+                console.error(
+                    "Error al verificar el perfil:",
+                    error
+                );
+
+                alert(
+                    "No se pudo verificar tu perfil. Inicia sesión nuevamente."
+                );
+            } finally {
+                setCargandoPerfil(false);
+            }
+        };
+
+        verificarPerfil();
+    }, [navigate]);
+
+    // ============================================
     // CARGAR PUESTOS DISPONIBLES
     // ============================================
     const loadAvailableStands = async () => {
@@ -43,7 +86,9 @@ function RegistrarNegocio() {
 
             const data = await getAvailableStands();
 
-            setAvailableStands(Array.isArray(data) ? data : []);
+            setAvailableStands(
+                Array.isArray(data) ? data : []
+            );
         } catch (error) {
             console.error(
                 "Error al cargar puestos disponibles:",
@@ -126,13 +171,16 @@ function RegistrarNegocio() {
                 };
 
                 imagen.onerror = () => {
-                    reject(new Error("Error al cargar la imagen."));
+                    reject(
+                        new Error(
+                            "Error al cargar la imagen."
+                        )
+                    );
                 };
             });
 
             // Mostrar preview
             setPreviewLogo(previewUrl);
-
             setSubiendoLogo(true);
 
             // Subir logo al backend
@@ -145,7 +193,6 @@ function RegistrarNegocio() {
         } catch (error) {
             console.error("Error al subir logo:", error);
 
-            // Si hubo error, eliminar preview
             URL.revokeObjectURL(previewUrl);
             setPreviewLogo("");
 
@@ -202,7 +249,8 @@ function RegistrarNegocio() {
         // ============================================
         const standSeleccionado = availableStands.find(
             (stand) =>
-                Number(stand.number) === Number(datos.numero_puesto)
+                Number(stand.number) ===
+                Number(datos.numero_puesto)
         );
 
         if (!standSeleccionado) {
@@ -221,21 +269,32 @@ function RegistrarNegocio() {
             // 1. REGISTRAR NEGOCIO
             // ============================================
             const respuesta = await registrarNegocio({
-                nombre_negocio: datos.nombre_negocio.trim(),
+                nombre_negocio:
+                    datos.nombre_negocio.trim(),
+
                 descripcion_negocio:
                     datos.descripcion_negocio.trim(),
-                telefono_negocio: datos.telefono_negocio.trim(),
-                numero_puesto: Number(datos.numero_puesto),
+
+                telefono_negocio:
+                    datos.telefono_negocio.trim(),
+
+                numero_puesto:
+                    Number(datos.numero_puesto),
+
                 logo: datos.logo,
             });
 
-            console.log("Negocio registrado:", respuesta);
+            console.log(
+                "Negocio registrado:",
+                respuesta
+            );
 
             // ============================================
             // 2. ASIGNAR NEGOCIO AL PUESTO
             // ============================================
             const negocioId =
-                respuesta.id || respuesta.id_negocio;
+                respuesta.id ||
+                respuesta.id_negocio;
 
             if (!negocioId) {
                 throw new Error(
@@ -250,7 +309,8 @@ function RegistrarNegocio() {
                     userId: user?.id,
                     ownerName: datos.nombre_negocio,
                     products: [],
-                    description: datos.descripcion_negocio,
+                    description:
+                        datos.descripcion_negocio,
                 }
             );
 
@@ -318,16 +378,39 @@ function RegistrarNegocio() {
     };
 
     // ============================================
+    // MOSTRAR CARGA MIENTRAS SE VERIFICA PERFIL
+    // ============================================
+    if (cargandoPerfil) {
+        return (
+            <main className="registro-negocio-container">
+                <div className="registro-negocio-card">
+                    <p
+                        style={{
+                            textAlign: "center",
+                            padding: "20px",
+                        }}
+                    >
+                        Verificando información del perfil...
+                    </p>
+                </div>
+            </main>
+        );
+    }
+
+    // ============================================
     // RENDER
     // ============================================
     return (
         <main className="registro-negocio-container">
             <div className="registro-negocio-card">
-                <h1>Solicitud de Registro de Negocio</h1>
+                <h1>
+                    Solicitud de Registro de Negocio
+                </h1>
 
                 <p className="subtitle">
-                    Solo se aceptan negocios que tengan un puesto fijo
-                    dentro del Mercado de las Pulgas San Alejo.
+                    Solo se aceptan negocios que tengan un
+                    puesto fijo dentro del Mercado de las
+                    Pulgas San Alejo.
                     <br />
 
                     <strong>
@@ -337,6 +420,7 @@ function RegistrarNegocio() {
                 </p>
 
                 <form onSubmit={guardarSolicitud}>
+
                     {/* ========================================
                         LOGO
                     ======================================== */}
@@ -359,8 +443,8 @@ function RegistrarNegocio() {
                                 </div>
 
                                 <p>
-                                    Haz clic para seleccionar el
-                                    logo
+                                    Haz clic para seleccionar
+                                    el logo
                                 </p>
 
                                 <small>
@@ -405,7 +489,18 @@ function RegistrarNegocio() {
                         type="text"
                         name="nombre_negocio"
                         value={datos.nombre_negocio}
-                        onChange={handleChange}
+                        onChange={(e) => {
+                            const soloLetras =
+                                e.target.value.replace(
+                                    /[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g,
+                                    ""
+                                );
+
+                            setDatos((prev) => ({
+                                ...prev,
+                                nombre_negocio: soloLetras,
+                            }));
+                        }}
                         placeholder="Ej: Antigüedades San Alejo"
                     />
 
@@ -434,10 +529,23 @@ function RegistrarNegocio() {
                     </label>
 
                     <input
-                        type="tel"
+                        type="text"
                         name="telefono_negocio"
+                        inputMode="numeric"
                         value={datos.telefono_negocio}
-                        onChange={handleChange}
+                        onChange={(e) => {
+                            const soloNumeros =
+                                e.target.value.replace(
+                                    /\D/g,
+                                    ""
+                                );
+
+                            setDatos((prev) => ({
+                                ...prev,
+                                telefono_negocio:
+                                    soloNumeros,
+                            }));
+                        }}
                         placeholder="Ej: 3012345678"
                     />
 
@@ -474,8 +582,8 @@ function RegistrarNegocio() {
 
                                 {stand.price
                                     ? ` ($${Number(
-                                          stand.price
-                                      ).toLocaleString()}/mes)`
+                                        stand.price
+                                    ).toLocaleString()}/mes)`
                                     : ""}
                             </option>
                         ))}
@@ -490,8 +598,8 @@ function RegistrarNegocio() {
                     {availableStands.length === 0 &&
                         !cargandoPuestos && (
                             <div className="sin-puestos">
-                                ⚠️ No hay puestos disponibles en
-                                este momento.
+                                ⚠️ No hay puestos disponibles
+                                en este momento.
                             </div>
                         )}
 
@@ -520,7 +628,9 @@ function RegistrarNegocio() {
                                             Number(
                                                 datos.numero_puesto
                                             ) ===
-                                            Number(stand.number)
+                                            Number(
+                                                stand.number
+                                            )
                                                 ? "selected"
                                                 : ""
                                         }`}
@@ -540,7 +650,8 @@ function RegistrarNegocio() {
                                             }px`,
                                             top: `${
                                                 (stand.coordinates
-                                                    ?.y || 1) *
+                                                    ?.y ||
+                                                    1) *
                                                     1.8 +
                                                 20
                                             }px`,
@@ -590,4 +701,3 @@ function RegistrarNegocio() {
 }
 
 export default RegistrarNegocio;
-
