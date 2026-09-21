@@ -5,13 +5,12 @@ import { useAuth } from "../../context/AuthContext";
 // ============================================
 // IMPORTS DE APIS
 // ============================================
-import { subirLogo as subirLogoApi } from "../../api/uploadApi";
-import { registrarNegocio } from "../../api/negocioApi";
 import { obtenerMiPerfil } from "../../api/perfilApi";
+import { registrarNegocio } from "../../api/negocioApi";
+import { subirLogo as subirLogoApi } from "../../api/uploadApi";
 import {
-    getAvailableStands,
-    assignStandToBusiness,
-} from "../../api/api";
+    getAvailableStands
+} from "../../api/mapaApis";
 
 import "../../styles/RegistrarNegocio.css";
 
@@ -266,7 +265,7 @@ function RegistrarNegocio() {
 
         try {
             // ============================================
-            // 1. REGISTRAR NEGOCIO
+            // 1. REGISTRAR NEGOCIO Y ASIGNAR PUESTO (Vía Backend)
             // ============================================
             const respuesta = await registrarNegocio({
                 nombre_negocio:
@@ -285,44 +284,19 @@ function RegistrarNegocio() {
             });
 
             console.log(
-                "Negocio registrado:",
+                "Negocio registrado exitosamente:",
                 respuesta
             );
 
             // ============================================
-            // 2. ASIGNAR NEGOCIO AL PUESTO
-            // ============================================
-            const negocioId =
-                respuesta.id ||
-                respuesta.id_negocio;
-
-            if (!negocioId) {
-                throw new Error(
-                    "El negocio fue registrado, pero no se recibió su ID."
-                );
-            }
-
-            await assignStandToBusiness(
-                datos.numero_puesto,
-                {
-                    negocioId,
-                    userId: user?.id,
-                    ownerName: datos.nombre_negocio,
-                    products: [],
-                    description:
-                        datos.descripcion_negocio,
-                }
-            );
-
-            // ============================================
-            // 3. MENSAJE DE ÉXITO
+            // 2. MENSAJE DE ÉXITO
             // ============================================
             alert(
                 `✅ ¡Éxito! Tu negocio "${datos.nombre_negocio}" ha sido registrado y asignado al puesto #${datos.numero_puesto}.`
             );
 
             // ============================================
-            // 4. LIMPIAR FORMULARIO
+            // 3. LIMPIAR FORMULARIO
             // ============================================
             setDatos({
                 nombre_negocio: "",
@@ -335,7 +309,7 @@ function RegistrarNegocio() {
             setPreviewLogo("");
 
             // ============================================
-            // 5. ACTUALIZAR PUESTOS DISPONIBLES
+            // 4. ACTUALIZAR PUESTOS DISPONIBLES
             // ============================================
             await loadAvailableStands();
         } catch (error) {
