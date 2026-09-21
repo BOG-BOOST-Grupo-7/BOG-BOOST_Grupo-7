@@ -56,7 +56,7 @@
   }
 }
 
-/* 🔥 RESET CLAVE */
+/* RESET CLAVE - evita desbordamientos */
 * {
   margin: 0;
   padding: 0;
@@ -70,12 +70,13 @@ body {
   overflow-x: hidden;
 }
 
-/* 🚀 ROOT CORREGIDO (AQUÍ ESTABA EL ERROR) */
+/* ROOT */
 #root {
   width: 100%;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  overflow-x: hidden; 
 }
 
 /* tipografías */

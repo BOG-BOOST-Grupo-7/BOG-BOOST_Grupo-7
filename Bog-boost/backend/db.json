@@ -21,5 +21,52 @@
     }
   ],
   "productos": [],
-  "negocios": []
+  "negocios": [],
+  "stands": [
+    {
+      "id": 52,
+      "number": 52,
+      "section": "Museo de Arte Moderno",
+      "coordinates": { "x": 52, "y": 1 },
+      "owner": "María González",
+      "products": ["Pinturas al óleo", "Acuarelas", "Lienzos"],
+      "description": "Arte contemporáneo y pinturas únicas",
+      "history": "Fundado en 1995",
+      "image": null,
+      "rating": 4.5,
+      "userId": null,
+      "createdAt": "2024-01-15T10:30:00.000Z",
+      "updatedAt": "2024-01-15T10:30:00.000Z"
+    },
+    {
+      "id": 65,
+      "number": 65,
+      "section": "Museo de Arte Moderno",
+      "coordinates": { "x": 65, "y": 1 },
+      "owner": "Carlos Méndez",
+      "products": ["Esculturas", "Arte abstracto"],
+      "description": "Esculturas modernas",
+      "history": "Artista plástico desde 1990",
+      "image": null,
+      "rating": 4.8,
+      "userId": null,
+      "createdAt": "2024-01-15T10:30:00.000Z",
+      "updatedAt": "2024-01-15T10:30:00.000Z"
+    },
+    {
+      "id": 77,
+      "number": 77,
+      "section": "Sección Principal",
+      "coordinates": { "x": 77, "y": 3 },
+      "owner": "Ana Martínez",
+      "products": ["Libros antiguos", "Revistas vintage", "Cómics"],
+      "description": "Colección de libros raros",
+      "history": "Coleccionista desde 1980",
+      "image": null,
+      "rating": 4.2,
+      "userId": null,
+      "createdAt": "2024-01-15T10:30:00.000Z",
+      "updatedAt": "2024-01-15T10:30:00.000Z"
+    }
+  ]
 }
