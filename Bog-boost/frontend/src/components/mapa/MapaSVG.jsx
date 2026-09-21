@@ -12,7 +12,7 @@ const MapaSVG = ({ puestos, obtenerNegocio, alHacerClicPuesto }) => {
       {/* REFERENCIAS VISUALES */}
       {/* ================================================ */}
 
-      {/* MUSEO DE ARTE MODERNO — mueve a la izquierda junto al bloque azul */}
+      {/* MUSEO DE ARTE MODERNO  */}
 <g transform="translate(580, 20)">
   <text x="60" y="30" textAnchor="middle" fontSize="80">🏛️</text>
   <text x="60" y="55" className="label-ref" textAnchor="middle">
