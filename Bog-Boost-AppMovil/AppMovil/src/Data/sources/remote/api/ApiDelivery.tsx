@@ -13,6 +13,15 @@ const ApiDelivery = axios.create({
     }
 });
 
+export const solicitudNegocio = async (negocioData: any) => {
+    const response = await ApiDelivery.post('/rest/v1/negocios', negocioData, {
+        headers: {
+            'Prefer': 'return=representation'
+        }
+    });
+    return response.data;
+};
+
 export const getProducts = async () => {
     const response = await ApiDelivery.get('/products');
     return response.data;

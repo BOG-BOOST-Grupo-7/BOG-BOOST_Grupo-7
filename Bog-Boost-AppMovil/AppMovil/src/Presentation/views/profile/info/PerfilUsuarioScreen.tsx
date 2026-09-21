@@ -7,8 +7,7 @@ import { Footer } from "../../../components/MarketUI";
 import { useUserLocal } from "../../../hooks/useUserLocal";
 import { RemoveUserLocalUseCase } from "../../../../Domain/UseCases/userLocal/RemoveUserLocal";
 
-// Pantalla de perfil del usuario autenticado. Muestra sus datos reales (obtenidos del almacenamiento local)
-// con el diseño de tarjeta beige del proyecto de Figma, y permite cerrar la sesión.
+// Pantalla de perfil del usuario autenticado. Muestra sus datos reales (obtenidos del almacenamiento local) con el diseño de tarjeta beige del proyecto de Figma, y permite cerrar la sesión.
 export function PerfilUsuarioScreen() {
     // Consume el usuario autenticado actualmente almacenado en el dispositivo.
     const { user } = useUserLocal();
@@ -38,9 +37,11 @@ export function PerfilUsuarioScreen() {
                         <Text style={styles.fieldLabel}>Teléfono</Text>
                         <Text style={styles.fieldValue}>{user?.phone ?? "—"}</Text>
                     </View>
-
                     <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
                         <Text style={styles.logoutButtonText}>Cerrar Sesión</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={() => navigation.navigate('RegistroNegocioScreen')}>
+                            <Text style={styles.linkTextBold}>Solicitud de negocio</Text>
                     </TouchableOpacity>
                 </View>
             </ScrollView>
@@ -58,4 +59,5 @@ const styles = StyleSheet.create({
     fieldValue: { fontSize: 14, fontWeight: '700', color: C.black, marginTop: 2 },
     logoutButton: { width: '100%', paddingVertical: 12, borderRadius: 999, alignItems: 'center', backgroundColor: C.amberDark, marginTop: 8 },
     logoutButtonText: { fontSize: 13, fontWeight: '700', color: C.white },
+    linkTextBold: {fontSize: 15, fontWeight: '600', textDecorationLine: 'underline', color: C.black,},
 });
