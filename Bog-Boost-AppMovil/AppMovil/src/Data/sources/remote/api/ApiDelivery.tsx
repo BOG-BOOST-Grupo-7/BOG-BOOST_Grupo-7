@@ -1,8 +1,7 @@
 import axios from 'axios';
 
-// Configuración centralizada del cliente HTTP. Crea una instancia de Axios con la URL base del servidor y los encabezados por defecto.
-const SUPABASE_URL = 'https://conhkkkqfqshgafjpaes.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNvbmhra2txZnFzaGdhZmpwYWVzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxNjYwOTEsImV4cCI6MjA5NTc0MjA5MX0.8n5xum6G6TMSaKcthdn7xS8YBuk9hRwsv3Q3vYMGNPM'; // tu anon key completa
+const SUPABASE_URL = 'https://supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNvbmhra2txZnFzaGdhZmpwYWVzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxNjYwOTEsImV4cCI6MjA5NTc0MjA5MX0.8n5xum6G6TMSaKcthdn7xS8YBuk9hRwsv3Q3vYMGNPM'; 
 
 const ApiDelivery = axios.create({
     baseURL: SUPABASE_URL,
@@ -12,15 +11,6 @@ const ApiDelivery = axios.create({
         'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
     }
 });
-
-export const solicitudNegocio = async (negocioData: any) => {
-    const response = await ApiDelivery.post('/rest/v1/negocios', negocioData, {
-        headers: {
-            'Prefer': 'return=representation'
-        }
-    });
-    return response.data;
-};
 
 export const getProducts = async () => {
     const response = await ApiDelivery.get('/products');
@@ -47,4 +37,63 @@ export const getProductById = async (id: any) => {
     return response.data;
 };
 
-export {ApiDelivery, SUPABASE_ANON_KEY};
+export const crearPerfil = async (perfil: any) => {
+    const response = await ApiDelivery.post('/rest/v1/perfil', perfil, {
+        headers: {
+            'Prefer': 'return=representation',
+            'Accept-Profile': 'cliente',
+            'Content-Profile': 'cliente'
+        }
+    });
+    return response.data;
+};
+
+/**
+ * Permite a los usuarios registrados enviar una propuesta de creación de negocio.
+ */
+export const solicitudNegocio = async (negocio: any, accessToken?: string | null) => {
+    const response = await ApiDelivery.post('/rest/v1/negocios', negocio, { // Corregido a plural 'negocios'
+        headers: {
+            'Prefer': 'return=representation',
+            'Accept-Profile': 'public',
+            'Content-Profile': 'public',
+            ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+        }
+    });
+    return response.data;
+};
+
+/**
+ * Obtiene todas las solicitudes de negocios que están en estado PENDIENTE para el panel del Admin.
+ */
+export const getSolicitudesPendientes = async (accessToken: string) => {
+    const response = await ApiDelivery.get('/rest/v1/negocios?estado_negocio=eq.PENDIENTE', {
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${accessToken}`,
+            'Accept-Profile': 'public', 
+            'Content-Profile': 'public'
+        }
+    });
+    return response.data;
+};
+
+/**
+ * Actualiza el estado de una propuesta de negocio a 'APROBADO' o 'RECHAZADO'.
+ */
+export const actualizarEstadoSolicitud = async (idNegocio: number, nuevoEstado: string, accessToken: string) => {
+    const response = await ApiDelivery.patch(`/rest/v1/negocios?id_negocio=eq.${idNegocio}`, 
+        { estado_negocio: nuevoEstado },
+        {
+            headers: {
+                'Authorization': `Bearer ${accessToken}`,
+                'Accept-Profile': 'public',
+                'Content-Profile': 'public'
+            }
+        }
+    );
+    return response.data;
+};
+
+export { ApiDelivery, SUPABASE_ANON_KEY };

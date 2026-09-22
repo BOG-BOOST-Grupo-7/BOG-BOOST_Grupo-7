@@ -37,7 +37,6 @@ export const HomeScreen = ({navigation, route}: Props) => {
   }, [user]);
 
   return (
-    // Contenedor general centrado que replica la tarjeta beige de "Iniciar Sesión" del diseño de Figma.
     <View style={styles.container}>
       <View style={styles.centerArea}>
         <View style={styles.card}>

@@ -1,10 +1,12 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, ScrollView, Alert, ActivityIndicator } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { C } from "../../theme/AppTheme";
 import { Footer } from "../../components/MarketUI";
-import { solicitudNegocio } from "../../../Data/sources/remote/api/ApiDelivery"; // Verifica que la ruta a tu apiDelivery sea la correcta
+import { solicitudNegocio } from "../../../Data/sources/remote/api/ApiDelivery";
+import { useUserLocal } from "../../hooks/useUserLocal";
 import styles from "./styles";
+import { LocalStorage } from "../../../Data/sources/local/LocalStorage";
 
 const categorias = ["Accesorios", "Artesanías", "Ropa", "Antigüedades", "Joyas", "Arte"];
 
@@ -14,40 +16,64 @@ export function RegistroNegocioScreen() {
     const [descripcion, setDescripcion] = useState("");
     const [telefono, setTelefono] = useState("");
     const [loading, setLoading] = useState(false);
+    
     const navigation = useNavigation<any>();
+
+    // 2. Traemos el objeto 'user' y la función para cargar la sesión desde tu arquitectura
+    const { user, getUserSession } = useUserLocal();
+
+    // 3. Forzamos a que lea la sesión guardada apenas se monte la pantalla
+    useEffect(() => {
+        getUserSession();
+    }, []);
 
     const handleEnviarSolicitud = async () => {
         if (!nombre || !descripcion || !telefono) {
             Alert.alert("Error", "Por favor completa todos los campos obligatorios.");
             return;
         }
+
+        // 4. Verificamos dinámicamente si el usuario está logueado usando tu propio objeto local
+        if (!user || !user.id) {
+            Alert.alert("Error de Sesión", "No se detectó una sesión activa. Por favor inicia sesión.");
+            return;
+        }
+
         setLoading(true);
+
         try {
-            // CAMBIA ESTO: Coloca temporalmente un ID de prueba que exista en tu tabla de perfiles/usuarios para ensayar
-            const idPerfilUsuarioLogueado = "PON_AQUI_UN_ID_DE_PRUEBA_O_TU_VARIABLE"; 
-            if (!idPerfilUsuarioLogueado || idPerfilUsuarioLogueado.includes("PON_AQUI")) {
-                throw new Error("Falta configurar el id_perfil del usuario.");
-            }
-            // Unimos la categoría y descripción de forma segura sin caracteres extraños
             const descripcionFinal = categoria ? "[" + categoria + "] " + descripcion : descripcion;
+
             const nuevoNegocio = {
-                id_perfil: idPerfilUsuarioLogueado,
+                id_perfil: user.id,
                 nombre_negocio: nombre,
                 descripcion_negocio: descripcionFinal,
                 telefono_negocio: telefono,
-                estado_negocio: "pendiente",
+                estado_negocio: "PENDIENTE",
                 logo: null
             };
-            await solicitudNegocio(nuevoNegocio);
+
+            // Lee el token guardado al iniciar sesión, para que la petición quede autenticada
+            // como este usuario (lo exige la política de seguridad de la tabla "negocio").
+            const { getItem } = LocalStorage();
+            const accessToken = await getItem('access_token');
+
+            // Enviamos los datos vía Axios a Supabase, ya autenticados con ese token
+            await solicitudNegocio(nuevoNegocio, accessToken as string);
+
             Alert.alert(
                 "Solicitud Recibida",
                 "Tu propuesta de negocio fue enviada con éxito a los administradores."
             );
+
+            // Limpieza del formulario
             setNombre("");
             setCategoria("");
             setDescripcion("");
             setTelefono("");
+
             navigation.navigate('VendedorScreen');
+
         } catch (error: any) {
             console.error("Error al guardar negocio:", error);
             const mensajeError = error.response?.data?.message || error.message || "Error de conexión.";
@@ -91,7 +117,7 @@ export function RegistroNegocioScreen() {
                             <Text style={styles.primaryButtonText}>Enviar Solicitud al Admin</Text>
                         )}
                     </TouchableOpacity>
-                
+                    
                     <TouchableOpacity onPress={() => navigation.goBack()} disabled={loading}>
                         <Text style={styles.linkText}>Cancelar</Text>
                     </TouchableOpacity>

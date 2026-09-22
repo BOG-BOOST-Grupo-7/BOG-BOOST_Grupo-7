@@ -1,58 +1,83 @@
-import { AxiosError } from "axios";
-import { User } from "../../Domain/entities/User";
 import { AuthRepository } from "../../Domain/repositories/AuthRespository";
-import { ApiDelivery } from "../sources/remote/api/ApiDelivery";
-import { ResponseApiDelivery } from "../sources/remote/models/ResponseApiDelivery";
+import { User } from "../../Domain/entities/User";
+import { createClient } from "@supabase/supabase-js";
+import { SUPABASE_ANON_KEY } from "../sources/remote/api/ApiDelivery";
 
-// Implementación del repositorio de autenticación. Conecta la lógica del dominio con el sistema de Authentication de Supabase.
+// Inicialización del cliente nativo de Supabase exclusivo para los flujos de la capa de datos de Autenticación.
+const supabase = createClient('https://conhkkkqfqshgafjpaes.supabase.co', SUPABASE_ANON_KEY);
+
+// Implementación concreta del repositorio de autenticación. Gestiona la comunicación directa con las APIs de Supabase.
 export class AuthRepositoryImpl implements AuthRepository {
-// Registra un nuevo usuario en Supabase Authentication, guardando nombre, apellido y teléfono en el campo user_metadata.
-    async register(user: User): Promise<ResponseApiDelivery> {
-        try {
-            // Crea el usuario y envía los datos extra dentro de "data" (Supabase los guarda en user_metadata).
-            const response = await ApiDelivery.post('/auth/v1/signup', {
-                email: user.email,
-                password: user.password,
-                data: {
-                    name: user.name,
-                    lastname: user.lastname,
-                    phone: user.phone,
-                }
-            });
-            const authUser = response.data.user;
 
-            return Promise.resolve({
-                success: true,
-                message: 'Usuario registrado correctamente',
-                data: { id: authUser.id, email: authUser.email, ...authUser.user_metadata },
-                error: null
+    /** * Autentica un usuario existente de forma nativa e infalible mediante la SDK oficial de Supabase Auth (GoTrue). * @param email Correo electrónico ingresado en el formulario. * @param password Contraseña correspondiente a la cuenta. */
+    async login(email: string, password: string): Promise<any> {
+        try {
+            const { data, error } = await supabase.auth.signInWithPassword({
+                email: email,
+                password: password,
             });
-        } catch (error) { // Captura, formatea y procesa el error de la API
-            let e = (error as AxiosError);
-            console.log('error: ' + JSON.stringify(e.response?.data));
-            return Promise.resolve({ success: false, message: (e.response?.data as any)?.msg || 'Error al registrar el usuario', data: null, error: e.response?.data });
+
+            if (error) throw error;
+
+            // Retornamos una respuesta estandarizada con éxito mapeada al formato que espera tu caso de uso
+            return {
+                success: true,
+                message: "Inicio de sesión correcto",
+                data: data
+            };
+
+        } catch (error: any) {
+            console.error("Fallo detectado dentro de AuthRepositoryImpl.login:", error.message);
+            
+            // Capturamos la descripción limpia del error devuelto por el motor oficial de Supabase
+            const apiMessage = error.message || "Correo o contraseña incorrectos";
+
+            return {
+                success: false,
+                message: apiMessage,
+                data: null,
+                error: error.message
+            };
         }
     }
 
-    // Inicia sesión en la aplicación. Valida las credenciales contra Supabase Authentication.
-    async login(email: string, password: string): Promise<ResponseApiDelivery> {
-        try { // Envía las credenciales de acceso al endpoint de login de Supabase.
-            const response = await ApiDelivery.post('/auth/v1/token?grant_type=password', {
-                email: email,
-                password: password
+    /**
+     * Registra un nuevo usuario en la base de datos de manera limpia usando el método signUp de la SDK oficial.
+     * @param user Entidad que agrupa las propiedades del nuevo usuario.
+     */
+    async register(user: User): Promise<any> {
+        try {
+            // Invocamos el método signUp oficial empaquetando los metadatos de registro del perfil
+            const { data, error } = await supabase.auth.signUp({
+                email: user.email,
+                password: user.password,
+                options: {
+                    data: {
+                        name: user.name,
+                        lastname: user.lastname,
+                        phone: user.phone
+                    }
+                }
             });
-            const authUser = response.data.user;
 
-            return Promise.resolve({
+            if (error) throw error;
+
+            return {
                 success: true,
-                message: 'Inicio de sesión correcto',
-                data: { id: authUser.id, email: authUser.email, ...authUser.user_metadata },
-                error: null
-            });
-        } catch (error) { // Captura, formatea y procesa el error de la API.
-            let e = (error as AxiosError);
-            console.log('error: ' + JSON.stringify(e.response?.data));
-            return Promise.resolve({ success: false, message: (e.response?.data as any)?.error_description || 'Correo o contraseña incorrectos', data: null, error: e.response?.data });
+                message: "Usuario registrado correctamente",
+                data: data
+            };
+
+        } catch (error: any) {
+            console.error("Fallo detectado dentro de AuthRepositoryImpl.register:", error.message);
+            const apiMessage = error.message || "Error al registrar el usuario en el servidor.";
+
+            return {
+                success: false,
+                message: apiMessage,
+                data: null,
+                error: error.message
+            };
         }
     }
 }
