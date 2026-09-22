@@ -1,6 +1,6 @@
 import supabase from "../services/supabase.js";
 
-// backend: listarMovimientos (CORREGIDO)
+
 export const listarMovimientos = async (req, res) => {
   try {
     const { id_negocio } = req.query;
@@ -9,6 +9,25 @@ export const listarMovimientos = async (req, res) => {
       return res.status(400).json({ mensaje: "Falta el id_negocio" });
     }
 
+    // 1. Primero obtenemos los IDs de los productos que pertenecen a este negocio
+    const { data: productosNegocio, error: errorProd } = await supabase
+      .schema("catalogo")
+      .from("producto")
+      .select("id_producto")
+      .eq("id_negocio", id_negocio);
+
+    if (errorProd) {
+      return res.status(400).json(errorProd);
+    }
+
+    const idsProductos = productosNegocio.map(p => p.id_producto);
+
+    // Si el negocio no tiene productos, retornamos una lista vacía de inmediato
+    if (idsProductos.length === 0) {
+      return res.json([]);
+    }
+
+    // 2. Traemos los movimientos filtrando únicamente por los IDs de esos productos
     const { data, error } = await supabase
       .schema("catalogo")
       .from("movimiento_stock")
@@ -22,7 +41,7 @@ export const listarMovimientos = async (req, res) => {
           id_negocio
         )
       `)
-      .eq("producto.id_negocio", id_negocio)
+      .in("id_producto", idsProductos) // <--- Filtro exacto por los productos del negocio
       .order("fecha_movimiento", { ascending: false });
 
     if (error) {

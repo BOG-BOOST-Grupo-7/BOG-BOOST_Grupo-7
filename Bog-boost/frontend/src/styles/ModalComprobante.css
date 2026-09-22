@@ -29,8 +29,14 @@
 }
 
 /* Ajuste para que se vea bien al imprimir */
+/* Ajuste para que se vea bien al imprimir (específico para comprobantes) */
 @media print {
     .modal-overlay { background: none !important; }
-    .modal-content { box-shadow: none !important; }
+    
+    /* Cambia .modal-content por una clase propia de tu comprobante */
+    .modal-comprobante-content { 
+        box-shadow: none !important; 
+    } 
+    
     .btn-orange, .btn-green { display: none; }
 }

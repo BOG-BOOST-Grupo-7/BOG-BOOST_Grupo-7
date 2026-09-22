@@ -34,6 +34,14 @@ const Historial = () => {
     <div className="historial-page">
       <h1>Mi Historial de Compras</h1>
       
+      {/* Aviso informativo sobre calificaciones y comentarios */}
+      <div className="aviso-calificacion-banner">
+        <span className="aviso-icono">💡</span>
+        <p>
+          Una vez que tu pedido se encuentre en estado <strong>ENTREGADO</strong>, podrás ingresar a los detalles de la compra para calificar y comentar los productos adquiridos.
+        </p>
+      </div>
+      
       {loading ? <p>Cargando...</p> : (
         <table className="tabla-historial">
           <thead>

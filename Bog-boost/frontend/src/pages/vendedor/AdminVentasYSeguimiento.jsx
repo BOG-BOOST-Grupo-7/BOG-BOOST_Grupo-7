@@ -323,6 +323,7 @@ const AdminVentasYSeguimiento = () => {
               <button 
                 onClick={cerrarModalCliente}
                 className="modal-close-btn"
+                title="Cerrar"
               >
                 <FaTimes />
               </button>

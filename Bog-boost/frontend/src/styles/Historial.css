@@ -4,10 +4,34 @@
   margin: 0 auto;
 }
 
+/* Estilos para el aviso de calificación */
+.aviso-calificacion-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background-color: #fff8e1; /* Tonalidad suave acorde a tu línea naranja */
+  border-left: 4px solid #ff9800;
+  padding: 14px 18px;
+  border-radius: 8px;
+  margin-bottom: 25px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.aviso-icono {
+  font-size: 1.3rem;
+}
+
+.aviso-calificacion-banner p {
+  margin: 0;
+  color: #5d4037;
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+
 .tabla-historial {
   width: 100%;
   border-collapse: collapse;
-  margin-top: 20px;
+  margin-top: 10px;
   background: white;
   border-radius: 8px;
   overflow: hidden;

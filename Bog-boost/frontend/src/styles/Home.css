@@ -365,6 +365,63 @@ html, body {
   background-color: #f8f9fa;
 }
 
+/* ==========================================================
+   3. BANNER DE COBERTURA Y ENTREGAS (Profesional)
+   ================================================---------- */
+.aviso-cobertura {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  background: linear-gradient(135deg, #fffdf9 0%, #fff8eb 100%);
+  border: 1px solid #f5d799;
+  border-left: 5px solid #f5b952;
+  border-radius: 12px;
+  padding: 15px 20px;
+  margin-bottom: 25px;
+  box-shadow: 0 4px 15px rgba(245, 185, 82, 0.08);
+}
+
+.aviso-icono {
+  background: #f5b952;
+  color: #000;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+}
+
+.aviso-texto h4 {
+  margin: 0 0 3px 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: #2c2c2c;
+}
+
+.aviso-texto p {
+  margin: 0;
+  font-size: 13px;
+  color: #555;
+  line-height: 1.4;
+}
+
+/* Responsivo para pantallas pequeñas */
+@media (max-width: 768px) {
+  .aviso-cobertura {
+    padding: 12px 15px;
+  }
+  .aviso-texto h4 {
+    font-size: 14px;
+  }
+  .aviso-texto p {
+    font-size: 12px;
+  }
+}
+
 /* Diseño Responsivo */
 @media (max-width: 1024px) {
   .main-content {

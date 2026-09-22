@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { crearComentarioApi } from "../../api/comentarioApi"; // Ajusta la ruta a tu API de comentarios
+import { crearComentarioApi } from "../../api/comentarioApi";
 import "../../styles/PerfilNegocio.css"; 
 import "../../styles/ModalComprobante.css"; 
 
@@ -16,9 +16,9 @@ const ModalComprobante = ({ venta, onClose, esVendedor = false }) => {
   const estado = seguimientoData?.estado_seguimiento ? seguimientoData.estado_seguimiento.toUpperCase() : 'PENDIENTE';
   const esEntregado = estado === 'ENTREGADO';
 
-  // 2. Estados locales para manejar los comentarios por cada producto
+  // 2. Estados locales para manejar los comentarios y mensajes de éxito por producto
   const [comentarios, setComentarios] = useState({}); 
-  const [mensajeExito, setMensajeExito] = useState("");
+  const [mensajesExito, setMensajesExito] = useState({});
 
   const handleInputChange = (id_producto, campo, valor) => {
     setComentarios(prev => ({
@@ -43,8 +43,13 @@ const ModalComprobante = ({ venta, onClose, esVendedor = false }) => {
         comentario: datos.texto,
         calificacion: Number(datos.calificacion || 5)
       });
-      setMensajeExito(`¡Comentario publicado con éxito!`);
-      setTimeout(() => setMensajeExito(""), 3000);
+      
+      // Mostrar mensaje de éxito específico para este producto
+      setMensajesExito(prev => ({ ...prev, [id_producto]: "¡Reseña publicada con éxito!" }));
+      setTimeout(() => {
+        setMensajesExito(prev => ({ ...prev, [id_producto]: "" }));
+      }, 3000);
+
     } catch (error) {
       console.error("Error al publicar comentario:", error);
       alert("Hubo un error al publicar el comentario.");
@@ -53,7 +58,8 @@ const ModalComprobante = ({ venta, onClose, esVendedor = false }) => {
 
   return (
     <div className="modal-overlay">
-      <div className="modal-content">
+      {/* Cambia a .modal-comprobante-content si deseas aislarlo totalmente en el CSS */}
+      <div className="modal-content modal-comprobante-content">
         
         <div className="modal-header">
           <h2>{esVendedor ? `Comprobante de Venta #${venta.id_venta}` : "Comprobante de Compra"}</h2>
@@ -65,7 +71,6 @@ const ModalComprobante = ({ venta, onClose, esVendedor = false }) => {
           <div className="card-medio">
             <h4>{esVendedor ? `Detalles de la Venta #${venta.id_venta}` : `Detalles del pedido #${venta.id_venta}`}</h4>
             
-            {/* Si NO es vendedor, mostramos fecha y dirección */}
             {!esVendedor && (
               <>
                 <p><strong>Fecha:</strong> {new Date(venta.fecha_venta).toLocaleDateString()}</p>
@@ -73,17 +78,13 @@ const ModalComprobante = ({ venta, onClose, esVendedor = false }) => {
               </>
             )}
 
-            {/* Datos que verá tanto el comprador como el vendedor */}
             <p><strong>Método de pago:</strong> {venta.medio_pago?.nombre_medio || venta.metodo_pago || "No especificado"}</p>
             <p><strong>Envío:</strong> {venta.metodo_envio?.nombre_metodo || venta.envio || "No especificado"}</p>
 
-            {/* Estado del pedido solo para el comprador (el vendedor ya lo ve en su tabla principal) */}
             {!esVendedor && (
               <p><strong>Estado del pedido:</strong> <span className={`badge-estado ${estado.toLowerCase()}`}>{estado}</span></p>
             )}
           </div>
-
-          {mensajeExito && <div className="alerta-exito" style={{ color: 'green', margin: '10px 0', fontWeight: 'bold' }}>{mensajeExito}</div>}
 
           <table className="tabla-comprobante" style={{ marginTop: '15px' }}>
             <thead>
@@ -108,7 +109,7 @@ const ModalComprobante = ({ venta, onClose, esVendedor = false }) => {
                       </td>
                     </tr>
 
-                    {/* La sección de comentarios solo se muestra si NO es vendedor y está ENTREGADO */}
+                    {/* Sección de comentarios por producto */}
                     {!esVendedor && esEntregado && (
                       <tr>
                         <td colSpan="3" style={{ background: '#f9f9f9', padding: '10px' }}>
@@ -129,7 +130,7 @@ const ModalComprobante = ({ venta, onClose, esVendedor = false }) => {
                               </select>
                             </div>
 
-                            <div style={{ display: 'flex', gap: '10px' }}>
+                            <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
                               <input 
                                 type="text" 
                                 placeholder="Escribe tu opinión (máx. 500 caracteres)..."
@@ -147,6 +148,12 @@ const ModalComprobante = ({ venta, onClose, esVendedor = false }) => {
                                 Publicar reseña
                               </button>
                             </div>
+
+                            {mensajesExito[idProducto] && (
+                              <div style={{ color: 'green', marginTop: '6px', fontSize: '0.85rem', fontWeight: 'bold' }}>
+                                {mensajesExito[idProducto]}
+                              </div>
+                            )}
                           </div>
                         </td>
                       </tr>
@@ -162,7 +169,6 @@ const ModalComprobante = ({ venta, onClose, esVendedor = false }) => {
           </div>
         </div>
 
-        {/* Footer adaptativo */}
         <div className="modal-footer">
           <button className="btn-orange" onClick={onClose}>
             Cerrar
