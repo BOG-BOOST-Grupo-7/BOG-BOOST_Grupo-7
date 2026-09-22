@@ -1,151 +1,170 @@
 /* ============================================
+   CONFIGURACIÓN GENERAL Y RESET
+============================================ */
+* {
+    box-sizing: border-box;
+}
+
+/* ============================================
    CONTENEDOR GENERAL
 ============================================ */
-
-.registro-negocio-container {
-    max-width: 900px;
-    margin: 50px auto;
-    padding: 20px;
+.registro-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    width: 100%;
+    background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+    min-height: calc(100vh - 80px);
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
-.registro-negocio-title {
-    text-align: center;
-    font-size: 2rem;
-    margin-bottom: 30px;
-    font-family: Georgia, serif;
-}
-
 /* ============================================
-   TARJETA
+   TARJETA MODERNA
 ============================================ */
-
-.registro-negocio-card {
-    background: #f4eadc;
-    border: 2px solid #000;
-    border-radius: 24px;
-    padding: 30px;
-    max-width: 700px;
-    margin: auto;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+.registro-card {
+    background-color: #ffffff;
+    border: none;
+    border-radius: 16px;
+    padding: 40px;
+    max-width: 460px;
+    width: 100%;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+    transition: transform 0.3s ease;
     animation: fadeIn 0.5s ease;
 }
 
-.registro-negocio-card h1 {
-    text-align: center;
-    font-size: 26px;
-    font-weight: 700;
-    color: #111;
-    margin-bottom: 10px;
-}
-
-.registro-negocio-card p {
-    text-align: center;
-    color: #555;
-    font-size: 15px;
-    margin-bottom: 30px;
-    line-height: 1.5;
+.registro-card-wide {
+    max-width: 1150px; /* Contenedor mucho más ancho para que el formulario respire mejor */
 }
 
 /* ============================================
-   SUBTÍTULO Y ESTADOS
+   HEADER INTERNO DE LA TARJETA
 ============================================ */
+.auth-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
 
-.subtitle {
-    color: #7f8c8d;
-    font-size: 0.9rem;
-    margin-bottom: 20px;
+.auth-icon-badge {
+    width: 50px;
+    height: 50px;
+    background-color: rgba(245, 185, 82, 0.15);
+    color: #ffa125;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    margin: 0 auto 15px auto;
+}
+
+.registro-title {
+    font-family: 'Inter', 'Segoe UI', sans-serif;
+    font-size: 26px;
+    font-weight: 700;
+    color: #111827;
+    margin: 0 0 8px 0;
+}
+
+.registro-subtitle {
+    font-size: 14px;
+    color: #6b7280;
+    margin: 0;
+    line-height: 1.5;
 }
 
 /* ============================================
    FORMULARIO
 ============================================ */
-
-.registro-negocio-card form {
+.registro-form {
     display: flex;
     flex-direction: column;
-    gap: 18px;
+    gap: 20px;
 }
 
-.registro-negocio-card label {
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.form-group label {
     font-weight: 600;
-    font-size: 14px;
+    font-size: 13px;
+    color: #374151;
     display: flex;
     align-items: center;
     gap: 8px;
-    color: #000;
 }
 
-.registro-negocio-card label i {
-    color: #f8b94e;
+.form-group label .label-icon {
+    color: #ffa125;
+    font-size: 14px;
 }
 
 /* ============================================
-   INPUTS
+   INPUTS Y TEXTAREA
 ============================================ */
-
+.form-group input,
+.form-group textarea,
 .registro-negocio-card input,
 .registro-negocio-card textarea {
+    width: 100%;
     padding: 12px 16px;
-    border: 2px solid #000;
-    border-radius: 12px;
-    font-size: 15px;
-    background: white;
-    color: #333;
-    transition: .3s;
+    border: 1.5px solid #e5e7eb;
+    border-radius: 10px;
+    font-size: 14px;
+    color: #1f2937;
+    background-color: #f9fafb;
+    transition: all 0.2s ease;
 }
 
-.registro-negocio-card textarea {
+.form-group textarea {
     resize: vertical;
-    min-height: 130px;
+    min-height: 120px;
     font-family: inherit;
 }
 
-/* ============================================
-   FOCUS
-============================================ */
-
-.registro-negocio-card input:focus,
-.registro-negocio-card textarea:focus {
+.form-group input:focus,
+.form-group textarea:focus {
+    border-color: #F5B952;
     outline: none;
-    border-color: #f8b94e;
-    background: #ffffff;
-    box-shadow: 0 0 0 3px rgba(245, 185, 82, 0.15);
+    box-shadow: 0 0 0 4px rgba(245, 185, 82, 0.15);
+    background-color: #fff;
 }
 
-/* ============================================
-   HOVER
-============================================ */
-
-.registro-negocio-card input:hover,
-.registro-negocio-card textarea:hover {
-    border-color: #f8b94e;
+.form-group input:hover,
+.form-group textarea:hover {
+    border-color: #d1d5db;
 }
 
 /* ============================================
    SELECT DE PUESTOS
 ============================================ */
-
 .stand-select {
     width: 100%;
     padding: 12px 16px;
-    border: 2px solid #000;
-    border-radius: 12px;
-    font-size: 15px;
-    background: white;
+    border: 1.5px solid #e5e7eb;
+    border-radius: 10px;
+    font-size: 14px;
+    background: #f9fafb;
+    color: #1f2937;
     cursor: pointer;
     transition: .3s;
     appearance: none;
-
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23333' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
-
     background-repeat: no-repeat;
     background-position: right 15px center;
 }
 
 .stand-select:focus {
     outline: none;
-    border-color: #f8b94e;
+    border-color: #F5B952;
+    background-color: #fff;
+    box-shadow: 0 0 0 4px rgba(245, 185, 82, 0.15);
 }
 
 .stand-select:disabled {
@@ -155,37 +174,35 @@
 }
 
 /* ============================================
-   MENSAJES DE ESTADO
+   MENSAJES DE ESTADO DE PUESTOS
 ============================================ */
-
 .cargando-puestos {
     text-align: center;
-    font-weight: bold;
+    font-weight: 600;
     color: #c88d19;
     font-size: 0.85rem;
     margin-top: 5px;
 }
 
 .sin-puestos {
-    color: #e74c3c;
+    color: #dc2626;
     font-size: 0.85rem;
     margin-top: 5px;
     padding: 10px;
-    background: #fde8e8;
-    border-radius: 6px;
+    background: #fef2f2;
+    border-radius: 8px;
     text-align: center;
-    border: 2px solid #e74c3c;
+    border: 1px solid #fee2e2;
 }
 
 /* ============================================
    ÁREA DEL LOGO
 ============================================ */
-
 .logo-upload {
-    width: 200px;
-    height: 200px;
-    margin: 0 auto;
-    border: 3px dashed #f8b94e;
+    width: 160px;
+    height: 160px;
+    margin: 5px auto;
+    border: 2px dashed #F5B952;
     border-radius: 50%;
     overflow: hidden;
     background: #fffdf9;
@@ -206,7 +223,7 @@
 }
 
 .logo-icon {
-    font-size: 60px;
+    font-size: 45px;
     margin-bottom: 5px;
 }
 
@@ -223,11 +240,6 @@
     margin: 0;
 }
 
-.logo-upload span {
-    font-size: 14px;
-    color: #555;
-}
-
 .preview-logo {
     width: 100%;
     height: 100%;
@@ -235,33 +247,25 @@
     border-radius: 50%;
 }
 
-/* ============================================
-   MENSAJE SUBIENDO
-============================================ */
-
 .uploading {
     text-align: center;
     font-weight: 600;
     color: #c88d19;
-    font-size: 14px;
+    font-size: 13px;
 }
-
-/* ============================================
-   BOTÓN CAMBIAR LOGO
-============================================ */
 
 .btn-eliminar-logo {
     background: #fff;
-    border: 2px solid #ff6b6b;
-    border-radius: 25px;
-    padding: 10px 16px;
+    border: 1.5px solid #ff6b6b;
+    border-radius: 20px;
+    padding: 8px 14px;
     color: #ff6b6b;
     font-weight: 600;
-    font-size: 13px;
+    font-size: 12px;
     cursor: pointer;
     transition: all 0.2s ease;
     width: fit-content;
-    margin: 0 auto;
+    margin: 5px auto 0 auto;
 }
 
 .btn-eliminar-logo:hover {
@@ -271,294 +275,64 @@
 }
 
 /* ============================================
-   MAPA INTERACTIVO PARA SELECCIÓN DE PUESTO
+   MENSAJE DE ERROR
 ============================================ */
-
-.stand-map-preview {
-    margin-top: 20px;
-    padding: 20px;
-    background: #fff8eb;
-    border-radius: 16px;
-    border: 2px solid #f8b94e;
-}
-
-.stand-map-preview h4 {
-    margin: 0 0 5px 0;
-    color: #2c3e50;
-    font-size: 1rem;
-    text-align: center;
-}
-
-.stand-map-preview h4 i {
-    color: #f8b94e;
-}
-
-.map-hint {
-    color: #7f8c8d;
-    font-size: 0.8rem;
-    margin: 0 0 10px 0;
-    text-align: center;
-}
-
-.mini-map {
-    position: relative;
-    width: 100%;
-    height: 350px;
-    background: #e8e0d4;
-    border-radius: 12px;
-    overflow: hidden;
-    border: 2px solid #000;
-}
-
-/* ============================================
-   MARCADORES DE PUESTOS
-============================================ */
-
-.stand-selector {
-    position: absolute;
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    border: 2px solid #2ecc71;
-    background: rgba(46, 204, 113, 0.3);
-    color: #2c3e50;
-    font-size: 0.55rem;
-    font-weight: 700;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.3s ease;
-    transform: translate(-50%, -50%);
-    padding: 0;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.stand-selector:hover {
-    transform: translate(-50%, -50%) scale(1.3);
-    background: rgba(46, 204, 113, 0.6);
-    z-index: 10;
-    box-shadow: 0 2px 10px rgba(46, 204, 113, 0.4);
-}
-
-.stand-selector.selected {
-    background: #f8b94e;
-    border-color: #000;
-    color: #000;
-    transform: translate(-50%, -50%) scale(1.4);
-    box-shadow: 0 0 20px rgba(248, 185, 78, 0.6);
-    z-index: 20;
-    animation: pulse-selected 1.5s ease-in-out infinite;
-    font-weight: 900;
-}
-
-@keyframes pulse-selected {
-
-    0%,
-    100% {
-        box-shadow: 0 0 20px rgba(248, 185, 78, 0.4);
-    }
-
-    50% {
-        box-shadow: 0 0 40px rgba(248, 185, 78, 0.8);
-    }
-}
-
-/* ============================================
-   LEYENDA DEL MAPA
-============================================ */
-
-.map-legend-mini {
-    position: absolute;
-    bottom: 10px;
-    left: 10px;
-    background: rgba(255, 255, 255, 0.9);
-    padding: 6px 12px;
-    border-radius: 20px;
-    font-size: 0.7rem;
+.error-banner {
+    background-color: #fef2f2;
+    border: 1px solid #fee2e2;
+    color: #dc2626;
+    padding: 12px 16px;
+    border-radius: 10px;
+    font-size: 13px;
     display: flex;
     align-items: center;
     gap: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    border: 1px solid #000;
-}
-
-.legend-dot {
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    display: inline-block;
-    border: 1px solid rgba(0, 0, 0, 0.2);
-}
-
-.legend-dot.available {
-    background: #2ecc71;
 }
 
 /* ============================================
-   MENSAJE REGISTRANDO
+   BOTÓN PRINCIPAL (CTA)
 ============================================ */
-
-.registrando-mensaje {
-    margin-top: 10px;
-    color: #c88d19;
-    font-size: 0.9rem;
-    text-align: center;
-    font-weight: bold;
-}
-
-/* ============================================
-   BOTÓN ENVIAR
-============================================ */
-
 .btn-registrar {
-    background: #f8b94e;
-    border: 2px solid #000;
-    border-radius: 25px;
-    padding: 14px;
-    font-weight: bold;
+    background-color: #F5B952;
+    border: none;
+    border-radius: 10px;
+    height: 48px;
     font-size: 15px;
-    color: #111;
+    font-weight: 600;
     cursor: pointer;
-    transition: all 0.3s ease;
-    margin-top: 10px;
+    transition: all 0.2s ease;
+    color: #1f2937;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 5px;
+    box-shadow: 0 4px 6px -1px rgba(245, 185, 82, 0.3);
 }
 
 .btn-registrar:hover:not(:disabled) {
-    background: #e6a73a;
+    background-color: #e8a83e;
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(248, 185, 78, 0.35);
+    box-shadow: 0 6px 8px -1px rgba(245, 185, 82, 0.4);
+}
+
+.btn-registrar:active:not(:disabled) {
+    transform: translateY(0);
 }
 
 .btn-registrar:disabled {
-    opacity: 0.6;
+    opacity: 0.7;
     cursor: not-allowed;
 }
 
 /* ============================================
-   RESPONSIVE - TABLET
+   ANIMACIONES
 ============================================ */
-
-@media (max-width: 768px) {
-
-    .registro-negocio-container {
-        margin: 20px auto;
-        padding: 0 15px;
-    }
-
-    .registro-negocio-card {
-        padding: 25px 20px;
-    }
-
-    .logo-upload {
-        width: 150px;
-        height: 150px;
-    }
-
-    .logo-icon {
-        font-size: 40px;
-    }
-
-    .mini-map {
-        height: 250px;
-    }
-
-    .stand-selector {
-        width: 22px;
-        height: 22px;
-        font-size: 0.45rem;
-    }
-
-    .stand-selector.selected {
-        transform: translate(-50%, -50%) scale(1.3);
-    }
-
-    .registro-negocio-card h1 {
-        font-size: 1.5rem;
-    }
-
-    .registro-negocio-title {
-        font-size: 1.5rem;
-    }
-}
-
-/* ============================================
-   RESPONSIVE - CELULAR
-============================================ */
-
-@media (max-width: 480px) {
-
-    .registro-negocio-container {
-        padding: 10px;
-        margin: 20px auto;
-    }
-
-    .registro-negocio-card {
-        padding: 15px;
-        border-radius: 16px;
-    }
-
-    .mini-map {
-        height: 200px;
-    }
-
-    .stand-selector {
-        width: 18px;
-        height: 18px;
-        font-size: 0.4rem;
-        border-width: 1.5px;
-    }
-
-    .stand-selector.selected {
-        transform: translate(-50%, -50%) scale(1.2);
-    }
-
-    .map-legend-mini {
-        font-size: 0.55rem;
-        padding: 4px 8px;
-    }
-
-    .stand-map-preview h4 {
-        font-size: 0.85rem;
-    }
-
-    .logo-upload {
-        width: 120px;
-        height: 120px;
-    }
-
-    .logo-icon {
-        font-size: 30px;
-    }
-
-    .registro-negocio-card input,
-    .registro-negocio-card textarea,
-    .stand-select {
-        font-size: 14px;
-        padding: 10px 14px;
-    }
-
-    .btn-registrar {
-        font-size: 14px;
-        padding: 12px;
-    }
-
-    .registro-negocio-card h1 {
-        font-size: 1.2rem;
-    }
-}
-
-/* ============================================
-   ANIMACIONES ADICIONALES
-============================================ */
-
 @keyframes fadeIn {
-
     from {
         opacity: 0;
         transform: translateY(-10px);
     }
-
     to {
         opacity: 1;
         transform: translateY(0);
@@ -566,49 +340,34 @@
 }
 
 /* ============================================
-   MEJORAS VISUALES PARA EL MAPA MINI
+   RESPONSIVE (TABLETS Y CELULARES)
 ============================================ */
+@media (max-width: 768px) {
+    .registro-container {
+        padding: 20px 10px;
+    }
 
-.mini-map::before {
-    content: "🗺️ Mapa del Mercado";
-    position: absolute;
-    top: 10px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: rgba(255, 255, 255, 0.85);
-    padding: 4px 16px;
-    border-radius: 20px;
-    font-size: 0.7rem;
-    font-weight: bold;
-    color: #2c3e50;
-    border: 1px solid #000;
-    z-index: 5;
-    white-space: nowrap;
+    .registro-card {
+        padding: 25px 20px;
+    }
 }
 
-/* Líneas de cuadrícula en el mini mapa */
+@media (max-width: 480px) {
+    .registro-card {
+        padding: 20px 15px;
+        border-radius: 12px;
+    }
 
-.mini-map::after {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
+    .logo-upload {
+        width: 130px;
+        height: 130px;
+    }
 
-    background-image:
-        linear-gradient(
-            rgba(0, 0, 0, 0.05) 1px,
-            transparent 1px
-        ),
-        linear-gradient(
-            90deg,
-            rgba(0, 0, 0, 0.05) 1px,
-            transparent 1px
-        );
+    .logo-icon {
+        font-size: 35px;
+    }
 
-    background-size: 20px 20px;
-
-    pointer-events: none;
-    z-index: 1;
+    .registro-title {
+        font-size: 22px;
+    }
 }

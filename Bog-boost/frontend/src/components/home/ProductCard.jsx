@@ -29,12 +29,10 @@ function ProductCard({ producto }) {
             cantidad: 1
         });
 
-
         toast.success("Producto agregado al carrito");
 
         console.log("Agregado al carrito:", producto);
     };
-
 
     const abrirDetalle = () => {
         navigate(`/producto/${producto.id_producto}`);
@@ -42,10 +40,10 @@ function ProductCard({ producto }) {
 
     return (
         <div
-            className="carrusel-item"
+            className="product-card"
             onClick={abrirDetalle}
         >
-            <div className="producto-imagen">
+            <div className="product-card-img-container">
                 {producto.imagen ? (
                     <img
                         src={producto.imagen}
@@ -59,19 +57,19 @@ function ProductCard({ producto }) {
                 )}
             </div>
 
-            <div className="producto-info-carrusel">
+            <div className="product-card-body">
+
+                <span className="product-card-category">
+                    {producto.categoria?.nombre_categoria}
+                </span>
 
                 <h4>{producto.nombre_producto}</h4>
 
-                <p className="categoria-producto">
-                    {producto.categoria?.nombre_categoria}
-                </p>
-
-                <p className="descripcion-producto">
+                <p className="product-card-desc">
                     {producto.descripcion}
                 </p>
 
-                <span className="producto-precio-carrusel">
+                <span className="product-card-price">
                     {Number(producto.precio).toLocaleString("es-CO", {
                         style: "currency",
                         currency: "COP"

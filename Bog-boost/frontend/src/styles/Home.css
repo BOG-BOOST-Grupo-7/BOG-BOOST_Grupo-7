@@ -1,86 +1,41 @@
-.container-home {
-  max-width: 1200px; /* Corregí: 300px era muy pequeño */
-  margin: 0 auto;
-  padding: 15px;
-}
-
-.view-title {
-  text-align: center;
-  font-size: 30px;
-  margin-bottom: 20px;
-}
-
-.main-content {
-  display: grid;
-  grid-template-columns: 1fr 400px;
-  gap: 20px;
-  justify-content: start;
-  padding: 0 15px;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.carruseles-column {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-}
-
-.carrusel-container {
-  background: white;
-  border-radius: 14px;
-  padding: 15px;
-  border: 2px solid #ddd;
-}
-
-.carrusel-title {
-  margin-bottom: 15px;
-  font-size: 18px;
-}
-
-.carrusel-wrapper {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.carrusel-track {
-  flex: 1;
-  display: flex;
-  gap: 10px;
-}
-
-.carrusel-item {
-  width: 130px;
-  height: 240px;
+/* ==========================================================
+   1. ESTILOS GLOBALES DE LA TARJETA (ProductCard)
+   Se verán EXACTAMENTE IGUAL tanto en el carrusel como fuera de él.
+   ================================================---------- */
+.product-card {
+  height: 320px;
+  width: 100%; /* Por defecto toma todo el contenedor disponible */
   display: flex;
   flex-direction: column;
   background: #fafafa;
   border-radius: 10px;
+  border: 1px solid #eee;
   overflow: hidden;
   cursor: pointer;
   transition: .3s;
   flex-shrink: 0;
+  box-sizing: border-box;
 }
 
-.carrusel-item:hover {
+.product-card:hover {
   transform: translateY(-3px);
+  box-shadow: 0 6px 15px rgba(0,0,0,0.08);
 }
 
-.producto-imagen {
+.product-card-img-container {
   width: 100%;
-  height: 110px;
+  height: 130px;
   overflow: hidden;
   background: #f4f4f4;
 }
 
-.producto-img {
+.product-card-img-container img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-.producto-info-carrusel {
+.product-card-body {
   display: flex;
   flex-direction: column;
   flex: 1;
@@ -90,56 +45,218 @@
 .sin-imagen {
   color: #777;
   font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
 }
 
-.descripcion-producto {
-  height: 36px;
-  overflow: hidden;
-  font-size: 12px;
-  line-height: 18px;
-}
-
-.categoria-producto {
-  font-size: 12px;
+.product-card-category {
+  font-size: 11px;
   color: #777;
-  margin-bottom: 6px;
-  height: 16px;
-}
-
-.producto-info-carrusel h4 {
-  font-size: 14px;
-  height: 36px;
+  margin-bottom: 4px;
+  height: 15px;
   overflow: hidden;
-  margin-bottom: 6px;
 }
 
-.producto-info-carrusel p {
+.product-card-body h4 {
+  font-size: 13px;
+  font-weight: bold;
+  height: 32px;
+  overflow: hidden;
+  margin: 0 0 4px 0;
+  color: #333;
+}
+
+.product-card-desc {
+  height: 28px;
+  overflow: hidden;
   font-size: 11px;
   color: #666;
+  line-height: 14px;
+  margin-bottom: 6px;
 }
 
-.producto-precio-carrusel {
-  margin-top: auto;
-  font-size: 16px;
+.product-card-price {
+  font-size: 14px;
   font-weight: bold;
-  color: #f5b952;
+  color: #d99a36;
+  margin-bottom: 8px;
 }
 
-.carrusel-btn {
-  width: 36px;
-  height: 36px;
+.btn-carrito {
+  width: 100%;
   border: none;
-  border-radius: 50%;
-  cursor: pointer;
   background: #f5b952;
-  font-size: 18px;
+  color: #000;
+  padding: 8px;
+  border-radius: 8px;
+  font-weight: bold;
+  font-size: 12px;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  transition: .25s;
+  margin-top: auto;
 }
 
-/* ✅ NUEVA TARJETA DEL MAPA */
+.btn-carrito:hover {
+  background: #e3a82d;
+}
+
+
+/* ==========================================================
+   2. CONTENEDORES Y DISTRIBUCIÓN (Home y Carrusel)
+   ================================================---------- */
+
+.container-home {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.view-title {
+  text-align: center;
+  font-size: 28px;
+  font-weight: 700;
+  color: #2c2c2c;
+  margin-bottom: 25px;
+}
+
+.main-content {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 24px;
+  justify-content: start;
+  padding: 0 10px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.carruseles-column {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Contenedor del Carrusel */
+.carrusel-container {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 20px 24px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  border: 1px solid #eaeaea;
+}
+
+.carrusel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  border-bottom: 2px solid #f9f9f9;
+  padding-bottom: 10px;
+}
+
+.carrusel-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 0;
+}
+
+/* Indicadores de página estilo puntos modernos */
+.carrusel-indicadores {
+  display: flex;
+  gap: 6px;
+}
+
+.indicador-punto {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #dcdcdc;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.indicador-punto.activo {
+  width: 22px;
+  border-radius: 4px;
+  background: #f5b952;
+}
+
+.carrusel-wrapper {
+  display: flex;
+  align-items: center;
+  position: relative;
+  gap: 12px;
+}
+
+.carrusel-columnas-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+  overflow: hidden;
+}
+
+/* Control del layout exclusivo del carrusel */
+.carrusel-track {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+}
+
+/* Forzar que cada tarjeta mida exactamente el 25% solo cuando está DENTRO del track del carrusel */
+.carrusel-track > .product-card {
+  flex: 1;
+  min-width: 0; 
+  max-width: calc(25% - 9px); 
+}
+
+/* Botones de navegación del carrusel */
+.carrusel-btn {
+  background: #ffffff;
+  border: 1px solid #e0e0e0;
+  color: #333;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 16px;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  z-index: 2;
+}
+
+.carrusel-btn:hover {
+  background: #f5b952;
+  border-color: #f5b952;
+  color: #000;
+  transform: scale(1.08);
+}
+
+.sin-productos {
+  text-align: center;
+  color: #888;
+  font-size: 14px;
+  padding: 30px 0;
+  width: 100%;
+}
+
+/* Resto de componentes (Mapa y Registro) */
 .tarjeta-mapa {
   background: white;
   border-radius: 16px;
-  border: 2px solid #ddd;
+  border: 1px solid #eaeaea;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
   padding: 25px;
   text-align: center;
   margin-bottom: 20px;
@@ -173,10 +290,10 @@
   transform: translateY(-2px);
 }
 
-/* TARJETA REGISTRAR NEGOCIO */
 .negocio-card {
   background: #fff;
-  border: 2px solid #ddd;
+  border: 1px solid #eaeaea;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
   border-radius: 16px;
   padding: 25px;
 }
@@ -203,6 +320,7 @@
   gap: 20px;
   padding: 25px;
   text-align: center;
+  background: #fffdf9;
 }
 
 .negocio-icono {
@@ -236,54 +354,18 @@
 .right-column {
   display: flex;
   flex-direction: column;
-  gap: 0;
+  gap: 20px;
 }
 
-.negocio-info {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 12px;
-  padding-top: 10px;
-  border-top: 1px solid #ececec;
-}
-
-.logo-negocio-card {
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 1px solid #ddd;
-}
-
-.btn-carrito {
-  width: 100%;
-  border: none;
-  background: #f5b952;
-  color: #000;
-  padding: 12px;
-  border-radius: 10px;
-  font-weight: bold;
-  cursor: pointer;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 8px;
-  transition: .25s;
-}
-
-.btn-carrito:hover {
-  background: #e3a82d;
-}
-
-/* Evitar desplazamiento horizontal */
 html, body {
   overflow-x: hidden;
   margin: 0;
   padding: 0;
   width: 100%;
+  background-color: #f8f9fa;
 }
 
+/* Diseño Responsivo */
 @media (max-width: 1024px) {
   .main-content {
     grid-template-columns: 1fr;
@@ -296,42 +378,20 @@ html, body {
   .negocio-card {
     flex: 1;
   }
-  .carrusel-item {
-    width: 180px;
-    height: 300px;
+  .carrusel-track > .product-card {
+    max-width: calc(33.333% - 8px); 
   }
 }
 
 @media (max-width: 768px) {
   .container-home {
-    padding: 15px;
+    padding: 10px;
   }
   .view-title {
-    font-size: 24px;
+    font-size: 22px;
   }
-  .carrusel-wrapper {
-    gap: 8px;
-  }
-  .carrusel-track {
-    display: flex;
-    flex-direction: row;
-    gap: 10px;
-    overflow-x: auto;
-    scroll-behavior: smooth;
-    scrollbar-width: none;
-  }
-  .carrusel-track::-webkit-scrollbar {
-    display: none;
-  }
-  .carrusel-item {
-    width: 170px;
-    height: 290px;
-    flex-shrink: 0;
-  }
-  .carrusel-btn {
-    width: 35px;
-    height: 35px;
-    font-size: 16px;
+  .carrusel-track > .product-card {
+    max-width: calc(50% - 6px); 
   }
   .right-column {
     flex-direction: column;

@@ -8,11 +8,9 @@ import { useAuth } from "../../context/AuthContext";
 import { obtenerMiPerfil } from "../../api/perfilApi";
 import { registrarNegocio } from "../../api/negocioApi";
 import { subirLogo as subirLogoApi } from "../../api/uploadApi";
-import {
-    getAvailableStands
-} from "../../api/mapaApis";
+import { getAvailableStands } from "../../api/mapaApis";
 
-import "../../styles/RegistrarNegocio.css";
+import "../../styles/RegistrarNegocio.css"; // Archivo CSS unificado
 
 function RegistrarNegocio() {
     const { user } = useAuth();
@@ -36,6 +34,7 @@ function RegistrarNegocio() {
     const [loading, setLoading] = useState(false);
     const [availableStands, setAvailableStands] = useState([]);
     const [cargandoPuestos, setCargandoPuestos] = useState(false);
+    const [error, setError] = useState("");
 
     // ============================================
     // VALIDAR PERFIL
@@ -55,19 +54,12 @@ function RegistrarNegocio() {
                     alert(
                         "Por favor, completa la información de tu perfil personal antes de registrar un negocio."
                     );
-
                     navigate("/perfil");
                     return;
                 }
-            } catch (error) {
-                console.error(
-                    "Error al verificar el perfil:",
-                    error
-                );
-
-                alert(
-                    "No se pudo verificar tu perfil. Inicia sesión nuevamente."
-                );
+            } catch (err) {
+                console.error("Error al verificar el perfil:", err);
+                alert("No se pudo verificar tu perfil. Inicia sesión nuevamente.");
             } finally {
                 setCargandoPerfil(false);
             }
@@ -82,19 +74,11 @@ function RegistrarNegocio() {
     const loadAvailableStands = async () => {
         try {
             setCargandoPuestos(true);
-
             const data = await getAvailableStands();
-
-            setAvailableStands(
-                Array.isArray(data) ? data : []
-            );
-        } catch (error) {
-            console.error(
-                "Error al cargar puestos disponibles:",
-                error
-            );
-
-            alert("Error al cargar los puestos disponibles.");
+            setAvailableStands(Array.isArray(data) ? data : []);
+        } catch (err) {
+            console.error("Error al cargar puestos disponibles:", err);
+            setError("Error al cargar los puestos disponibles.");
         } finally {
             setCargandoPuestos(false);
         }
@@ -109,7 +93,6 @@ function RegistrarNegocio() {
     // ============================================
     const handleChange = (e) => {
         const { name, value } = e.target;
-
         setDatos((prev) => ({
             ...prev,
             [name]: value,
@@ -120,90 +103,56 @@ function RegistrarNegocio() {
     // SUBIR LOGO
     // ============================================
     const subirLogo = async (e) => {
-        if (!e || !e.target) {
-            console.error("Evento o target no definido.");
-            return;
-        }
+        if (!e || !e.target) return;
 
         const file = e.target.files?.[0];
+        if (!file) return;
 
-        if (!file) {
-            console.warn("No se seleccionó ningún archivo.");
-            return;
-        }
-
-        // Validar tipo de imagen
         if (!file.type || !file.type.startsWith("image/")) {
-            alert("Solo se permiten imágenes.");
+            setError("Solo se permiten archivos de imagen.");
             e.target.value = "";
             return;
         }
 
-        // Máximo 5 MB
         if (file.size > 5 * 1024 * 1024) {
-            alert("La imagen no puede superar los 5 MB.");
+            setError("La imagen no puede superar los 5 MB.");
             e.target.value = "";
             return;
         }
 
         const previewUrl = URL.createObjectURL(file);
         const imagen = new Image();
-
         imagen.src = previewUrl;
 
         try {
-            // Validar dimensiones
             await new Promise((resolve, reject) => {
                 imagen.onload = () => {
-                    if (
-                        imagen.width > 2500 ||
-                        imagen.height > 2500
-                    ) {
-                        reject(
-                            new Error(
-                                "La imagen es demasiado grande. Máximo 2500x2500 píxeles."
-                            )
-                        );
+                    if (imagen.width > 2500 || imagen.height > 2500) {
+                        reject(new Error("La imagen es demasiado grande. Máximo 2500x2500 píxeles."));
                     } else {
                         resolve();
                     }
                 };
-
-                imagen.onerror = () => {
-                    reject(
-                        new Error(
-                            "Error al cargar la imagen."
-                        )
-                    );
-                };
+                imagen.onerror = () => reject(new Error("Error al cargar la imagen."));
             });
 
-            // Mostrar preview
             setPreviewLogo(previewUrl);
             setSubiendoLogo(true);
+            setError("");
 
-            // Subir logo al backend
             const respuesta = await subirLogoApi(file);
 
             setDatos((prev) => ({
                 ...prev,
                 logo: respuesta.url,
             }));
-        } catch (error) {
-            console.error("Error al subir logo:", error);
-
+        } catch (err) {
+            console.error("Error al subir logo:", err);
             URL.revokeObjectURL(previewUrl);
             setPreviewLogo("");
-
-            alert(
-                error.response?.data?.mensaje ||
-                    error.message ||
-                    "Error al subir el logo."
-            );
+            setError(err.response?.data?.mensaje || err.message || "Error al subir el logo.");
         } finally {
             setSubiendoLogo(false);
-
-            // Permitir seleccionar nuevamente el mismo archivo
             e.target.value = "";
         }
     };
@@ -213,50 +162,39 @@ function RegistrarNegocio() {
     // ============================================
     const guardarSolicitud = async (e) => {
         e.preventDefault();
-
-        // ============================================
-        // VALIDACIONES
-        // ============================================
+        setError("");
 
         if (!datos.logo) {
-            alert("Debes subir el logo del negocio.");
+            setError("Debes subir el logo del negocio.");
             return;
         }
 
         if (!datos.nombre_negocio.trim()) {
-            alert("Ingresa el nombre del negocio.");
+            setError("Ingresa el nombre del negocio.");
             return;
         }
 
         if (!datos.descripcion_negocio.trim()) {
-            alert("Ingresa una descripción.");
+            setError("Ingresa una descripción para tu negocio.");
             return;
         }
 
         if (!datos.telefono_negocio.trim()) {
-            alert("Ingresa el teléfono.");
+            setError("Ingresa el teléfono de contacto.");
             return;
         }
 
         if (!datos.numero_puesto) {
-            alert("Selecciona un número de puesto disponible.");
+            setError("Selecciona un número de puesto disponible.");
             return;
         }
 
-        // ============================================
-        // VERIFICAR DISPONIBILIDAD DEL PUESTO
-        // ============================================
         const standSeleccionado = availableStands.find(
-            (stand) =>
-                Number(stand.number) ===
-                Number(datos.numero_puesto)
+            (stand) => Number(stand.number) === Number(datos.numero_puesto)
         );
 
         if (!standSeleccionado) {
-            alert(
-                "El puesto seleccionado no está disponible. Por favor, elige otro."
-            );
-
+            setError("El puesto seleccionado no está disponible. Por favor, elige otro.");
             await loadAvailableStands();
             return;
         }
@@ -264,40 +202,16 @@ function RegistrarNegocio() {
         setLoading(true);
 
         try {
-            // ============================================
-            // 1. REGISTRAR NEGOCIO Y ASIGNAR PUESTO (Vía Backend)
-            // ============================================
-            const respuesta = await registrarNegocio({
-                nombre_negocio:
-                    datos.nombre_negocio.trim(),
-
-                descripcion_negocio:
-                    datos.descripcion_negocio.trim(),
-
-                telefono_negocio:
-                    datos.telefono_negocio.trim(),
-
-                numero_puesto:
-                    Number(datos.numero_puesto),
-
+            await registrarNegocio({
+                nombre_negocio: datos.nombre_negocio.trim(),
+                descripcion_negocio: datos.descripcion_negocio.trim(),
+                telefono_negocio: datos.telefono_negocio.trim(),
+                numero_puesto: Number(datos.numero_puesto),
                 logo: datos.logo,
             });
 
-            console.log(
-                "Negocio registrado exitosamente:",
-                respuesta
-            );
+            alert(`✅ ¡Éxito! Tu negocio "${datos.nombre_negocio}" ha sido registrado y asignado al puesto #${datos.numero_puesto}.`);
 
-            // ============================================
-            // 2. MENSAJE DE ÉXITO
-            // ============================================
-            alert(
-                `✅ ¡Éxito! Tu negocio "${datos.nombre_negocio}" ha sido registrado y asignado al puesto #${datos.numero_puesto}.`
-            );
-
-            // ============================================
-            // 3. LIMPIAR FORMULARIO
-            // ============================================
             setDatos({
                 nombre_negocio: "",
                 descripcion_negocio: "",
@@ -305,369 +219,215 @@ function RegistrarNegocio() {
                 numero_puesto: "",
                 logo: "",
             });
-
             setPreviewLogo("");
-
-            // ============================================
-            // 4. ACTUALIZAR PUESTOS DISPONIBLES
-            // ============================================
             await loadAvailableStands();
-        } catch (error) {
-            console.error(
-                "Error al registrar negocio:",
-                error
-            );
-
-            alert(
-                error.response?.data?.mensaje ||
-                    error.response?.data?.message ||
-                    error.message ||
-                    "Error al registrar el negocio. Por favor, intenta de nuevo."
+        } catch (err) {
+            console.error("Error al registrar negocio:", err);
+            setError(
+                err.response?.data?.mensaje ||
+                err.response?.data?.message ||
+                err.message ||
+                "Error al registrar el negocio. Por favor, intenta de nuevo."
             );
         } finally {
             setLoading(false);
         }
     };
 
-    // ============================================
-    // SELECCIONAR PUESTO DESDE EL MAPA
-    // ============================================
-    const handleStandSelect = (standNumber) => {
-        setDatos((prev) => ({
-            ...prev,
-            numero_puesto: String(standNumber),
-        }));
-    };
-
-    // ============================================
-    // ELIMINAR / CAMBIAR LOGO
-    // ============================================
     const eliminarLogo = () => {
         setPreviewLogo("");
-
         setDatos((prev) => ({
             ...prev,
             logo: "",
         }));
     };
 
-    // ============================================
-    // MOSTRAR CARGA MIENTRAS SE VERIFICA PERFIL
-    // ============================================
     if (cargandoPerfil) {
         return (
-            <main className="registro-negocio-container">
-                <div className="registro-negocio-card">
-                    <p
-                        style={{
-                            textAlign: "center",
-                            padding: "20px",
-                        }}
-                    >
-                        Verificando información del perfil...
-                    </p>
+            <main className="registro-container">
+                <div className="registro-card registro-card-wide">
+                    <p style={{ textAlign: "center", color: "#6b7280" }}>Verificando información del perfil...</p>
                 </div>
             </main>
         );
     }
 
-    // ============================================
-    // RENDER
-    // ============================================
     return (
-        <main className="registro-negocio-container">
-            <div className="registro-negocio-card">
-                <h1>
-                    Solicitud de Registro de Negocio
-                </h1>
+        <main className="registro-container">
+            <div className="registro-card registro-card-wide">
+                
+                {/* ENCABEZADO UNIFICADO */}
+                <div className="auth-header">
+                    <div className="auth-icon-badge">
+                        <i className="fas fa-store"></i>
+                    </div>
+                    <h1 className="registro-title">Solicitud de Registro de Negocio</h1>
+                    <p className="registro-subtitle">
+                        Solo se aceptan negocios con puesto fijo en el Mercado de las Pulgas San Alejo.
+                        <br />
+                        <strong>Puestos disponibles: {availableStands.length}</strong>
+                    </p>
+                </div>
 
-                <p className="subtitle">
-                    Solo se aceptan negocios que tengan un
-                    puesto fijo dentro del Mercado de las
-                    Pulgas San Alejo.
-                    <br />
-
-                    <strong>
-                        Puestos disponibles:{" "}
-                        {availableStands.length}
-                    </strong>
-                </p>
-
-                <form onSubmit={guardarSolicitud}>
-
-                    {/* ========================================
-                        LOGO
-                    ======================================== */}
-                    <label>
-                        <i className="fas fa-image"></i>{" "}
-                        Logo del negocio
-                    </label>
-
-                    <label className="logo-upload">
-                        {previewLogo ? (
-                            <img
-                                src={previewLogo}
-                                alt="Logo del negocio"
-                                className="preview-logo"
+                <form onSubmit={guardarSolicitud} className="registro-form">
+                    
+                    {/* ÁREA DEL LOGO */}
+                    <div className="form-group" style={{ alignItems: "center" }}>
+                        <label style={{ width: "100%", justifyContent: "flex-start" }}>
+                            <i className="fas fa-image label-icon"></i> Logo del negocio
+                        </label>
+                        
+                        <label className="logo-upload">
+                            {previewLogo ? (
+                                <img
+                                    src={previewLogo}
+                                    alt="Logo del negocio"
+                                    className="preview-logo"
+                                />
+                            ) : (
+                                <>
+                                    <div className="logo-icon">🏪</div>
+                                    <p>Sube tu logo</p>
+                                    <small>PNG, JPG o WEBP (máx. 5 MB)</small>
+                                </>
+                            )}
+                            <input
+                                type="file"
+                                hidden
+                                accept="image/png,image/jpeg,image/webp"
+                                onChange={subirLogo}
                             />
-                        ) : (
-                            <>
-                                <div className="logo-icon">
-                                    🏪
-                                </div>
+                        </label>
 
-                                <p>
-                                    Haz clic para seleccionar
-                                    el logo
-                                </p>
+                        {subiendoLogo && <div className="uploading">⏳ Subiendo logo...</div>}
 
-                                <small>
-                                    PNG, JPG o WEBP (máx. 5 MB)
-                                </small>
-                            </>
-                        )}
-
-                        <input
-                            type="file"
-                            hidden
-                            accept="image/png,image/jpeg,image/webp"
-                            onChange={subirLogo}
-                        />
-                    </label>
-
-                    {subiendoLogo && (
-                        <div className="uploading">
-                            ⏳ Subiendo logo...
-                        </div>
-                    )}
-
-                    {previewLogo && !subiendoLogo && (
-                        <button
-                            type="button"
-                            className="btn-eliminar-logo"
-                            onClick={eliminarLogo}
-                        >
-                            🗑 Cambiar logo
-                        </button>
-                    )}
-
-                    {/* ========================================
-                        NOMBRE
-                    ======================================== */}
-                    <label>
-                        <i className="fas fa-store"></i>{" "}
-                        Nombre del negocio
-                    </label>
-
-                    <input
-                        type="text"
-                        name="nombre_negocio"
-                        value={datos.nombre_negocio}
-                        onChange={(e) => {
-                            const soloLetras =
-                                e.target.value.replace(
-                                    /[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g,
-                                    ""
-                                );
-
-                            setDatos((prev) => ({
-                                ...prev,
-                                nombre_negocio: soloLetras,
-                            }));
-                        }}
-                        placeholder="Ej: Antigüedades San Alejo"
-                    />
-
-                    {/* ========================================
-                        DESCRIPCIÓN
-                    ======================================== */}
-                    <label>
-                        <i className="fas fa-align-left"></i>{" "}
-                        Descripción
-                    </label>
-
-                    <textarea
-                        name="descripcion_negocio"
-                        value={datos.descripcion_negocio}
-                        onChange={handleChange}
-                        placeholder="Describe tu negocio"
-                        rows="4"
-                    />
-
-                    {/* ========================================
-                        TELÉFONO
-                    ======================================== */}
-                    <label>
-                        <i className="fas fa-phone"></i>{" "}
-                        Teléfono
-                    </label>
-
-                    <input
-                        type="text"
-                        name="telefono_negocio"
-                        inputMode="numeric"
-                        value={datos.telefono_negocio}
-                        onChange={(e) => {
-                            const soloNumeros =
-                                e.target.value.replace(
-                                    /\D/g,
-                                    ""
-                                );
-
-                            setDatos((prev) => ({
-                                ...prev,
-                                telefono_negocio:
-                                    soloNumeros,
-                            }));
-                        }}
-                        placeholder="Ej: 3012345678"
-                    />
-
-                    {/* ========================================
-                        SELECCIÓN DE PUESTO
-                    ======================================== */}
-                    <label>
-                        <i className="fas fa-map-marker-alt"></i>{" "}
-                        Número del puesto
-                    </label>
-
-                    <select
-                        name="numero_puesto"
-                        value={datos.numero_puesto}
-                        onChange={handleChange}
-                        className="stand-select"
-                        disabled={cargandoPuestos}
-                    >
-                        <option value="">
-                            -- Selecciona un puesto disponible --
-                        </option>
-
-                        {availableStands.map((stand) => (
-                            <option
-                                key={stand.id}
-                                value={stand.number}
+                        {previewLogo && !subiendoLogo && (
+                            <button
+                                type="button"
+                                className="btn-eliminar-logo"
+                                onClick={eliminarLogo}
                             >
-                                Puesto #{stand.number} -{" "}
-                                {stand.section}
-
-                                {stand.size
-                                    ? ` - ${stand.size}`
-                                    : ""}
-
-                                {stand.price
-                                    ? ` ($${Number(
-                                        stand.price
-                                    ).toLocaleString()}/mes)`
-                                    : ""}
-                            </option>
-                        ))}
-                    </select>
-
-                    {cargandoPuestos && (
-                        <div className="cargando-puestos">
-                            ⏳ Cargando puestos disponibles...
-                        </div>
-                    )}
-
-                    {availableStands.length === 0 &&
-                        !cargandoPuestos && (
-                            <div className="sin-puestos">
-                                ⚠️ No hay puestos disponibles
-                                en este momento.
-                            </div>
+                                🗑 Cambiar logo
+                            </button>
                         )}
-
-                    {/* ========================================
-                        MAPA INTERACTIVO
-                    ======================================== */}
-                    <div className="stand-map-preview">
-                        <h4>
-                            <i className="fas fa-map"></i>{" "}
-                            Selecciona tu puesto en el mapa
-                        </h4>
-
-                        <p className="map-hint">
-                            Haz clic en cualquier número verde
-                            para seleccionar tu puesto
-                        </p>
-
-                        <div className="mini-map">
-                            {availableStands
-                                .slice(0, 30)
-                                .map((stand) => (
-                                    <button
-                                        type="button"
-                                        key={stand.id}
-                                        className={`stand-selector ${
-                                            Number(
-                                                datos.numero_puesto
-                                            ) ===
-                                            Number(
-                                                stand.number
-                                            )
-                                                ? "selected"
-                                                : ""
-                                        }`}
-                                        onClick={() =>
-                                            handleStandSelect(
-                                                stand.number
-                                            )
-                                        }
-                                        style={{
-                                            position: "absolute",
-                                            left: `${
-                                                (stand.coordinates
-                                                    ?.x ||
-                                                    stand.number) *
-                                                    1.8 +
-                                                20
-                                            }px`,
-                                            top: `${
-                                                (stand.coordinates
-                                                    ?.y ||
-                                                    1) *
-                                                    1.8 +
-                                                20
-                                            }px`,
-                                        }}
-                                        title={`Puesto #${stand.number} - ${stand.section}`}
-                                    >
-                                        {stand.number}
-                                    </button>
-                                ))}
-
-                            <div className="map-legend-mini">
-                                <span className="legend-dot available"></span>{" "}
-                                Disponible
-                            </div>
-                        </div>
                     </div>
 
-                    {/* ========================================
-                        BOTÓN DE REGISTRO
-                    ======================================== */}
+                    {/* NOMBRE DEL NEGOCIO */}
+                    <div className="form-group">
+                        <label>
+                            <i className="fas fa-store label-icon"></i> Nombre del negocio
+                        </label>
+                        <input
+                            type="text"
+                            name="nombre_negocio"
+                            value={datos.nombre_negocio}
+                            onChange={(e) => {
+                                const soloLetras = e.target.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, "");
+                                setDatos((prev) => ({
+                                    ...prev,
+                                    nombre_negocio: soloLetras,
+                                }));
+                            }}
+                            placeholder="Ej: Antigüedades San Alejo"
+                            required
+                        />
+                    </div>
+
+                    {/* DESCRIPCIÓN */}
+                    <div className="form-group">
+                        <label>
+                            <i className="fas fa-align-left label-icon"></i> Descripción
+                        </label>
+                        <textarea
+                            name="descripcion_negocio"
+                            value={datos.descripcion_negocio}
+                            onChange={handleChange}
+                            placeholder="Describe tu negocio y productos"
+                            required
+                        />
+                    </div>
+
+                    {/* TELÉFONO */}
+                    <div className="form-group">
+                        <label>
+                            <i className="fas fa-phone label-icon"></i> Teléfono
+                        </label>
+                        <input
+                            type="text"
+                            name="telefono_negocio"
+                            inputMode="numeric"
+                            value={datos.telefono_negocio}
+                            onChange={(e) => {
+                                const soloNumeros = e.target.value.replace(/\D/g, "");
+                                setDatos((prev) => ({
+                                    ...prev,
+                                    telefono_negocio: soloNumeros,
+                                }));
+                            }}
+                            placeholder="Ej: 3012345678"
+                            required
+                        />
+                    </div>
+
+                    {/* SELECCIÓN DE PUESTO */}
+                    <div className="form-group">
+                        <label>
+                            <i className="fas fa-map-marker-alt label-icon"></i> Número del puesto
+                        </label>
+                        <select
+                            name="numero_puesto"
+                            value={datos.numero_puesto}
+                            onChange={handleChange}
+                            className="stand-select"
+                            disabled={cargandoPuestos}
+                            required
+                        >
+                            <option value="">-- Selecciona un puesto disponible --</option>
+                            {availableStands.map((stand) => (
+                                <option key={stand.id} value={stand.number}>
+                                    Puesto #{stand.number} - {stand.section}
+                                    {stand.size ? ` - ${stand.size}` : ""}
+                                    {stand.price ? ` ($${Number(stand.price).toLocaleString()}/mes)` : ""}
+                                </option>
+                            ))}
+                        </select>
+
+                        {cargandoPuestos && <div className="cargando-puestos">⏳ Cargando puestos disponibles...</div>}
+
+                        {availableStands.length === 0 && !cargandoPuestos && (
+                            <div className="sin-puestos">
+                                ⚠️ No hay puestos disponibles en este momento.
+                            </div>
+                        )}
+                    </div>
+
+                    {/* BANNER DE ERRORES */}
+                    {error && (
+                        <div className="error-banner">
+                            <i className="fas fa-exclamation-circle"></i> {error}
+                        </div>
+                    )}
+
+                    {/* BOTÓN DE ENVÍO */}
                     <button
                         type="submit"
                         className="btn-registrar"
-                        disabled={
-                            subiendoLogo ||
-                            loading ||
-                            availableStands.length === 0
-                        }
+                        disabled={subiendoLogo || loading || availableStands.length === 0}
                     >
-                        {subiendoLogo
-                            ? "⏳ Subiendo logo..."
-                            : loading
-                            ? "⏳ Registrando..."
-                            : "📝 Enviar solicitud"}
+                        {subiendoLogo ? (
+                            <>
+                                <i className="fas fa-spinner fa-spin"></i> Subiendo logo...
+                            </>
+                        ) : loading ? (
+                            <>
+                                <i className="fas fa-spinner fa-spin"></i> Registrando...
+                            </>
+                        ) : (
+                            <>
+                                Enviar solicitud de registro <i className="fas fa-arrow-right"></i>
+                            </>
+                        )}
                     </button>
-
-                    {loading && (
-                        <div className="registrando-mensaje">
-                            ⏳ Registrando tu negocio y asignando
-                            el puesto...
-                        </div>
-                    )}
                 </form>
             </div>
         </main>

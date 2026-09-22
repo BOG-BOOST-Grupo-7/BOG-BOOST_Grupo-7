@@ -23,11 +23,8 @@ function Home() {
   };
 
   const productosDestacados = productos;
-  const artesanias = productos.filter(
-    producto => producto.categoria?.nombre_categoria === "Artesanías"
-  );
   const ofertasEspeciales = productos.filter(
-    producto => Number(producto.precio) < 30000
+    producto => Number(producto.precio) < 50000
   );
 
   return (
@@ -44,7 +41,6 @@ function Home() {
             title="Ofertas Especiales"
             productos={ofertasEspeciales}
           />
-          
         </div>
 
         <div className="right-column">

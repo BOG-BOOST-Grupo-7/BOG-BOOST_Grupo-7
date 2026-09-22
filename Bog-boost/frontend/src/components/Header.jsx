@@ -273,7 +273,7 @@ function Header() {
                     <a
                       key={cat.id_categoria}
                       onClick={() =>
-                        go(`/catalogo/${cat.id_categoria}`)
+                        go(`/categoria/${cat.id_categoria}`)
                       }
                     >
                       <i className="fas fa-tag"></i> {cat.nombre_categoria}
@@ -300,6 +300,10 @@ function Header() {
         {!isAuthenticated ? (
 
           <>
+            <a onClick={() => go("/registrar-negocio")}>
+              Registrar negocio
+            </a>
+            
             <a onClick={() => go("/login")}>
               Iniciar Sesión
             </a>
@@ -307,6 +311,8 @@ function Header() {
             <a onClick={() => go("/registro")}>
               Registro
             </a>
+
+            
           </>
 
         ) : rol === "CLIENTE" ? (
@@ -322,6 +328,10 @@ function Header() {
 
             <a onClick={() => go("/contacto")}>
               Contáctenos/PQRS
+            </a>
+
+            <a onClick={() => go("/registrar-negocio")}>
+              Registrar negocio
             </a>
           </>
 

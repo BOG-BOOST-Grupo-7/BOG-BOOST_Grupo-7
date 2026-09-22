@@ -1,5 +1,4 @@
 import { useEffect, useState, useRef } from "react";
-
 import { FaEdit } from "react-icons/fa";
 
 import { obtenerMiNegocio, actualizarNegocio } from "../../api/negocioApi";
@@ -79,6 +78,7 @@ export default function PerfilNegocio() {
             </h1>
 
             <div className="profile-grid">
+                {/* Columna izquierda: Logo y Botones de configuración debajo */}
                 <div className="info-column">
                     <div className="profile-card logo-card">
                         {
@@ -112,69 +112,61 @@ export default function PerfilNegocio() {
                         />
                     </div>
 
-                    <div className="profile-card info-card">
-                        <h2>
-                            {negocio.nombre_negocio}
-                        </h2>
-                        <p>
-                            <strong>Descripción</strong>
-                        </p>
-                        <p>
-                            {negocio.descripcion_negocio}
-                        </p>
-                        <p>
-                            <strong>Teléfono</strong>
-                        </p>
-                        <p>
-                            {negocio.telefono_negocio}
-                        </p>
-                        <p>
-                            <strong>Estado</strong>
-                        </p>
-                        <p>
-                            {negocio.estado_negocio}
-                        </p>
-                        <p>
-                            <strong>Puesto</strong>
-                        </p>
-                        <p>
-                            {negocio.puesto?.[0]?.numero_puesto}
-                        </p>
-
+                    {/* Botones de configuración colocados debajo del logo */}
+                    <div className="config-buttons-bottom">
                         <button
-                            className="btn-edit"
-                            onClick={() => setMostrarModal(true)}
+                            className="btn-side"
+                            onClick={() => setMostrarMediosPago(true)}
                         >
-                            <FaEdit />
-                            Editar información
+                            Medio de pago
+                        </button>
+                        <button
+                            className="btn-side"
+                            onClick={() => setMostrarModalEnvio(true)}
+                        >
+                            Método de envío
                         </button>
                     </div>
                 </div>
 
+                {/* Columna derecha: Información del Negocio */}
                 <div className="map-column">
                     <div className="map-column-inner">
-                        <div className="profile-card map-card">
-                            <h3>
-                                Mapa del negocio
-                            </h3>
-                            <div className="map-placeholder">
-                                Próximamente
-                            </div>
-                        </div>
+                        <div className="profile-card info-card">
+                            <h2>
+                                {negocio.nombre_negocio}
+                            </h2>
+                            <p>
+                                <strong>Descripción</strong>
+                            </p>
+                            <p>
+                                {negocio.descripcion_negocio}
+                            </p>
+                            <p>
+                                <strong>Teléfono</strong>
+                            </p>
+                            <p>
+                                {negocio.telefono_negocio}
+                            </p>
+                            <p>
+                                <strong>Estado</strong>
+                            </p>
+                            <p>
+                                {negocio.estado_negocio}
+                            </p>
+                            <p>
+                                <strong>Puesto</strong>
+                            </p>
+                            <p>
+                                {negocio.puesto?.[0]?.numero_puesto || "No especificado"}
+                            </p>
 
-                        {/* Botones de configuración colocados debajo del mapa */}
-                        <div className="config-buttons-bottom">
                             <button
-                                className="btn-side"
-                                onClick={() => setMostrarMediosPago(true)}
+                                className="btn-edit"
+                                onClick={() => setMostrarModal(true)}
                             >
-                                Medio de pago
-                            </button>
-                            <button
-                                className="btn-side"
-                                onClick={() => setMostrarModalEnvio(true)}
-                            >
-                                Método de envío
+                                <FaEdit />
+                                Editar información
                             </button>
                         </div>
                     </div>

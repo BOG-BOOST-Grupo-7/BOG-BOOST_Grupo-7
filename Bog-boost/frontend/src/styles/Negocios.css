@@ -17,7 +17,7 @@
     border-radius: 12px;
     padding: 15px;
     cursor: pointer;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     transition: transform 0.2s ease;
     text-align: center;
 }
@@ -41,4 +41,103 @@
 .negocio-card p {
     font-size: 14px;
     color: #555;
+}
+
+/* ==========================================
+   Estilos para la vista de Detalle de Negocio
+   ========================================== */
+
+/* Contenedor para mostrar el logo y la información lado a lado */
+.profile-grid-single {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 24px;
+    align-items: start;
+    width: 100%;
+    margin-bottom: 30px;
+}
+
+@media (max-width: 768px) {
+    .profile-grid-single {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Estilos generales de las tarjetas de perfil */
+.profile-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Contenedor de información alargado hacia abajo */
+.info-card {
+    min-height: 320px;
+    padding: 30px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+/* Nombre del negocio en naranja */
+.info-card h2 {
+    color: #f8b94e;
+    margin-top: 0;
+    margin-bottom: 15px;
+}
+
+/* Títulos / Etiquetas de la información (Puesto, Descripción, Teléfono) en color naranja */
+.info-card p strong {
+    color: #f8b94e;
+    font-size: 14px;
+}
+
+/* Textos con el contenido en un tono oscuro legible */
+.info-card p:not(:has(strong)) {
+    color: #333;
+    font-size: 15px;
+    margin-bottom: 12px;
+}
+
+.products-section {
+    margin-top: 40px;
+    width: 100%;
+}
+
+.section-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #eaeaea;
+    padding-bottom: 8px;
+}
+
+/* Cuadrícula adaptable para las tarjetas de productos */
+.productos-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    width: 100%;
+}
+
+/* Diseño responsivo de la cuadrícula de productos */
+@media (max-width: 1024px) {
+    .productos-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .productos-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+    }
+}
+
+@media (max-width: 480px) {
+    .productos-grid {
+        grid-template-columns: 1fr;
+    }
 }

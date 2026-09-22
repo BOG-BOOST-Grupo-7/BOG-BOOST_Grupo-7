@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import { obtenerNegocioPorId } from "../../api/negocioApi";
 import { obtenerProductosPorNegocio } from "../../api/productoApi";
 import ProductCard from "../../components/home/ProductCard";
@@ -40,64 +40,65 @@ function NegocioDetalle() {
 
     return (
         <div className="perfil-negocio" style={{ padding: "30px 20px" }}>
-            <div className="profile-grid">
-                <div className="info-column">
-                    <div className="profile-card logo-card">
-                        {
-                            negocio.logo ?
-                                <img
-                                    src={negocio.logo}
-                                    alt={negocio.nombre_negocio}
-                                    className="logo-negocio"
-                                />
-                                :
-                                <div className="logo-placeholder">
-                                    Sin logo
-                                </div>
-                        }
-                    </div>
-
-                    <div className="profile-card info-card">
-                        <h2>
-                            {negocio.nombre_negocio}
-                        </h2>
-                        <p>
-                            <strong>Descripción</strong>
-                        </p>
-                        <p>
-                            {negocio.descripcion_negocio}
-                        </p>
-                        <p>
-                            <strong>Teléfono</strong>
-                        </p>
-                        <p>
-                            {negocio.telefono_negocio}
-                        </p>
-                    </div>
+            {/* Contenedor principal con logo e información lado a lado */}
+            <div className="profile-grid-single">
+                <div className="profile-card logo-card">
+                    {
+                        negocio.logo ?
+                            <img
+                                src={negocio.logo}
+                                alt={negocio.nombre_negocio}
+                                className="logo-negocio"
+                            />
+                            :
+                            <div className="logo-placeholder">
+                                Sin logo
+                            </div>
+                    }
                 </div>
 
-                <div className="map-column">
-                    <div className="profile-card map-card">
-                        <h3>
-                            Mapa del negocio
-                        </h3>
-                        <div className="map-placeholder">
-                            Próximamente
-                        </div>
-                    </div>
+                <div className="profile-card info-card">
+                    <h2>
+                        {negocio.nombre_negocio}
+                    </h2>
+                
+
+                    <p>
+                        <strong>Descripción</strong>
+                    </p>
+                    <p>
+                        {negocio.descripcion_negocio}
+                    </p>
+                    <p>
+                        <strong>Teléfono</strong>
+                    </p>
+                    <p>
+                        {negocio.telefono_negocio}
+                    </p>
+
+                    <p>
+                        <strong>Puesto</strong>
+                    </p>
+
+                    <p>
+                    <Link to="/mapa-mercado" className="boton-mapa">
+                            Ver Mapa del Mercado
+                        </Link>
+                    </p>
                 </div>
             </div>
 
             <div className="products-section">
-                <div className="productos-carrusel">
-                    {productos.length === 0 ? (
-                        <p style={{ color: "#777", fontStyle: "italic", padding: "20px" }}>Este negocio aún no tiene productos disponibles.</p>
-                    ) : (
-                        productos.map((p) => (
+                <h3 className="section-title">Productos del Negocio</h3>
+                {productos.length === 0 ? (
+                    <p style={{ color: "#777", fontStyle: "italic", padding: "20px" }}>Este negocio aún no tiene productos disponibles.</p>
+                ) : (
+                    <div className="productos-grid">
+                        {productos.map((p) => (
                             <ProductCard key={p.id_producto} producto={p} />
-                        ))
-                    )}
-                </div>
+                        ))}
+                    </div>
+                )}
             </div>
         </div>
     );

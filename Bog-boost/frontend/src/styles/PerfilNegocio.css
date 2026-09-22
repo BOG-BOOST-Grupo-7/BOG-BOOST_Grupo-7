@@ -31,6 +31,7 @@
     display:flex;
     flex-direction:column;
     gap:20px;
+    width: 100%;
 }
 
 .map-column{
@@ -71,19 +72,11 @@
     gap:10px;
 }
 
-/* Mapa compacto */
-.map-card{
-    width:100%;
-    min-height:700px;
-    max-height: 650px;
-    display:flex;
-    flex-direction:column;
-}
-
-/* Botones debajo del mapa */
+/* Botones de configuración debajo del logo */
 .config-buttons-bottom {
     display: flex;
     gap: 15px;
+    width: 100%;
 }
 
 .config-buttons-bottom .btn-side {
@@ -116,22 +109,6 @@
     justify-content: center;
     font-size: 18px;
     color: #777;
-}
-
-/* ===========================
-   MAPA
-=========================== */
-
-.map-placeholder{
-    flex:1;
-    margin-top:15px;
-    border-radius:12px;
-    background:#ececec;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    color:#666;
-    font-size:18px;
 }
 
 /* ===========================
@@ -380,7 +357,7 @@
 }
 
 /*==============================
-    CARRUSEL PRODUCTOS
+  CARRUSEL PRODUCTOS
 ==============================*/
 
 .productos-carrusel{
