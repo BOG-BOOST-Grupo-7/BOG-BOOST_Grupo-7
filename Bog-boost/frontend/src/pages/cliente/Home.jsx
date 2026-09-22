@@ -44,10 +44,7 @@ function Home() {
             title="Ofertas Especiales"
             productos={ofertasEspeciales}
           />
-          <HomeCarousel
-            title="Artesanías"
-            productos={artesanias}
-          />
+          
         </div>
 
         <div className="right-column">

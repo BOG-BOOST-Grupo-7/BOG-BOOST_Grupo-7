@@ -11,22 +11,35 @@ const MapaMercadoPagina = () => {
   const [puestoSeleccionado, setPuestoSeleccionado] = useState(null);
   const [cargando, setCargando] = useState(true);
 
+  // 1. Cargar puestos
   const cargarPuestos = useCallback(async () => {
     const { data, error } = await supabase
       .from('puestos')
       .select('*')
       .order('id', { ascending: true });
-    if (error) console.error('Error puestos:', error);
-    else setPuestos(data || []);
+    
+    if (error) {
+      console.error('Error puestos:', error);
+    } else {
+      console.log('Puestos cargados:', data);
+      setPuestos(data || []);
+    }
   }, []);
 
+  // 2. Cargar negocios aprobados desde el esquema 'negocio'
   const cargarNegocios = useCallback(async () => {
     const { data, error } = await supabase
-      .from('negocios')
-      .select('*')
-      .eq('estado', 'aceptado');
-    if (error) console.error('Error negocios:', error);
-    else setNegocios(data || []);
+      .schema('negocio')
+      .from('negocio')
+      .select('*, puesto(numero_puesto)')
+      .eq('estado_negocio', 'APROBADO');
+
+    if (error) {
+      console.error('Error negocios:', error);
+    } else {
+      console.log('Negocios APROBADOS cargados:', data);
+      setNegocios(data || []);
+    }
   }, []);
 
   useEffect(() => {
@@ -38,29 +51,50 @@ const MapaMercadoPagina = () => {
     cargarTodo();
   }, [cargarPuestos, cargarNegocios]);
 
+  // 3. Canal en tiempo real sincronizado con el esquema 'negocio'
   useEffect(() => {
     const canal = supabase
-      .channel('cambios-mapa')
+      .channel('cambios-mapa-negocios')
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: 'negocios' },
+        { event: '*', schema: 'negocio', table: 'negocio' },
         () => cargarNegocios()
       )
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: 'puestos' },
-        () => cargarPuestos()
+        { event: '*', schema: 'negocio', table: 'puesto' },
+        () => cargarNegocios()
       )
       .subscribe();
 
     return () => supabase.removeChannel(canal);
-  }, [cargarNegocios, cargarPuestos]);
+  }, [cargarNegocios]);
 
-  const obtenerNegocio = (numeroPuesto) =>
-    negocios.find((n) => String(n.numero_puesto) === String(numeroPuesto));
+  // 4. Enlazar el puesto del mapa con el negocio aprobado de forma más robusta
+  const obtenerNegocio = (numeroPuesto) => {
+    return negocios.find((n) => {
+      if (!n.puesto) return false;
+
+      // Si Supabase devuelve la relación como arreglo
+      if (Array.isArray(n.puesto)) {
+        return n.puesto.some(
+          (p) => String(p.numero_puesto).trim() === String(numeroPuesto).trim()
+        );
+      }
+
+      // Si Supabase devuelve la relación como un objeto directo
+      if (typeof n.puesto === 'object' && n.puesto !== null) {
+        return String(n.puesto.numero_puesto).trim() === String(numeroPuesto).trim();
+      }
+
+      return false;
+    });
+  };
 
   const manejarClicPuesto = (puesto) => {
-    const negocio = obtenerNegocio(puesto.numero);
+    // Nota: Asegúrate de si la propiedad en tu tabla de puestos se llama 'numero' o 'numero_puesto'
+    const numPuesto = puesto.numero || puesto.numero_puesto;
+    const negocio = obtenerNegocio(numPuesto);
     setPuestoSeleccionado({ ...puesto, negocio });
   };
 

@@ -12,141 +12,119 @@ const MapaSVG = ({ puestos, obtenerNegocio, alHacerClicPuesto }) => {
       {/* REFERENCIAS VISUALES */}
       {/* ================================================ */}
 
-      {/* MUSEO DE ARTE MODERNO — mueve a la izquierda junto al bloque azul */}
-<g transform="translate(580, 20)">
-  <text x="60" y="30" textAnchor="middle" fontSize="80">🏛️</text>
-  <text x="60" y="55" className="label-ref" textAnchor="middle">
-    MUSEO DE
-  </text>
-  <text x="60" y="68" className="label-ref" textAnchor="middle">
-    ARTE MODERNO
-  </text>
-</g>
+      {/* MUSEO DE ARTE MODERNO */}
+      <g transform="translate(580, 20)">
+        <text x="60" y="30" textAnchor="middle" fontSize="80">🏛️</text>
+        <text x="60" y="55" className="label-ref" textAnchor="middle">MUSEO DE</text>
+        <text x="60" y="68" className="label-ref" textAnchor="middle">ARTE MODERNO</text>
+      </g>
 
-{/* MONSERRATE — se queda igual, arriba de los puestos 34-31 */}
-<g transform="translate(1180, 5)">
-  <text x="60" y="30" textAnchor="middle" fontSize="80">⛪</text>
-  <text x="60" y="55" className="label-ref-lg" textAnchor="middle" style={{ fontSize: '13px' }}>
-    MONSERRATE
-  </text>
-</g>
+      {/* MONSERRATE */}
+      <g transform="translate(1180, 5)">
+        <text x="60" y="30" textAnchor="middle" fontSize="80">⛪</text>
+        <text x="60" y="55" className="label-ref-lg" textAnchor="middle" style={{ fontSize: '13px' }}>MONSERRATE</text>
+      </g>
 
-{/* PLANETARIO DISTRITAL — un poco más a la derecha */}
-<g transform="translate(80, 420)">
-  <text x="45" y="20" textAnchor="middle" fontSize="80">🪐</text>
-  <text x="45" y="45" className="label-ref-sm" textAnchor="middle">
-    PLANETARIO
-  </text>
-  <text x="45" y="60" className="label-ref-sm" textAnchor="middle">
-    DISTRITAL
-  </text>
-</g>
+      {/* PLANETARIO DISTRITAL */}
+      <g transform="translate(80, 420)">
+        <text x="45" y="20" textAnchor="middle" fontSize="80">🪐</text>
+        <text x="45" y="45" className="label-ref-sm" textAnchor="middle">PLANETARIO</text>
+        <text x="45" y="60" className="label-ref-sm" textAnchor="middle">DISTRITAL</text>
+      </g>
 
-{/* TORRE COLPATRIA — ajusta según el nuevo bloque azul */}
-<g transform="translate(490, 940)">
-  <text x="60" y="15" textAnchor="middle" fontSize="80">🏢</text>
-  <text x="60" y="38" className="label-ref-sm" textAnchor="middle">
-    TORRE
-  </text>
-  <text x="60" y="52" className="label-ref-sm" textAnchor="middle">
-    COLPATRIA
-  </text>
-</g>
+      {/* TORRE COLPATRIA */}
+      <g transform="translate(490, 940)">
+        <text x="60" y="15" textAnchor="middle" fontSize="80">🏢</text>
+        <text x="60" y="38" className="label-ref-sm" textAnchor="middle">TORRE</text>
+        <text x="60" y="52" className="label-ref-sm" textAnchor="middle">COLPATRIA</text>
+      </g>
 
-{/* ASEO — al lado derecho del puesto 24 */}
-<rect x="1595" y="238" width="60" height="30" fill="#000" />
-<text
-  x="1625"
-  y="258"
-  fill="#fff"
-  fontSize="11"
-  fontWeight="bold"
-  textAnchor="middle"
-  fontFamily="Arial"
->
-  ASEO
-</text>
+      {/* ASEO */}
+      <rect x="1595" y="238" width="60" height="30" fill="#000" />
+      <text x="1625" y="258" fill="#fff" fontSize="11" fontWeight="bold" textAnchor="middle" fontFamily="Arial">
+        ASEO
+      </text>
 
-{/* ENTRADA Calle 24 — derecha, rotada, más cerca de las casillas */}
-<text
-  x="1750"
-  y="220"
-  className="label-ref"
-  textAnchor="middle"
-  transform="rotate(90 1750 220)"
->
-  ENTRADA Calle 24
-</text>
+      {/* ENTRADA Calle 24 */}
+      <text x="1750" y="220" className="label-ref" textAnchor="middle" transform="rotate(90 1750 220)">
+        ENTRADA Calle 24
+      </text>
 
-{/* Zona bicicletas + panel de servicios — corrida a la izquierda */}
-<g transform="translate(440, 640)">
-  <rect x="0" y="0" width="260" height="220" fill="#000" />
-  <text x="130" y="110" textAnchor="middle" fontSize="36" fill="#fff">🚲</text>
-  <text x="240" y="50" textAnchor="middle" fontSize="9" fill="#fff" fontFamily="Arial">CARNE</text>
-  <text x="240" y="75" textAnchor="middle" fontSize="9" fill="#fff" fontFamily="Arial">BOYACÁ</text>
-  <text x="240" y="100" textAnchor="middle" fontSize="9" fill="#fff" fontFamily="Arial">LECHONA</text>
-  <text x="240" y="125" textAnchor="middle" fontSize="9" fill="#fff" fontFamily="Arial">JEEP</text>
-  <text x="240" y="150" textAnchor="middle" fontSize="9" fill="#fff" fontFamily="Arial">FRUTAS</text>
-  <text x="240" y="175" textAnchor="middle" fontSize="9" fill="#fff" fontFamily="Arial">ACHIRAS</text>
-  <text x="240" y="200" textAnchor="middle" fontSize="9" fill="#fff" fontFamily="Arial">POSTRES</text>
-  <text x="165" y="50" textAnchor="middle" fontSize="9" fill="#fff" fontFamily="Arial">VINOS</text>
-  <text x="165" y="75" textAnchor="middle" fontSize="9" fill="#fff" fontFamily="Arial">SAPICON</text>
-  <text x="165" y="100" textAnchor="middle" fontSize="9" fill="#fff" fontFamily="Arial">COOP</text>
-  <text x="165" y="125" textAnchor="middle" fontSize="9" fill="#fff" fontFamily="Arial">CAKE</text>
-  <text x="165" y="150" textAnchor="middle" fontSize="9" fill="#fff" fontFamily="Arial">BEBIDAS</text>
-</g>
+      {/* Zona bicicletas */}
+      <g transform="translate(440, 640)">
+        <rect x="0" y="0" width="260" height="220" fill="#000" />
+        <text x="130" y="110" textAnchor="middle" fontSize="36" fill="#fff">🚲</text>
+        <text x="240" y="50" textAnchor="middle" fontSize="9" fill="#fff" fontFamily="Arial">CARNE</text>
+        <text x="240" y="75" textAnchor="middle" fontSize="9" fill="#fff" fontFamily="Arial">BOYACÁ</text>
+        <text x="240" y="100" textAnchor="middle" fontSize="9" fill="#fff" fontFamily="Arial">LECHONA</text>
+        <text x="240" y="125" textAnchor="middle" fontSize="9" fill="#fff" fontFamily="Arial">JEEP</text>
+        <text x="240" y="150" textAnchor="middle" fontSize="9" fill="#fff" fontFamily="Arial">FRUTAS</text>
+        <text x="240" y="175" textAnchor="middle" fontSize="9" fill="#fff" fontFamily="Arial">ACHIRAS</text>
+        <text x="240" y="200" textAnchor="middle" fontSize="9" fill="#fff" fontFamily="Arial">POSTRES</text>
+        <text x="165" y="50" textAnchor="middle" fontSize="9" fill="#fff" fontFamily="Arial">VINOS</text>
+        <text x="165" y="75" textAnchor="middle" fontSize="9" fill="#fff" fontFamily="Arial">SAPICON</text>
+        <text x="165" y="100" textAnchor="middle" fontSize="9" fill="#fff" fontFamily="Arial">COOP</text>
+        <text x="165" y="125" textAnchor="middle" fontSize="9" fill="#fff" fontFamily="Arial">CAKE</text>
+        <text x="165" y="150" textAnchor="middle" fontSize="9" fill="#fff" fontFamily="Arial">BEBIDAS</text>
+      </g>
 
-{/* BAÑOS — más a la izquierda */}
-<g transform="translate(1150, 990)">
-  <rect x="0" y="0" width="60" height="26" fill="#fff" stroke="#000" strokeWidth="1.2" />
-  <text
-    x="30"
-    y="17"
-    fill="#000"
-    fontSize="10"
-    fontWeight="bold"
-    textAnchor="middle"
-    fontFamily="Arial"
-  >
-    BAÑOS
-  </text>
-  <text x="80" y="20" textAnchor="middle" fontSize="16">🚻</text>
-</g>
+      {/* BAÑOS */}
+      <g transform="translate(1150, 990)">
+        <rect x="0" y="0" width="60" height="26" fill="#fff" stroke="#000" strokeWidth="1.2" />
+        <text x="30" y="17" fill="#000" fontSize="10" fontWeight="bold" textAnchor="middle" fontFamily="Arial">
+          BAÑOS
+        </text>
+        <text x="80" y="20" textAnchor="middle" fontSize="16">🚻</text>
+      </g>
 
-{/* ENTRADA Cra 7 — corrido a la derecha */}
-<text x="1080" y="1050" className="label-ref-lg" textAnchor="middle">
-  ENTRADA Cra 7
-</text>  
+      {/* ENTRADA Cra 7 */}
+      <text x="1080" y="1050" className="label-ref-lg" textAnchor="middle">
+        ENTRADA Cra 7
+      </text>  
 
       {/* ================================================ */}
-      {/* PUESTOS */}
+      {/* PUESTOS (DINÁMICOS DESDE SUPABASE) */}
       {/* ================================================ */}
       <g className="grupo-puestos">
         {puestos.map((puesto) => {
-          const negocio = obtenerNegocio(puesto.numero);
+          // Normalizamos para aceptar tanto 'numero' como 'numero_puesto' de Supabase
+          const numPuesto = puesto.numero_puesto || puesto.numero;
+          const negocio = obtenerNegocio(numPuesto);
           const esOcupado = Boolean(negocio) || puesto.estado === 'ocupado';
+          
+          // Extraemos el nombre del negocio de forma segura según posibles estructuras
+          const nombreNegocio = negocio 
+            ? (negocio.nombre || negocio.nombre_negocio || negocio.titulo || 'Ocupado') 
+            : 'Disponible';
+
+          // Coordenadas y dimensiones de respaldo por si la BD no las trae
+          const posX = puesto.x !== undefined && puesto.x !== null ? puesto.x : 400;
+          const posY = puesto.y !== undefined && puesto.y !== null ? puesto.y : 300;
+          const ancho = puesto.ancho || 25;
+          const alto = puesto.alto || 25;
+
           return (
             <g
-              key={puesto.numero}
+              key={numPuesto}
               className={`puesto-svg ${esOcupado ? 'ocupado' : 'disponible'}`}
-              onClick={() => alHacerClicPuesto({ ...puesto, negocio })}
+              onClick={() => alHacerClicPuesto({ ...puesto, numero: numPuesto, negocio })}
             >
               <title>
-                Puesto {puesto.numero} — {esOcupado ? 'Ocupado' : 'Disponible'}
+                Puesto {numPuesto} — {nombreNegocio}
               </title>
               <rect
-                x={puesto.x}
-                y={puesto.y}
-                width={puesto.ancho}
-                height={puesto.alto}
+                x={posX}
+                y={posY}
+                width={ancho}
+                height={alto}
                 rx="1"
               />
               <text
-                x={puesto.x + puesto.ancho / 2}
-                y={puesto.y + puesto.alto / 2}
+                x={posX + ancho / 2}
+                y={posY + alto / 2}
                 className="texto-p"
               >
-                {puesto.numero}
+                {numPuesto}
               </text>
             </g>
           );

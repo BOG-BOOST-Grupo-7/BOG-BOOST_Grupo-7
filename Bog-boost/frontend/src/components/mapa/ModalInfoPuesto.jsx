@@ -1,8 +1,19 @@
+import { useNavigate } from 'react-router-dom';
 import './ModalInfoPuesto.css';
 
 const ModalInfoPuesto = ({ puesto, negocio, alCerrar }) => {
+  const navigate = useNavigate();
+
   if (!puesto) return null;
   const estaOcupado = Boolean(negocio);
+
+  // Función para manejar el clic y redirigir al perfil del negocio
+  const irAlDetalleNegocio = () => {
+    if (negocio && negocio.id_negocio) {
+      alCerrar(); // Cerramos el modal primero
+      navigate(`/negocios/${negocio.id_negocio}`); // Redirige a la ruta configurada
+    }
+  };
 
   return (
     <div className="modal-fondo" onClick={alCerrar}>
@@ -12,19 +23,39 @@ const ModalInfoPuesto = ({ puesto, negocio, alCerrar }) => {
         <h2>Puesto N° {puesto.numero}</h2>
 
         {estaOcupado ? (
-          <div className="info-negocio">
-            <div className="insignia ocupado">Ocupado</div>
-            <p><strong>Propietario:</strong> {negocio.nombre_propietario || 'No especificado'}</p>
-            <p><strong>Nombre del negocio:</strong> {negocio.nombre_negocio || 'Sin nombre'}</p>
-            <p>
-              <strong>Categorías / Productos:</strong>{' '}
-              {Array.isArray(negocio.categorias)
-                ? negocio.categorias.join(', ')
-                : negocio.categorias || 'No especificadas'}
-            </p>
-            {negocio.descripcion && (
-              <p><strong>Descripción:</strong> {negocio.descripcion}</p>
+          <div 
+            className="info-negocio clicable" 
+            onClick={irAlDetalleNegocio}
+            title="Haz clic para ver el perfil del negocio"
+          >
+            {/* Logo del negocio si lo tiene registrado */}
+            {negocio.logo && (
+              <div className="modal-logo-container">
+                <img 
+                  src={negocio.logo} 
+                  alt={negocio.nombre_negocio} 
+                />
+              </div>
             )}
+
+            <div className="insignia ocupado">Ocupado</div>
+            
+            <div className="campo-info">
+              <span className="etiqueta">Nombre del negocio:</span>
+              <span className="valor">{negocio.nombre_negocio || 'Sin nombre'}</span>
+            </div>
+            
+            <div className="campo-info">
+              <span className="etiqueta">Descripción:</span>
+              <span className="valor">{negocio.descripcion_negocio || 'Sin descripción'}</span>
+            </div>
+
+            <div className="campo-info">
+              <span className="etiqueta">Teléfono de contacto:</span>
+              <span className="valor">{negocio.telefono_negocio || 'No especificado'}</span>
+            </div>
+
+            <span className="texto-ver-perfil">Ver perfil completo ➜</span>
           </div>
         ) : (
           <div className="info-disponible">
