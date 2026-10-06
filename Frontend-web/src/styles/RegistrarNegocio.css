@@ -1,0 +1,373 @@
+/* ============================================
+   CONFIGURACIÓN GENERAL Y RESET
+============================================ */
+* {
+    box-sizing: border-box;
+}
+
+/* ============================================
+   CONTENEDOR GENERAL
+============================================ */
+.registro-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    width: 100%;
+    background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+    min-height: calc(100vh - 80px);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* ============================================
+   TARJETA MODERNA
+============================================ */
+.registro-card {
+    background-color: #ffffff;
+    border: none;
+    border-radius: 16px;
+    padding: 40px;
+    max-width: 460px;
+    width: 100%;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+    transition: transform 0.3s ease;
+    animation: fadeIn 0.5s ease;
+}
+
+.registro-card-wide {
+    max-width: 1150px; /* Contenedor mucho más ancho para que el formulario respire mejor */
+}
+
+/* ============================================
+   HEADER INTERNO DE LA TARJETA
+============================================ */
+.auth-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.auth-icon-badge {
+    width: 50px;
+    height: 50px;
+    background-color: rgba(245, 185, 82, 0.15);
+    color: #ffa125;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    margin: 0 auto 15px auto;
+}
+
+.registro-title {
+    font-family: 'Inter', 'Segoe UI', sans-serif;
+    font-size: 26px;
+    font-weight: 700;
+    color: #111827;
+    margin: 0 0 8px 0;
+}
+
+.registro-subtitle {
+    font-size: 14px;
+    color: #6b7280;
+    margin: 0;
+    line-height: 1.5;
+}
+
+/* ============================================
+   FORMULARIO
+============================================ */
+.registro-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.form-group label {
+    font-weight: 600;
+    font-size: 13px;
+    color: #374151;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.form-group label .label-icon {
+    color: #ffa125;
+    font-size: 14px;
+}
+
+/* ============================================
+   INPUTS Y TEXTAREA
+============================================ */
+.form-group input,
+.form-group textarea,
+.registro-negocio-card input,
+.registro-negocio-card textarea {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1.5px solid #e5e7eb;
+    border-radius: 10px;
+    font-size: 14px;
+    color: #1f2937;
+    background-color: #f9fafb;
+    transition: all 0.2s ease;
+}
+
+.form-group textarea {
+    resize: vertical;
+    min-height: 120px;
+    font-family: inherit;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+    border-color: #F5B952;
+    outline: none;
+    box-shadow: 0 0 0 4px rgba(245, 185, 82, 0.15);
+    background-color: #fff;
+}
+
+.form-group input:hover,
+.form-group textarea:hover {
+    border-color: #d1d5db;
+}
+
+/* ============================================
+   SELECT DE PUESTOS
+============================================ */
+.stand-select {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1.5px solid #e5e7eb;
+    border-radius: 10px;
+    font-size: 14px;
+    background: #f9fafb;
+    color: #1f2937;
+    cursor: pointer;
+    transition: .3s;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23333' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 15px center;
+}
+
+.stand-select:focus {
+    outline: none;
+    border-color: #F5B952;
+    background-color: #fff;
+    box-shadow: 0 0 0 4px rgba(245, 185, 82, 0.15);
+}
+
+.stand-select:disabled {
+    background-color: #f5f5f5;
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+/* ============================================
+   MENSAJES DE ESTADO DE PUESTOS
+============================================ */
+.cargando-puestos {
+    text-align: center;
+    font-weight: 600;
+    color: #c88d19;
+    font-size: 0.85rem;
+    margin-top: 5px;
+}
+
+.sin-puestos {
+    color: #dc2626;
+    font-size: 0.85rem;
+    margin-top: 5px;
+    padding: 10px;
+    background: #fef2f2;
+    border-radius: 8px;
+    text-align: center;
+    border: 1px solid #fee2e2;
+}
+
+/* ============================================
+   ÁREA DEL LOGO
+============================================ */
+.logo-upload {
+    width: 160px;
+    height: 160px;
+    margin: 5px auto;
+    border: 2px dashed #F5B952;
+    border-radius: 50%;
+    overflow: hidden;
+    background: #fffdf9;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+    padding: 15px;
+}
+
+.logo-upload:hover {
+    background: #fff8eb;
+    border-color: #e8a935;
+    transform: translateY(-2px);
+}
+
+.logo-icon {
+    font-size: 45px;
+    margin-bottom: 5px;
+}
+
+.logo-upload p {
+    font-size: 13px;
+    color: #444;
+    margin: 0 0 4px 0 !important;
+    font-weight: 600;
+}
+
+.logo-upload small {
+    font-size: 11px;
+    color: #777;
+    margin: 0;
+}
+
+.preview-logo {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+}
+
+.uploading {
+    text-align: center;
+    font-weight: 600;
+    color: #c88d19;
+    font-size: 13px;
+}
+
+.btn-eliminar-logo {
+    background: #fff;
+    border: 1.5px solid #ff6b6b;
+    border-radius: 20px;
+    padding: 8px 14px;
+    color: #ff6b6b;
+    font-weight: 600;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    width: fit-content;
+    margin: 5px auto 0 auto;
+}
+
+.btn-eliminar-logo:hover {
+    background: #ff6b6b;
+    color: #fff;
+    transform: scale(1.03);
+}
+
+/* ============================================
+   MENSAJE DE ERROR
+============================================ */
+.error-banner {
+    background-color: #fef2f2;
+    border: 1px solid #fee2e2;
+    color: #dc2626;
+    padding: 12px 16px;
+    border-radius: 10px;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* ============================================
+   BOTÓN PRINCIPAL (CTA)
+============================================ */
+.btn-registrar {
+    background-color: #F5B952;
+    border: none;
+    border-radius: 10px;
+    height: 48px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: #1f2937;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 5px;
+    box-shadow: 0 4px 6px -1px rgba(245, 185, 82, 0.3);
+}
+
+.btn-registrar:hover:not(:disabled) {
+    background-color: #e8a83e;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 8px -1px rgba(245, 185, 82, 0.4);
+}
+
+.btn-registrar:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+.btn-registrar:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+/* ============================================
+   ANIMACIONES
+============================================ */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ============================================
+   RESPONSIVE (TABLETS Y CELULARES)
+============================================ */
+@media (max-width: 768px) {
+    .registro-container {
+        padding: 20px 10px;
+    }
+
+    .registro-card {
+        padding: 25px 20px;
+    }
+}
+
+@media (max-width: 480px) {
+    .registro-card {
+        padding: 20px 15px;
+        border-radius: 12px;
+    }
+
+    .logo-upload {
+        width: 130px;
+        height: 130px;
+    }
+
+    .logo-icon {
+        font-size: 35px;
+    }
+
+    .registro-title {
+        font-size: 22px;
+    }
+}

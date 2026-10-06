@@ -1,0 +1,456 @@
+/* ==========================================================
+   1. ESTILOS GLOBALES DE LA TARJETA (ProductCard)
+   Se verán EXACTAMENTE IGUAL tanto en el carrusel como fuera de él.
+   ================================================---------- */
+.product-card {
+  height: 320px;
+  width: 100%; /* Por defecto toma todo el contenedor disponible */
+  display: flex;
+  flex-direction: column;
+  background: #fafafa;
+  border-radius: 10px;
+  border: 1px solid #eee;
+  overflow: hidden;
+  cursor: pointer;
+  transition: .3s;
+  flex-shrink: 0;
+  box-sizing: border-box;
+}
+
+.product-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 15px rgba(0,0,0,0.08);
+}
+
+.product-card-img-container {
+  width: 100%;
+  height: 130px;
+  overflow: hidden;
+  background: #f4f4f4;
+}
+
+.product-card-img-container img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.product-card-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  padding: 10px;
+}
+
+.sin-imagen {
+  color: #777;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+
+.product-card-category {
+  font-size: 11px;
+  color: #777;
+  margin-bottom: 4px;
+  height: 15px;
+  overflow: hidden;
+}
+
+.product-card-body h4 {
+  font-size: 13px;
+  font-weight: bold;
+  height: 32px;
+  overflow: hidden;
+  margin: 0 0 4px 0;
+  color: #333;
+}
+
+.product-card-desc {
+  height: 28px;
+  overflow: hidden;
+  font-size: 11px;
+  color: #666;
+  line-height: 14px;
+  margin-bottom: 6px;
+}
+
+.product-card-price {
+  font-size: 14px;
+  font-weight: bold;
+  color: #d99a36;
+  margin-bottom: 8px;
+}
+
+.btn-carrito {
+  width: 100%;
+  border: none;
+  background: #f5b952;
+  color: #000;
+  padding: 8px;
+  border-radius: 8px;
+  font-weight: bold;
+  font-size: 12px;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  transition: .25s;
+  margin-top: auto;
+}
+
+.btn-carrito:hover {
+  background: #e3a82d;
+}
+
+
+/* ==========================================================
+   2. CONTENEDORES Y DISTRIBUCIÓN (Home y Carrusel)
+   ================================================---------- */
+
+.container-home {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.view-title {
+  text-align: center;
+  font-size: 28px;
+  font-weight: 700;
+  color: #2c2c2c;
+  margin-bottom: 25px;
+}
+
+.main-content {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 24px;
+  justify-content: start;
+  padding: 0 10px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.carruseles-column {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Contenedor del Carrusel */
+.carrusel-container {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 20px 24px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  border: 1px solid #eaeaea;
+}
+
+.carrusel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  border-bottom: 2px solid #f9f9f9;
+  padding-bottom: 10px;
+}
+
+.carrusel-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 0;
+}
+
+/* Indicadores de página estilo puntos modernos */
+.carrusel-indicadores {
+  display: flex;
+  gap: 6px;
+}
+
+.indicador-punto {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #dcdcdc;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.indicador-punto.activo {
+  width: 22px;
+  border-radius: 4px;
+  background: #f5b952;
+}
+
+.carrusel-wrapper {
+  display: flex;
+  align-items: center;
+  position: relative;
+  gap: 12px;
+}
+
+.carrusel-columnas-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+  overflow: hidden;
+}
+
+/* Control del layout exclusivo del carrusel */
+.carrusel-track {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+}
+
+/* Forzar que cada tarjeta mida exactamente el 25% solo cuando está DENTRO del track del carrusel */
+.carrusel-track > .product-card {
+  flex: 1;
+  min-width: 0; 
+  max-width: calc(25% - 9px); 
+}
+
+/* Botones de navegación del carrusel */
+.carrusel-btn {
+  background: #ffffff;
+  border: 1px solid #e0e0e0;
+  color: #333;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 16px;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  z-index: 2;
+}
+
+.carrusel-btn:hover {
+  background: #f5b952;
+  border-color: #f5b952;
+  color: #000;
+  transform: scale(1.08);
+}
+
+.sin-productos {
+  text-align: center;
+  color: #888;
+  font-size: 14px;
+  padding: 30px 0;
+  width: 100%;
+}
+
+/* Resto de componentes (Mapa y Registro) */
+.tarjeta-mapa {
+  background: white;
+  border-radius: 16px;
+  border: 1px solid #eaeaea;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  padding: 25px;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.tarjeta-mapa h3 {
+  color: #f5b952;
+  font-size: 20px;
+  margin-bottom: 8px;
+}
+
+.tarjeta-mapa p {
+  color: #666;
+  margin-bottom: 18px;
+}
+
+.boton-mapa {
+  display: inline-block;
+  background: #f5b952;
+  color: #000;
+  padding: 12px 28px;
+  border-radius: 30px;
+  text-decoration: none;
+  font-weight: bold;
+  font-size: 15px;
+  transition: .3s;
+}
+
+.boton-mapa:hover {
+  background: #e7a92e;
+  transform: translateY(-2px);
+}
+
+.negocio-card {
+  background: #fff;
+  border: 1px solid #eaeaea;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  border-radius: 16px;
+  padding: 25px;
+}
+
+.negocio-title {
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+.negocio-subtitle {
+  text-align: center;
+  color: #555;
+  margin-bottom: 25px;
+}
+
+.negocio-placeholder {
+  height: 330px;
+  border: 2px dashed #f5b952;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+  padding: 25px;
+  text-align: center;
+  background: #fffdf9;
+}
+
+.negocio-icono {
+  font-size: 70px;
+}
+
+.negocio-texto {
+  max-width: 320px;
+  line-height: 1.6;
+  color: #444;
+}
+
+.btn-registrar-negocio {
+  margin-top: 10px;
+  background: #f5b952;
+  color: #000;
+  border: none;
+  border-radius: 30px;
+  padding: 14px 28px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: .3s;
+}
+
+.btn-registrar-negocio:hover {
+  background: #e7a92e;
+  transform: translateY(-2px);
+}
+
+.right-column {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+html, body {
+  overflow-x: hidden;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  background-color: #f8f9fa;
+}
+
+/* ==========================================================
+   3. BANNER DE COBERTURA Y ENTREGAS (Profesional)
+   ================================================---------- */
+.aviso-cobertura {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  background: linear-gradient(135deg, #fffdf9 0%, #fff8eb 100%);
+  border: 1px solid #f5d799;
+  border-left: 5px solid #f5b952;
+  border-radius: 12px;
+  padding: 15px 20px;
+  margin-bottom: 25px;
+  box-shadow: 0 4px 15px rgba(245, 185, 82, 0.08);
+}
+
+.aviso-icono {
+  background: #f5b952;
+  color: #000;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+}
+
+.aviso-texto h4 {
+  margin: 0 0 3px 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: #2c2c2c;
+}
+
+.aviso-texto p {
+  margin: 0;
+  font-size: 13px;
+  color: #555;
+  line-height: 1.4;
+}
+
+/* Responsivo para pantallas pequeñas */
+@media (max-width: 768px) {
+  .aviso-cobertura {
+    padding: 12px 15px;
+  }
+  .aviso-texto h4 {
+    font-size: 14px;
+  }
+  .aviso-texto p {
+    font-size: 12px;
+  }
+}
+
+/* Diseño Responsivo */
+@media (max-width: 1024px) {
+  .main-content {
+    grid-template-columns: 1fr;
+  }
+  .right-column {
+    flex-direction: row;
+    align-items: flex-start;
+  }
+  .tarjeta-mapa,
+  .negocio-card {
+    flex: 1;
+  }
+  .carrusel-track > .product-card {
+    max-width: calc(33.333% - 8px); 
+  }
+}
+
+@media (max-width: 768px) {
+  .container-home {
+    padding: 10px;
+  }
+  .view-title {
+    font-size: 22px;
+  }
+  .carrusel-track > .product-card {
+    max-width: calc(50% - 6px); 
+  }
+  .right-column {
+    flex-direction: column;
+  }
+}
