@@ -11,9 +11,7 @@ import {
   listarUsuarios,
   obtenerUsuarioPorId,
   recuperarPassword,
-  cambiarPassword,
-  solicitarReactivacion,
-  reactivarCuenta
+  cambiarPassword
 }
   from "../controllers/auth.controller.js";
 
@@ -27,7 +25,5 @@ router.get("/usuarios", authMiddleware, superAdminMiddleware, listarUsuarios);
 router.get("/usuarios/:id", authMiddleware, superAdminMiddleware, obtenerUsuarioPorId);
 router.post("/recuperar-password", recuperarPassword);
 router.put("/cambiar-password", cambiarPassword);
-router.post("/solicitar-reactivacion", solicitarReactivacion);
-router.put("/reactivar-cuenta", reactivarCuenta);
 
 export default router;
