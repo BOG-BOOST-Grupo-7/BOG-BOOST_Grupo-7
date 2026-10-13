@@ -70,7 +70,7 @@ export default function HomeView() {
                       />
                     </View>
                     <View style={styles.productCardBody}>
-                      <Text style={styles.productCardCategory} numberOfLines={1}>{item.categoria}</Text>
+                     <Text style={styles.productCardCategory} numberOfLines={1}>{item.categoria?.nombre_categoria || item.categoria}</Text>
                       <Text style={styles.productCardH4} numberOfLines={2}>{item.nombre}</Text>
                       <Text style={styles.productCardPrice}>${item.precio}</Text>
                       <View style={styles.btnCarrito}>
@@ -102,7 +102,7 @@ export default function HomeView() {
                       />
                     </View>
                     <View style={styles.productCardBody}>
-                      <Text style={styles.productCardCategory} numberOfLines={1}>{item.categoria}</Text>
+                      <Text style={styles.productCardCategory} numberOfLines={1}>{item.categoria?.nombre_categoria || item.categoria}</Text>
                       <Text style={styles.productCardH4} numberOfLines={2}>{item.nombre}</Text>
                       <Text style={styles.productCardPrice}>${item.precio}</Text>
                       <View style={styles.btnCarrito}>

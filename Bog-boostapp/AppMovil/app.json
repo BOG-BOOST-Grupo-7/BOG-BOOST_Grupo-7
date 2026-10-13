@@ -1,0 +1,11 @@
+{
+  "expo": {
+    "name": "AppMovil",
+    "slug": "AppMovil",
+    "version": "1.0.0",
+    "scheme": "appmovil",
+    "plugins": [
+      "expo-router"
+    ]
+  }
+}
