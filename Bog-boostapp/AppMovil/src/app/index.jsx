@@ -4,7 +4,7 @@ import { View, Text, StyleSheet } from 'react-native';
 export default function Page() {
   return (
     <View style={styles.container}>
-      <Text style={styles.texto}>¡Expo Router ya está conectado!</Text>
+      <Text style={styles.texto}>¡Hola Mundo en Bog-Boost!</Text>
     </View>
   );
 }
@@ -17,8 +17,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   texto: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: 'bold',
-    color: '#000000',
+    color: '#333',
   },
 });
