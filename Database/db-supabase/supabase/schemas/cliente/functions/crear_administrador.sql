@@ -1,0 +1,88 @@
+CREATE OR REPLACE FUNCTION cliente.crear_administrador (
+  p_id_perfil uuid
+)
+  RETURNS void
+  LANGUAGE plpgsql
+  SECURITY DEFINER
+  AS $function$
+declare
+    v_id_rol_admin integer;
+begin
+
+    if not cliente.es_super_admin() then
+        raise exception 'Solo el SUPER_ADMIN puede crear administradores';
+    end if;
+
+    select id_rol
+    into v_id_rol_admin
+    from cliente.rol
+    where nombre_rol = 'ADMINISTRADOR';
+
+    update cliente.perfil
+    set id_rol = v_id_rol_admin
+    where id_perfil = p_id_perfil;
+
+    insert into cliente.notificacion(
+        id_perfil,
+        mensaje,
+        tipo
+    )
+    values(
+        p_id_perfil,
+        'Has sido asignado como administrador.',
+        'SISTEMA'
+    );
+
+end;
+$function$;
+
+CREATE OR REPLACE FUNCTION cliente.crear_administrador (
+  p_id_super_admin uuid,
+  p_id_perfil      uuid
+)
+  RETURNS void
+  LANGUAGE plpgsql
+  SECURITY DEFINER
+  AS $function$
+declare
+    v_id_rol_admin integer;
+begin
+
+    if not exists (
+        select 1
+        from cliente.perfil p
+        join cliente.rol r
+            on p.id_rol = r.id_rol
+        where p.id_perfil = p_id_super_admin
+        and r.nombre_rol = 'SUPER_ADMIN'
+    ) then
+        raise exception
+        'Solo el SUPER_ADMIN puede crear administradores';
+    end if;
+
+    select id_rol
+    into v_id_rol_admin
+    from cliente.rol
+    where nombre_rol = 'ADMINISTRADOR';
+
+    update cliente.perfil
+    set id_rol = v_id_rol_admin
+    where id_perfil = p_id_perfil;
+
+    insert into cliente.notificacion(
+        id_perfil,
+        mensaje,
+        tipo
+    )
+    values(
+        p_id_perfil,
+        'Has sido asignado como administrador.',
+        'SISTEMA'
+    );
+
+end;
+$function$;
+
+GRANT EXECUTE ON FUNCTION "cliente"."crear_administrador"(uuid) TO "anon", "authenticated", "service_role";
+
+REVOKE ALL ON FUNCTION "cliente"."crear_administrador"(uuid) FROM PUBLIC;
