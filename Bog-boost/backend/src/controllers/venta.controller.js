@@ -46,8 +46,6 @@ export const obtenerVentaPorId = async (req, res) => {
       });
     }
 
-    // Ya no necesitas hacer los otros fetch manuales ni el bucle for, 
-    // porque "venta" ya contiene todo estructurado.
     return res.json(venta);
 
   } catch (error) {
@@ -73,8 +71,8 @@ export const confirmarCarrito = async (req, res) => {
     }
 
     let total = 0;
-    const detallesDB = []; // Para insertar en la tabla detalle_venta
-    const detallesRespuesta = []; // Para enviar al frontend con nombres de productos
+    const detallesDB = [];
+    const detallesRespuesta = [];
 
     // 1. Obtener ID Negocio del primer producto
     const { data: primerProducto, error: errorPrimerProducto } = await supabase
@@ -114,7 +112,6 @@ export const confirmarCarrito = async (req, res) => {
       const subtotal = Number(producto.precio) * Number(item.cantidad);
       total += subtotal;
 
-      // Datos para insertar en la DB
       detallesDB.push({
         id_producto: producto.id_producto,
         cantidad: item.cantidad,
@@ -122,7 +119,6 @@ export const confirmarCarrito = async (req, res) => {
         subtotal
       });
 
-      // Datos con nombre de producto para el frontend
       detallesRespuesta.push({
         cantidad: item.cantidad,
         subtotal,
@@ -176,7 +172,6 @@ export const confirmarCarrito = async (req, res) => {
     if (errorVenta) return res.status(400).json(errorVenta);
     const venta = ventaData[0];
 
-    // Obtener el id_perfil del vendedor del negocio para las notificaciones
     const { data: negocioData, error: errorNegocio } = await supabase
       .schema("negocio")
       .from("negocio")
@@ -204,7 +199,6 @@ export const confirmarCarrito = async (req, res) => {
 
       const nuevoStock = prod.stock - detalle.cantidad;
 
-      // Diagnóstico para ver qué está calculando exactamente
       console.log(`[DEBUG STOCK] Producto: ${prod.nombre_producto} | Stock Actual en DB: ${prod.stock} | Cantidad Vendida: ${detalle.cantidad} | Nuevo Stock Calculado: ${nuevoStock}`);
 
       await supabase
@@ -216,10 +210,6 @@ export const confirmarCarrito = async (req, res) => {
         })
         .eq("id_producto", detalle.id_producto);
 
-      // ==========================================
-      // ALERTA DE BAJO STOCK (Si el stock queda en 2 o menos)
-      // ==========================================
-      // Nota: Cambié a `<= 2` por seguridad por si en algún caso cae por debajo de 2 directamente
       if (nuevoStock <= 2 && !errorNegocio && negocioData?.id_perfil) {
         try {
           const { error: errorNotifStock } = await supabase
@@ -251,13 +241,10 @@ export const confirmarCarrito = async (req, res) => {
       .from("seguimiento")
       .insert([{ id_venta: venta.id_venta, estado_seguimiento: "PENDIENTE", fecha_entrega: null }]);
 
-    // ==========================
     // 8. ENVIAR NOTIFICACIONES DE VENTA
-    // ==========================
     try {
       const notificaciones = [];
 
-      // Notificación para el cliente que compró
       if (req.user && req.user.id && venta?.id_venta) {
         notificaciones.push({
           id_perfil: req.user.id,
@@ -267,7 +254,6 @@ export const confirmarCarrito = async (req, res) => {
         });
       }
 
-      // Notificación para el vendedor dueño del negocio
       if (!errorNegocio && negocioData && negocioData.id_perfil && venta?.id_venta) {
         notificaciones.push({
           id_perfil: negocioData.id_perfil,
@@ -277,7 +263,6 @@ export const confirmarCarrito = async (req, res) => {
         });
       }
 
-      // Insertar en la base de datos
       if (notificaciones.length > 0) {
         const { error: errorInsertarNotif } = await supabase
           .schema("cliente")
@@ -300,8 +285,8 @@ export const confirmarCarrito = async (req, res) => {
       mensaje: "Compra realizada correctamente.",
       venta: {
         ...venta,
-        detalle_venta: detallesRespuesta, // El frontend puede hacer .map() sin error
-        medio_pago: medioPago,            // Objeto completo
+        detalle_venta: detallesRespuesta,
+        medio_pago: medioPago,
         metodo_envio: metodoEnvio
       }
     });
@@ -325,171 +310,84 @@ export const crearVenta = async (req, res) => {
     } = req.body;
 
     let total = 0;
-
     const detalles = [];
 
-    // ==========================
-    // VALIDAR PRODUCTOS
-    // ==========================
     for (const item of productos) {
 
-      const {
-        data: producto,
-        error
-      } = await supabase
+      const { data: producto, error } = await supabase
         .schema("catalogo")
         .from("producto")
         .select("*")
-        .eq(
-          "id_producto",
-          item.id_producto
-        )
+        .eq("id_producto", item.id_producto)
         .single();
 
       if (error || !producto) {
-
         return res.status(404).json({
-          mensaje:
-            `Producto ${item.id_producto} no encontrado`
+          mensaje: `Producto ${item.id_producto} no encontrado`
         });
-
       }
 
-      if (
-        producto.id_negocio !== id_negocio
-      ) {
-
+      if (producto.id_negocio !== id_negocio) {
         return res.status(400).json({
-          mensaje:
-            `El producto ${producto.nombre_producto} no pertenece al negocio seleccionado`
+          mensaje: `El producto ${producto.nombre_producto} no pertenece al negocio seleccionado`
         });
-
       }
 
-      if (
-        producto.stock <
-        item.cantidad
-      ) {
-
+      if (producto.stock < item.cantidad) {
         return res.status(400).json({
-          mensaje:
-            `Stock insuficiente para ${producto.nombre_producto}`
+          mensaje: `Stock insuficiente para ${producto.nombre_producto}`
         });
-
       }
 
-      const subtotal =
-        Number(producto.precio) *
-        Number(item.cantidad);
-
+      const subtotal = Number(producto.precio) * Number(item.cantidad);
       total += subtotal;
 
       detalles.push({
-        id_producto:
-          producto.id_producto,
-        cantidad:
-          item.cantidad,
-        precio_unitario:
-          producto.precio,
+        id_producto: producto.id_producto,
+        cantidad: item.cantidad,
+        precio_unitario: producto.precio,
         subtotal
       });
 
     }
 
-    // ==========================
-    // VALIDAR MEDIO DE PAGO
-    // ==========================
-    const {
-      data: medioPago,
-      error: errorMedioPago
-    } = await supabase
+    const { data: medioPago, error: errorMedioPago } = await supabase
       .schema("negocio")
       .from("medio_pago")
-      .select(`
-        id_medio_pago,
-        id_negocio
-      `)
-      .eq(
-        "id_medio_pago",
-        id_medio_pago
-      )
-      .eq(
-        "id_negocio",
-        id_negocio
-      )
+      .select(`id_medio_pago, id_negocio`)
+      .eq("id_medio_pago", id_medio_pago)
+      .eq("id_negocio", id_negocio)
       .single();
 
-    if (
-      errorMedioPago ||
-      !medioPago
-    ) {
-
+    if (errorMedioPago || !medioPago) {
       return res.status(400).json({
-        mensaje:
-          "El medio de pago no pertenece al negocio seleccionado"
+        mensaje: "El medio de pago no pertenece al negocio seleccionado"
       });
-
     }
 
-    // ==========================
-    // VALIDAR MÉTODO DE ENVÍO
-    // ==========================
-    const {
-      data: metodoEnvio,
-      error: errorEnvio
-    } = await supabase
+    const { data: metodoEnvio, error: errorEnvio } = await supabase
       .schema("negocio")
       .from("metodo_envio")
-      .select(`
-        id_metodo_envio,
-        id_negocio,
-        costo_envio
-      `)
-      .eq(
-        "id_metodo_envio",
-        id_metodo_envio
-      )
-      .eq(
-        "id_negocio",
-        id_negocio
-      )
+      .select(`id_metodo_envio, id_negocio, costo_envio`)
+      .eq("id_metodo_envio", id_metodo_envio)
+      .eq("id_negocio", id_negocio)
       .single();
 
-    if (
-      errorEnvio ||
-      !metodoEnvio
-    ) {
-
+    if (errorEnvio || !metodoEnvio) {
       return res.status(400).json({
-        mensaje:
-          "El método de envío no pertenece al negocio seleccionado"
+        mensaje: "El método de envío no pertenece al negocio seleccionado"
       });
-
     }
 
-    // ==========================
-    // SUMAR COSTO DE ENVÍO
-    // ==========================
-    const costoEnvio =
-      Number(
-        metodoEnvio.costo_envio
-      );
-
+    const costoEnvio = Number(metodoEnvio.costo_envio);
     total += costoEnvio;
 
-    // ==========================
-    // CREAR VENTA
-    // ==========================
-    const {
-      data,
-      error: errorVenta
-    } = await supabase
+    const { data, error: errorVenta } = await supabase
       .schema("ventas")
       .from("venta")
       .insert([
         {
-          id_perfil:
-            req.user.id,
+          id_perfil: req.user.id,
           id_negocio,
           id_medio_pago,
           id_metodo_envio,
@@ -501,142 +399,80 @@ export const crearVenta = async (req, res) => {
       .select();
 
     if (errorVenta) {
-
-      return res.status(400)
-        .json(errorVenta);
-
+      return res.status(400).json(errorVenta);
     }
 
     const venta = data[0];
 
-    // ==========================
-    // CREAR DETALLES
-    // ==========================
     for (const detalle of detalles) {
 
-      const {
-        error: errorDetalle
-      } = await supabase
+      const { error: errorDetalle } = await supabase
         .schema("ventas")
         .from("detalle_venta")
-        .insert([
-          {
-            id_venta:
-              venta.id_venta,
-            ...detalle
-          }
-        ]);
+        .insert([{ id_venta: venta.id_venta, ...detalle }]);
 
       if (errorDetalle) {
-
-        return res.status(400)
-          .json(errorDetalle);
-
+        return res.status(400).json(errorDetalle);
       }
 
-      const {
-        data: producto
-      } = await supabase
+      const { data: producto } = await supabase
         .schema("catalogo")
         .from("producto")
         .select("*")
-        .eq(
-          "id_producto",
-          detalle.id_producto
-        )
+        .eq("id_producto", detalle.id_producto)
         .single();
 
-      const nuevoStock =
-        producto.stock -
-        detalle.cantidad;
+      const nuevoStock = producto.stock - detalle.cantidad;
 
       await supabase
         .schema("catalogo")
         .from("producto")
         .update({
-          stock:
-            nuevoStock,
-          estado_producto:
-            nuevoStock === 0
-              ? "AGOTADO"
-              : "DISPONIBLE"
+          stock: nuevoStock,
+          estado_producto: nuevoStock === 0 ? "AGOTADO" : "DISPONIBLE"
         })
-        .eq(
-          "id_producto",
-          detalle.id_producto
-        );
+        .eq("id_producto", detalle.id_producto);
 
     }
 
-    // ==========================
-    // CREAR SEGUIMIENTO
-    // ==========================
-    const {
-      error: errorSeguimiento
-    } = await supabase
+    const { error: errorSeguimiento } = await supabase
       .schema("ventas")
       .from("seguimiento")
       .insert([
         {
-          id_venta:
-            venta.id_venta,
-          estado_seguimiento:
-            "PENDIENTE",
-          fecha_entrega:
-            null
+          id_venta: venta.id_venta,
+          estado_seguimiento: "PENDIENTE",
+          fecha_entrega: null
         }
       ]);
 
     if (errorSeguimiento) {
-
-      return res.status(400)
-        .json(errorSeguimiento);
-
+      return res.status(400).json(errorSeguimiento);
     }
 
     res.status(201).json({
-      mensaje:
-        "Venta creada correctamente",
+      mensaje: "Venta creada correctamente",
       venta,
-      costo_envio:
-        costoEnvio,
-      total_pagado:
-        total
+      costo_envio: costoEnvio,
+      total_pagado: total
     });
 
   } catch (error) {
-
     console.error(error);
-
-    res.status(500)
-      .json(error);
-
+    res.status(500).json(error);
   }
 };
 
 export const actualizarVenta = async (req, res) => {
   try {
     const { id } = req.params;
+    const { telefono, direccion } = req.body;
 
-    const {
-      telefono,
-      direccion
-    } = req.body;
-
-    const {
-      data,
-      error
-    } = await supabase
+    const { data, error } = await supabase
       .schema("ventas")
       .from("venta")
-      .update({
-        telefono,
-        direccion
-      })
-      .eq(
-        "id_venta",
-        id
-      )
+      .update({ telefono, direccion })
+      .eq("id_venta", id)
       .select();
 
     if (error) {
@@ -658,36 +494,25 @@ export const eliminarVenta = async (req, res) => {
       .schema("ventas")
       .from("detalle_venta")
       .delete()
-      .eq(
-        "id_venta",
-        id
-      );
+      .eq("id_venta", id);
 
     await supabase
       .schema("ventas")
       .from("seguimiento")
       .delete()
-      .eq(
-        "id_venta",
-        id
-      );
+      .eq("id_venta", id);
 
     const { error } = await supabase
       .schema("ventas")
       .from("venta")
       .delete()
-      .eq(
-        "id_venta",
-        id
-      );
+      .eq("id_venta", id);
 
     if (error) {
       return res.status(400).json(error);
     }
 
-    res.json({
-      mensaje: "Venta eliminada"
-    });
+    res.json({ mensaje: "Venta eliminada" });
 
   } catch (error) {
     res.status(500).json(error);
@@ -696,14 +521,10 @@ export const eliminarVenta = async (req, res) => {
 
 export const misCompras = async (req, res) => {
   try {
-    // 1. Traer las ventas del usuario con su seguimiento
     const { data: ventas, error: errorVentas } = await supabase
       .schema("ventas")
       .from("venta")
-      .select(`
-        *,
-        seguimiento(*)
-      `)
+      .select(`*, seguimiento(*)`)
       .eq("id_perfil", req.user.id);
 
     if (errorVentas) {
@@ -711,10 +532,8 @@ export const misCompras = async (req, res) => {
       return res.status(400).json(errorVentas);
     }
 
-    // 2. Enriquecer cada venta con sus detalles, productos, medio de pago y método de envío
     const ventasEnriquecidas = await Promise.all(
       ventas.map(async (venta) => {
-        // A. Buscar medio de pago
         let medio_pago = null;
         if (venta.id_medio_pago) {
           const { data: mp } = await supabase
@@ -726,7 +545,6 @@ export const misCompras = async (req, res) => {
           medio_pago = mp;
         }
 
-        // B. Buscar método de envío
         let metodo_envio = null;
         if (venta.id_metodo_envio) {
           const { data: me } = await supabase
@@ -738,14 +556,12 @@ export const misCompras = async (req, res) => {
           metodo_envio = me;
         }
 
-        // C. Traer los detalles de la venta
         const { data: detalles } = await supabase
           .schema("ventas")
           .from("detalle_venta")
           .select("*")
           .eq("id_venta", venta.id_venta);
 
-        // D. Para cada detalle, traer la información del producto (esquema catalogo)
         const detalle_venta = await Promise.all(
           (detalles || []).map(async (detalle) => {
             let producto = null;
@@ -758,10 +574,7 @@ export const misCompras = async (req, res) => {
                 .single();
               producto = prod;
             }
-            return {
-              ...detalle,
-              producto
-            };
+            return { ...detalle, producto };
           })
         );
 
@@ -842,7 +655,6 @@ export const misVentas = async (req, res) => {
           metodo_envio = me;
         }
 
-        // Consultamos el perfil del cliente de forma segura y separada
         let perfil = null;
         if (venta.id_perfil) {
           const { data: pf } = await supabase
@@ -872,14 +684,10 @@ export const misVentas = async (req, res) => {
                 .single();
               producto = prod;
             }
-            return {
-              ...detalle,
-              producto
-            };
+            return { ...detalle, producto };
           })
         );
 
-        // Normalizamos el seguimiento asegurando que si viene como objeto o array vacío, se adapte
         let seguimientoArray = venta.seguimiento;
         if (!seguimientoArray || (Array.isArray(seguimientoArray) && seguimientoArray.length === 0)) {
           seguimientoArray = [{ estado_seguimiento: "PENDIENTE", id_venta: venta.id_venta, id_seguimiento: null }];
@@ -892,7 +700,7 @@ export const misVentas = async (req, res) => {
           seguimiento: seguimientoArray,
           medio_pago,
           metodo_envio,
-          perfil, // <--- Aquí inyectamos el perfil del cliente intacto para el modal
+          perfil,
           detalle_venta
         };
       })
@@ -902,5 +710,151 @@ export const misVentas = async (req, res) => {
   } catch (error) {
     console.error("Error en servidor (misVentas):", error);
     res.status(500).json(error);
+  }
+};
+
+// =====================================================
+// REPORTES: usuarios, ventas, negocios y productos top
+// =====================================================
+export const obtenerReportes = async (req, res) => {
+  try {
+    // 1. USUARIOS REGISTRADOS POR MES
+    const { data: perfiles, error: errorPerfiles } = await supabase
+      .schema("cliente")
+      .from("perfil")
+      .select("fecha_creacion")
+      .order("fecha_creacion", { ascending: true });
+
+    if (errorPerfiles) {
+      console.error("Error en perfiles:", errorPerfiles);
+      return res.status(400).json({ mensaje: "Error en perfiles", detalle: errorPerfiles });
+    }
+
+    const usuariosPorMes = {};
+    perfiles.forEach((perfil) => {
+      if (perfil.fecha_creacion) {
+        const mes = perfil.fecha_creacion.slice(0, 7);
+        usuariosPorMes[mes] = (usuariosPorMes[mes] || 0) + 1;
+      }
+    });
+
+    // 2. VENTAS Y TOTALES POR MES
+    const { data: ventas, error: errorVentas } = await supabase
+      .schema("ventas")
+      .from("venta")
+      .select("id_venta, id_negocio, fecha_venta, total")
+      .order("fecha_venta", { ascending: true });
+
+    if (errorVentas) {
+      console.error("Error en ventas:", errorVentas);
+      return res.status(400).json({ mensaje: "Error en ventas", detalle: errorVentas });
+    }
+
+    const ventasPorMes = {};
+    ventas.forEach((venta) => {
+      if (venta.fecha_venta) {
+        const mes = venta.fecha_venta.slice(0, 7);
+        if (!ventasPorMes[mes]) {
+          ventasPorMes[mes] = { cantidad_ventas: 0, ingresos_totales: 0 };
+        }
+        ventasPorMes[mes].cantidad_ventas += 1;
+        ventasPorMes[mes].ingresos_totales += Number(venta.total || 0);
+      }
+    });
+
+    // 2.1 VENTAS POR NEGOCIO
+    const { data: negocios, error: errorNegocios } = await supabase
+      .schema("negocio")
+      .from("negocio")
+      .select("id_negocio, nombre_negocio, logo");
+
+    if (errorNegocios) {
+      console.error("Error en negocios:", errorNegocios);
+      return res.status(400).json({ mensaje: "Error en negocios", detalle: errorNegocios });
+    }
+
+    const negociosDict = {};
+    negocios.forEach(n => {
+      negociosDict[n.id_negocio] = {
+        nombre: n.nombre_negocio,
+        logo: n.logo
+      };
+    });
+
+    const ventasPorNegocioMap = {};
+    ventas.forEach((venta) => {
+      const idNegocio = venta.id_negocio;
+      const infoNegocio = negociosDict[idNegocio];
+
+      if (!ventasPorNegocioMap[idNegocio]) {
+        ventasPorNegocioMap[idNegocio] = {
+          nombre_negocio: infoNegocio?.nombre_negocio || infoNegocio?.nombre || "Negocio desconocido",
+          logo: infoNegocio?.logo || "",
+          cantidad_ventas: 0,
+          ingresos_totales: 0
+        };
+      }
+      ventasPorNegocioMap[idNegocio].cantidad_ventas += 1;
+      ventasPorNegocioMap[idNegocio].ingresos_totales += Number(venta.total || 0);
+    });
+
+    const ventasPorNegocio = Object.values(ventasPorNegocioMap)
+      .sort((a, b) => b.ingresos_totales - a.ingresos_totales);
+
+    // 3. PRODUCTOS MÁS VENDIDOS
+    const { data: detalles, error: errorDetalles } = await supabase
+      .schema("ventas")
+      .from("detalle_venta")
+      .select("cantidad, id_producto");
+
+    if (errorDetalles) {
+      console.error("Error en detalles_venta:", errorDetalles);
+      return res.status(400).json({ mensaje: "Error en detalles_venta", detalle: errorDetalles });
+    }
+
+    const { data: productos, error: errorProductos } = await supabase
+      .schema("catalogo")
+      .from("producto")
+      .select("id_producto, nombre_producto, imagen, precio");
+
+    if (errorProductos) {
+      console.error("Error en productos:", errorProductos);
+      return res.status(400).json({ mensaje: "Error en productos", detalle: errorProductos });
+    }
+
+    const productosDict = {};
+    productos.forEach(p => {
+      productosDict[p.id_producto] = p;
+    });
+
+    const productosMap = {};
+    detalles.forEach((item) => {
+      const id = item.id_producto;
+      const prodInfo = productosDict[id];
+
+      if (!productosMap[id]) {
+        productosMap[id] = {
+          nombre: prodInfo?.nombre_producto || "Producto desconocido",
+          imagen: prodInfo?.imagen || "",
+          total_vendidos: 0
+        };
+      }
+      productosMap[id].total_vendidos += item.cantidad;
+    });
+
+    const productosMasVendidos = Object.values(productosMap)
+      .sort((a, b) => b.total_vendidos - a.total_vendidos)
+      .slice(0, 5);
+
+    res.json({
+      usuariosPorMes,
+      ventasPorMes,
+      ventasPorNegocio,
+      productosMasVendidos
+    });
+
+  } catch (error) {
+    console.error("Error crítico en reporte:", error);
+    res.status(500).json({ mensaje: "Error interno del servidor al generar reportes", error: error.message });
   }
 };

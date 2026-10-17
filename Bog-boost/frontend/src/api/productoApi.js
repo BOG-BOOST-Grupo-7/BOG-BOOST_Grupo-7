@@ -90,3 +90,19 @@ export const obtenerProductosPorNegocio = async (idNegocio) => {
     const { data } = await axiosClient.get(`/producto/negocio/${idNegocio}`);
     return data;
 };
+
+/* ==========================
+   BUSCADOR GLOBAL (Productos + Negocios)
+========================== */
+export const buscarProductosYNegociosApi = async (query) => {
+  try {
+    // Al usar axiosClient, solo necesitas poner la ruta relativa
+    const { data } = await axiosClient.get("/producto/buscar", {
+      params: { q: query },
+    });
+    return data; // Retorna { productos: [...], negocios: [...] }
+  } catch (error) {
+    console.error("Error al buscar:", error);
+    throw error;
+  }
+};

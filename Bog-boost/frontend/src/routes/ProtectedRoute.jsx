@@ -2,10 +2,10 @@ import { Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
 function ProtectedRoute({ children }) {
-  const { isAuthenticated, loading, hydrated } = useAuth();
+  const { isAuthenticated, loading } = useAuth();
 
-  if (!hydrated || loading) {
-    return null; // o loader
+  if (loading) {
+    return <div>Cargando...</div>; // O un spinner
   }
 
   if (!isAuthenticated) {

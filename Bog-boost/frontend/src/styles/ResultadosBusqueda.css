@@ -1,7 +1,11 @@
+/* =========================================================
+   CSS ORIGINAL (intacto)
+========================================================= */
+
 .busqueda-page {
-  max-width: 1200px;
+  max-width: 1600px;                 /* 👈 página más ancha */
   margin: 0 auto;
-  padding: 40px 20px;
+  padding: 40px 30px;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   color: #333;
 }
@@ -20,7 +24,7 @@
 }
 
 .query-highlight {
-  color: #F5B952; /* Ajusta este color al acento principal de tu app */
+  color: #F5B952;
 }
 
 .busqueda-counter {
@@ -119,31 +123,44 @@
   border-radius: 12px;
 }
 
-/* GRID DE PRODUCTOS */
+/* ============================================================
+   GRID DE PRODUCTOS  ← FLUIDO (auto-fill)
+============================================================ */
 .grid-productos-pro {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: 24px;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 18px;
 }
 
-/* GRID DE NEGOCIOS */
+/* ============================================================
+   GRID DE NEGOCIOS  ← VARIOS POR FILA (Opción A)
+============================================================ */
 .grid-negocios-pro {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
   gap: 20px;
 }
 
+/* ============================================================
+   TARJETA DE NEGOCIO  ← VERTICAL INTERNA (Opción 1)
+   logo arriba, texto abajo, centrado
+============================================================ */
 .negocio-card-pro {
   background: #fff;
   border: 1px solid #eaeaea;
   border-radius: 12px;
-  padding: 16px;
+  padding: 22px 18px;
   display: flex;
-  gap: 16px;
+  flex-direction: column;         /* 👈 logo arriba, texto abajo */
   align-items: center;
+  text-align: center;
+  gap: 14px;
   cursor: pointer;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
   box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+  text-decoration: none;
+  color: inherit;
+  width: 100%;                    /* 👈 ocupa todo el ancho de su celda */
 }
 
 .negocio-card-pro:hover {
@@ -153,8 +170,8 @@
 }
 
 .negocio-logo-container {
-  width: 70px;
-  height: 70px;
+  width: 90px;
+  height: 90px;
   border-radius: 50%;
   overflow: hidden;
   background-color: #f9f9f9;
@@ -170,13 +187,20 @@
 
 .negocio-info {
   flex-grow: 1;
+  min-width: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .negocio-info h3 {
-  font-size: 17px;
+  font-size: 16px;
   font-weight: 600;
   color: #222;
-  margin: 0 0 4px 0;
+  margin: 0 0 6px 0;
+  line-height: 1.3;
+  text-align: center;
 }
 
 .negocio-info p {
@@ -184,10 +208,10 @@
   color: #666;
   margin: 0 0 10px 0;
   line-height: 1.4;
-  height: 2.8em; /* Forzar exactamente 2 líneas de alto */
+  height: 2.8em;
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: normal;
+  text-align: center;
 }
 
 .visitar-link {
@@ -196,9 +220,321 @@
   color: #F5B952;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 5px;
 }
 
 .negocio-card-pro:hover .visitar-link {
   text-decoration: underline;
+}
+
+/* =========================================================
+   EXTENSIONES NUEVAS (filtros, cards de productos, estados)
+========================================================= */
+
+/* ============================
+   LAYOUT CON SIDEBAR
+============================ */
+.layout-busqueda {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: 30px;
+}
+
+@media (max-width: 900px) {
+  .layout-busqueda {
+    grid-template-columns: 1fr;
+  }
+}
+
+.contenido-busqueda {
+  min-width: 0;
+}
+
+/* ============================
+   SIDEBAR DE FILTROS
+============================ */
+.sidebar-filtros {
+  background: #fff;
+  border: 1px solid #eaeaea;
+  border-radius: 12px;
+  padding: 20px;
+  height: fit-content;
+  position: sticky;
+  top: 90px;
+}
+
+.filtros-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
+}
+
+.filtros-header h3 {
+  margin: 0;
+  font-size: 17px;
+  color: #222;
+}
+
+.btn-limpiar {
+  background: none;
+  border: none;
+  color: #F5B952;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+}
+
+.btn-limpiar:hover {
+  text-decoration: underline;
+}
+
+.filtro-grupo {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.filtro-grupo label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #444;
+}
+
+.filtro-grupo select,
+.filtro-grupo input {
+  padding: 8px 10px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 14px;
+  outline: none;
+  transition: border 0.15s;
+  font-family: inherit;
+  background-color: #fff;
+  color: #333;
+}
+
+.filtro-grupo select:focus,
+.filtro-grupo input:focus {
+  border-color: #F5B952;
+}
+
+.filtro-precio {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.filtro-precio input {
+  width: 100%;
+  min-width: 0;
+}
+
+.filtro-precio span {
+  color: #999;
+}
+
+/* ============================
+   CARDS DE PRODUCTOS
+============================ */
+.producto-card-pro {
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  border: 1px solid #eaeaea;
+  border-radius: 12px;
+  overflow: hidden;
+  text-decoration: none;
+  color: inherit;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+  width: 100%;
+}
+
+.producto-card-pro:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+  border-color: #ddd;
+}
+
+.producto-img-wrapper {
+  width: 100%;
+  height: 150px;
+  background: #f9f9f9;
+  overflow: hidden;
+}
+
+.producto-img-wrapper img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.producto-card-pro:hover .producto-img-wrapper img {
+  transform: scale(1.05);
+}
+
+.producto-img-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ccc;
+  font-size: 2rem;
+}
+
+.producto-info {
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  flex: 1;
+}
+
+.categoria-tag {
+  display: inline-block;
+  background: #fff8ec;
+  color: #c9962f;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 12px;
+  align-self: flex-start;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.producto-info h3 {
+  font-size: 14px;
+  font-weight: 600;
+  color: #222;
+  margin: 0;
+  line-height: 1.3;
+}
+
+.producto-desc {
+  font-size: 12px;
+  color: #666;
+  line-height: 1.4;
+  margin: 0;
+}
+
+.producto-precio {
+  font-weight: 700;
+  color: #F5B952;
+  font-size: 16px;
+  margin: auto 0 0 0;
+  padding-top: 6px;
+}
+
+/* ============================
+   PLACEHOLDER LOGO NEGOCIO
+============================ */
+.negocio-logo-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ccc;
+  font-size: 1.8rem;
+  background: #f9f9f9;
+}
+
+/* ============================
+   BOTÓN REINTENTAR
+============================ */
+.btn-reintentar {
+  margin-top: 20px;
+  padding: 10px 22px;
+  background: #F5B952;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+  font-family: inherit;
+  font-size: 14px;
+}
+
+.btn-reintentar:hover {
+  background: #e0a63c;
+}
+
+/* ============================
+   SUGERENCIAS EN ESTADO VACÍO
+============================ */
+.sugerencias {
+  margin-top: 25px;
+  text-align: left;
+  display: inline-block;
+  background: #fafafa;
+  padding: 15px 25px;
+  border-radius: 10px;
+}
+
+.sugerencias p {
+  margin: 0 0 8px 0;
+  font-weight: 600;
+  color: #444;
+}
+
+.sugerencias ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.sugerencias li {
+  color: #555;
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+
+/* ============================
+   TAB DISABLED
+============================ */
+.tab-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ============================
+   RESPONSIVE GENERAL
+============================ */
+@media (max-width: 600px) {
+  .busqueda-page {
+    padding: 25px 15px;
+  }
+
+  .busqueda-header h1 {
+    font-size: 22px;
+  }
+
+  .negocio-card-pro {
+    padding: 16px 14px;
+    gap: 10px;
+  }
+
+  .negocio-logo-container {
+    width: 80px;
+    height: 80px;
+  }
+
+  .negocio-info h3 {
+    font-size: 14px;
+  }
+
+  .negocio-info p {
+    font-size: 12px;
+  }
+
+  .sidebar-filtros {
+    position: static;
+  }
 }

@@ -198,38 +198,6 @@ export const completarPerfil = async (req, res) => {
   }
 };
 
-export const actualizarFoto = async (req, res) => {
-  try {
-    const {
-      url_foto
-    } = req.body;
-
-    const {
-      error
-    } = await supabase
-      .schema("cliente")
-      .from("perfil")
-      .update({
-        foto_perfil: url_foto
-      })
-      .eq(
-        "id_perfil",
-        req.user.id
-      );
-
-    if (error) {
-      return res.status(400).json(error);
-    }
-
-    res.json({
-      mensaje: "Foto actualizada"
-    });
-
-  } catch (error) {
-    res.status(500).json(error);
-  }
-};
-
 export const desactivarCuenta = async (req, res) => {
   try {
     const idUsuario =

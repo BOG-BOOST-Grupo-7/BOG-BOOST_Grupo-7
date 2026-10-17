@@ -69,3 +69,17 @@ export const listarVentasNegocio = async () => {
   const response = await axiosClient.get("/ventas/mis-ventas");
   return response.data;
 };
+
+// =========================
+// ADMIN — REPORTES
+// =========================
+
+export const obtenerReportes = async () => {
+  try {
+    const { data } = await axiosClient.get("/ventas/reportes");
+    return data;
+  } catch (error) {
+    console.error("Error al obtener reportes:", error);
+    throw error;
+  }
+};

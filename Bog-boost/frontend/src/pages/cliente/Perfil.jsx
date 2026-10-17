@@ -8,8 +8,11 @@ import {
     desactivarCuenta
 } from "../../api/perfilApi";
 
+import { subirFotoPerfil } from "../../api/uploadApi";
+
 function Perfil() {
-    const { logout } = useAuth();
+    // 👇 1. Extraemos la función del contexto 👇
+    const { logout, actualizarPerfilContexto } = useAuth();
     const fileInputRef = useRef(null);
 
     const [perfil, setPerfil] = useState({
@@ -132,13 +135,35 @@ function Perfil() {
         }
     };
 
-    const handleImagen = (file) => {
+    const handleImagen = async (file) => {
         if (!file) return;
+
+        // 1. Mostrar vista previa inmediata
         const preview = URL.createObjectURL(file);
         setPerfil((prev) => ({
             ...prev,
             foto_perfil: preview,
         }));
+
+        // 2. Subir al servidor
+        try {
+            const respuesta = await subirFotoPerfil(file);
+            
+            // 3. Actualizar con la URL oficial de Supabase
+            if (respuesta && respuesta.url) {
+                setPerfil((prev) => ({
+                    ...prev,
+                    foto_perfil: respuesta.url,
+                }));
+
+                // 👇 2. Actualizamos el contexto global 👇
+                actualizarPerfilContexto({ foto_perfil: respuesta.url });
+            }
+        } catch (error) {
+            console.error("Error al subir la imagen:", error);
+            alert("Hubo un error al subir la foto. Intenta de nuevo.");
+            cargarPerfil(); // Restaurar la foto anterior en caso de fallo
+        }
     };
 
     const handleDrop = (e) => {
@@ -242,7 +267,11 @@ function Perfil() {
                             type="file"
                             accept="image/*"
                             hidden
-                            onChange={(e) => handleImagen(e.target.files?.[0])}
+                            onChange={(e) => {
+                                const archivo = e.target.files?.[0];
+                                handleImagen(archivo);
+                                e.target.value = null;
+                            }}
                         />
                     </div>
 

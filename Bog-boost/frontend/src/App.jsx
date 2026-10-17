@@ -1,5 +1,6 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import ProtectedRoute from "./components/ProtectedRoute";
+import { useAuth } from "./context/AuthContext"; // 👈 Importamos el contexto
 
 // Layouts
 import ClienteLayout from "./layouts/ClienteLayout";
@@ -19,7 +20,6 @@ import ComentariosProducto from "./pages/cliente/ComentariosProducto";
 import ResultadosBusqueda from "./components/home/ResultadosBusqueda";
 import Notificaciones from "./pages/cliente/Notificaciones";
 import Categoria from "./pages/cliente/Categoria";
-
 
 // Auth
 import Login from "./pages/auth/Login";
@@ -42,12 +42,27 @@ import Carrito from "./pages/cliente/Carrito";
 import AdminMovimientoStock from "./pages/vendedor/MovimientoStock";
 import AdminVentasYSeguimiento from "./pages/vendedor/AdminVentasYSeguimiento";
 
+// 👇 COMPONENTE PARA REDIRIGIR AL ADMIN 👇
+const InicioRedireccion = () => {
+  const { rol, loading } = useAuth();
+  
+  if (loading) return <p style={{ textAlign: "center", marginTop: "50px" }}>Cargando...</p>;
+  
+  // Si es administrador, lo enviamos al panel
+  if (rol === "SUPER_ADMIN" || rol === "ADMINISTRADOR") {
+    return <Navigate to="/admin" replace />;
+  }
+  
+  // Si es cliente o vendedor, ve el Home normal
+  return <Home />;
+};
+
 function App() {
   return (
     <Routes>
-      {/* CLIENTE - Todo bajo ClienteLayout */}
       <Route path="/" element={<ClienteLayout />}>
-        <Route index element={<Home />} />
+        {/* 👇 Usamos el componente de redirección aquí 👇 */}
+        <Route index element={<InicioRedireccion />} />
         
         {/* Públicas */}
         <Route path="login" element={<Login />} />
@@ -75,13 +90,13 @@ function App() {
         <Route path="stock" element={<ProtectedRoute allowedRoles={["VENDEDOR"]}><AdminMovimientoStock /> </ProtectedRoute>} />
         <Route path="ventas" element={<ProtectedRoute allowedRoles={["VENDEDOR"]}><AdminVentasYSeguimiento /></ProtectedRoute>}/>
 
-        {/* ADMINISTRADOR */}
-        <Route path="admin" element={<ProtectedRoute allowedRoles={["SUPER_ADMIN"]}> <AdminHome /></ProtectedRoute>}/>
-        <Route path="admin/solicitudes" element={<ProtectedRoute allowedRoles={["SUPER_ADMIN"]}> <SolicitudesAdmin /> </ProtectedRoute>}/>
-        <Route path="admin/negocios" element={<ProtectedRoute allowedRoles={["SUPER_ADMIN"]}><ListaNegociosAdmin /></ProtectedRoute>} />
-        <Route path="admin/usuarios" element={<ProtectedRoute allowedRoles={["SUPER_ADMIN"]}> <ListaUsuariosAdmin /></ProtectedRoute>}/>
-        <Route path="admin/pqrs" element={<ProtectedRoute allowedRoles={["SUPER_ADMIN"]}><AdminPQRS /></ProtectedRoute>} />
-        <Route path="admin/reportes" element={<ProtectedRoute allowedRoles={["SUPER_ADMIN"]}><ReportesAdmin /></ProtectedRoute>} />
+        {/* ADMINISTRADOR Y SUPER_ADMIN */}
+        <Route path="admin" element={<ProtectedRoute allowedRoles={["SUPER_ADMIN", "ADMINISTRADOR"]}> <AdminHome /></ProtectedRoute>}/>
+        <Route path="admin/solicitudes" element={<ProtectedRoute allowedRoles={["SUPER_ADMIN", "ADMINISTRADOR"]}> <SolicitudesAdmin /> </ProtectedRoute>}/>
+        <Route path="admin/negocios" element={<ProtectedRoute allowedRoles={["SUPER_ADMIN", "ADMINISTRADOR"]}><ListaNegociosAdmin /></ProtectedRoute>} />
+        <Route path="admin/usuarios" element={<ProtectedRoute allowedRoles={["SUPER_ADMIN", "ADMINISTRADOR"]}> <ListaUsuariosAdmin /></ProtectedRoute>}/>
+        <Route path="admin/pqrs" element={<ProtectedRoute allowedRoles={["SUPER_ADMIN", "ADMINISTRADOR"]}><AdminPQRS /></ProtectedRoute>} />
+        <Route path="admin/reportes" element={<ProtectedRoute allowedRoles={["SUPER_ADMIN", "ADMINISTRADOR"]}><ReportesAdmin /></ProtectedRoute>} />
       </Route>
     </Routes>
   );

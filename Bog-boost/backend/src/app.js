@@ -19,9 +19,7 @@ import ventaRoutes from "./routes/venta.routes.js";
 import detalleVentaRoutes from "./routes/detalleVenta.routes.js";
 import seguimientoRoutes from "./routes/seguimiento.routes.js";
 import uploadRoutes from "./routes/upload.routes.js";
-import buscadorRoutes from "./routes/buscador.routes.js";
 import mapaRoutes from "./routes/mapa.routes.js";
-import reportesRoutes from "./routes/reporte.routes.js";
 
 const app = express();
 
@@ -51,8 +49,6 @@ app.use("/api/ventas", ventaRoutes);
 app.use("/api/detalles-venta", detalleVentaRoutes);
 app.use("/api/seguimientos", seguimientoRoutes);
 app.use("/api/upload", uploadRoutes);
-app.use("/api", buscadorRoutes);
 app.use("/api/mapa", mapaRoutes);
-app.use("/api/reportes", reportesRoutes);
 
 export default app;

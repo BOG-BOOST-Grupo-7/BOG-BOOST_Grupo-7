@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useAuth } from "../../context/AuthContext"; // 👈 IMPORTANTE AGREGAR ESTO
 import {
     FaUsers,
     FaUserCheck,
@@ -25,6 +26,10 @@ import {
 } from "../../api/rolApi";
 
 export default function ListaUsuariosAdmin() {
+    // 👇 Extraemos el rol del usuario logueado para saber quién está mirando
+    const { rol: rolLogueado } = useAuth(); 
+    const esSuperAdmin = rolLogueado === "SUPER_ADMIN";
+
     const [usuarios, setUsuarios] = useState([]);
     const [roles, setRoles] = useState([]);
 
@@ -38,7 +43,7 @@ export default function ListaUsuariosAdmin() {
 
     // ================= ESTADOS DE PAGINACIÓN =================
     const [paginaActual, setPaginaActual] = useState(1);
-    const filasPorPagina = 8; // Puedes ajustar este número según prefieras
+    const filasPorPagina = 8;
 
     const [usuarioSeleccionado, setUsuarioSeleccionado] = useState(null);
     const [mostrarModal, setMostrarModal] = useState(false);
@@ -69,9 +74,6 @@ export default function ListaUsuariosAdmin() {
         }
     };
 
-    // =====================================
-    // Nombre completo
-    // =====================================
     const nombreCompleto = (usuario) => {
         return [
             usuario.primer_nombre,
@@ -83,9 +85,6 @@ export default function ListaUsuariosAdmin() {
             .join(" ");
     };
 
-    // =====================================
-    // Lógica Combinada de Filtrado
-    // =====================================
     const usuariosFiltrados = useMemo(() => {
         return usuarios.filter((usuario) => {
             const cumpleEstado = estadoFiltro === "todos" || usuario.estado_usuario === estadoFiltro;
@@ -104,14 +103,10 @@ export default function ListaUsuariosAdmin() {
         });
     }, [usuarios, estadoFiltro, rolFiltro, busqueda]);
 
-    // Cada vez que cambien los filtros, la búsqueda o las filas por página, regresamos a la página 1
     useEffect(() => {
         setPaginaActual(1);
     }, [estadoFiltro, rolFiltro, busqueda]);
 
-    // =====================================
-    // Lógica de Paginación
-    // =====================================
     const totalPaginas = Math.ceil(usuariosFiltrados.length / filasPorPagina) || 1;
 
     const usuariosPaginados = useMemo(() => {
@@ -125,9 +120,6 @@ export default function ListaUsuariosAdmin() {
     const totalActivos = usuariosFiltrados.filter((u) => u.estado_usuario === "ACTIVO").length;
     const totalInactivos = usuariosFiltrados.filter((u) => u.estado_usuario === "INACTIVO").length;
 
-    // =====================================
-    // Ver detalles y Cambiar rol
-    // =====================================
     const verDetalles = async (id) => {
         try {
             const data = await obtenerPerfilPorId(id);
@@ -140,6 +132,9 @@ export default function ListaUsuariosAdmin() {
     };
 
     const cambiarRol = async (usuario) => {
+        // Protección extra en el frontend por si acaso
+        if (!esSuperAdmin) return; 
+
         const id_rol = rolesSeleccionados[usuario.id_perfil] ?? usuario.rol?.id_rol;
 
         if (!id_rol) {
@@ -193,44 +188,28 @@ export default function ListaUsuariosAdmin() {
             <div className="usuarios-summary">
                 <div className="summary-card">
                     <FaUsers style={{ color: "#2196f3" }} />
-                    <span>
-                        Clientes
-                        <strong>{totalClientes}</strong>
-                    </span>
+                    <span>Clientes<strong>{totalClientes}</strong></span>
                 </div>
                 <div className="summary-card">
                     <FaUserTie style={{ color: "#9c27b0" }} />
-                    <span>
-                        Vendedores
-                        <strong>{totalVendedores}</strong>
-                    </span>
+                    <span>Vendedores<strong>{totalVendedores}</strong></span>
                 </div>
                 <div className="summary-card">
                     <FaUserShield style={{ color: "#ff9800" }} />
-                    <span>
-                        Administradores
-                        <strong>{totalAdministradores}</strong>
-                    </span>
+                    <span>Administradores<strong>{totalAdministradores}</strong></span>
                 </div>
                 <div className="summary-card">
                     <FaUserCheck style={{ color: "#4CAF50" }} />
-                    <span>
-                        Activos
-                        <strong>{totalActivos}</strong>
-                    </span>
+                    <span>Activos<strong>{totalActivos}</strong></span>
                 </div>
                 <div className="summary-card">
                     <FaUserSlash style={{ color: "#F44336" }} />
-                    <span>
-                        Inactivos
-                        <strong>{totalInactivos}</strong>
-                    </span>
+                    <span>Inactivos<strong>{totalInactivos}</strong></span>
                 </div>
             </div>
 
             {/* ======== FILTROS Y BÚSQUEDA ======== */}
             <div className="action-bar">
-                {/* BARRA DE BÚSQUEDA */}
                 <div className="search-group">
                     <FaSearch />
                     <input
@@ -243,7 +222,6 @@ export default function ListaUsuariosAdmin() {
                 </div>
 
                 <div className="filter-group">
-                    {/* FILTRO POR ROL */}
                     <label>Rol:</label>
                     <select
                         className="usuarios-select"
@@ -258,7 +236,6 @@ export default function ListaUsuariosAdmin() {
                         ))}
                     </select>
 
-                    {/* FILTRO POR ESTADO */}
                     <label>Estado:</label>
                     <select
                         className="usuarios-select"
@@ -271,8 +248,7 @@ export default function ListaUsuariosAdmin() {
                     </select>
 
                     <button className="btn-orange" onClick={limpiarFiltros}>
-                        <FaUndo />
-                        Limpiar
+                        <FaUndo /> Limpiar
                     </button>
                 </div>
             </div>
@@ -292,15 +268,11 @@ export default function ListaUsuariosAdmin() {
                     <tbody>
                         {loading ? (
                             <tr>
-                                <td colSpan="5" className="sin-datos">
-                                    Cargando usuarios...
-                                </td>
+                                <td colSpan="5" className="sin-datos">Cargando usuarios...</td>
                             </tr>
                         ) : usuariosPaginados.length === 0 ? (
                             <tr>
-                                <td colSpan="5" className="sin-datos">
-                                    No se encontraron usuarios con esos filtros.
-                                </td>
+                                <td colSpan="5" className="sin-datos">No se encontraron usuarios con esos filtros.</td>
                             </tr>
                         ) : (
                             usuariosPaginados.map((usuario) => (
@@ -308,22 +280,29 @@ export default function ListaUsuariosAdmin() {
                                     <td>{nombreCompleto(usuario)}</td>
                                     <td>{usuario.email}</td>
                                     <td>
-                                        <select
-                                            className="usuarios-select"
-                                            value={rolesSeleccionados[usuario.id_perfil] ?? usuario.rol.id_rol}
-                                            onChange={(e) =>
-                                                setRolesSeleccionados({
-                                                    ...rolesSeleccionados,
-                                                    [usuario.id_perfil]: Number(e.target.value),
-                                                })
-                                            }
-                                        >
-                                            {roles.map((rol) => (
-                                                <option key={rol.id_rol} value={rol.id_rol}>
-                                                    {rol.nombre_rol}
-                                                </option>
-                                            ))}
-                                        </select>
+                                        {/* 👇 LÓGICA DE PERMISOS AQUÍ 👇 */}
+                                        {esSuperAdmin ? (
+                                            <select
+                                                className="usuarios-select"
+                                                value={rolesSeleccionados[usuario.id_perfil] ?? usuario.rol.id_rol}
+                                                onChange={(e) =>
+                                                    setRolesSeleccionados({
+                                                        ...rolesSeleccionados,
+                                                        [usuario.id_perfil]: Number(e.target.value),
+                                                    })
+                                                }
+                                            >
+                                                {roles.map((rol) => (
+                                                    <option key={rol.id_rol} value={rol.id_rol}>
+                                                        {rol.nombre_rol}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        ) : (
+                                            <span className="field-text">
+                                                {usuario.rol?.nombre_rol || "Sin rol"}
+                                            </span>
+                                        )}
                                     </td>
                                     <td>
                                         <span className={`status-badge ${claseEstado(usuario.estado_usuario)}`}>
@@ -339,13 +318,17 @@ export default function ListaUsuariosAdmin() {
                                             >
                                                 <FaEye />
                                             </button>
-                                            <button
-                                                className="btn-guardar"
-                                                title="Guardar rol"
-                                                onClick={() => cambiarRol(usuario)}
-                                            >
-                                                Guardar
-                                            </button>
+                                            
+                                            {/* 👇 SOLO EL SUPER ADMIN VE EL BOTÓN GUARDAR 👇 */}
+                                            {esSuperAdmin && (
+                                                <button
+                                                    className="btn-guardar"
+                                                    title="Guardar rol"
+                                                    onClick={() => cambiarRol(usuario)}
+                                                >
+                                                    Guardar
+                                                </button>
+                                            )}
                                         </div>
                                     </td>
                                 </tr>

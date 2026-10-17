@@ -1,14 +1,13 @@
 import { Router } from "express";
 
 import authMiddleware from "../middlewares/auth.js";
-import superAdminMiddleware from "../middlewares/superAdmin.js";
+import adminMiddleware from "../middlewares/admin.js";
 
 import {
   listarPerfiles,
   obtenerPerfilPorId,
   obtenerMiPerfil,
   completarPerfil,
-  actualizarFoto,
   desactivarCuenta,
   asignarAdministrador,
   quitarAdministrador
@@ -17,12 +16,11 @@ import {
 const router = Router();
 
 router.get("/me", authMiddleware, obtenerMiPerfil);
-router.get("/", authMiddleware, superAdminMiddleware, listarPerfiles);
-router.get("/:id", authMiddleware, superAdminMiddleware, obtenerPerfilPorId);
+router.get("/", authMiddleware, adminMiddleware, listarPerfiles);
+router.get("/:id", authMiddleware, adminMiddleware, obtenerPerfilPorId);
 router.put("/completar", authMiddleware, completarPerfil);
-router.put("/foto", authMiddleware, actualizarFoto);
 router.put("/desactivar-cuenta", authMiddleware, desactivarCuenta);
-router.put("/asignar-administrador", authMiddleware, superAdminMiddleware, asignarAdministrador);
-router.put("/quitar-administrador", authMiddleware, superAdminMiddleware, quitarAdministrador);
+router.put("/asignar-administrador", authMiddleware, asignarAdministrador);
+router.put("/quitar-administrador", authMiddleware, quitarAdministrador);
 
 export default router;

@@ -9,26 +9,38 @@ export function AuthProvider({ children }) {
   const [rol, setRol] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Restaurar sesión al abrir la aplicación
   useEffect(() => {
+    // 1. Recuperar inmediatamente del localStorage para que la foto aparezca rápido
+    const userStorage = localStorage.getItem("user");
+    const perfilStorage = localStorage.getItem("perfil");
+    const rolStorage = localStorage.getItem("rol");
+
+    if (userStorage && perfilStorage) {
+      setUser(JSON.parse(userStorage));
+      setPerfil(JSON.parse(perfilStorage));
+      setRol(rolStorage);
+    }
+
+    // 2. Validar con el backend
     const restaurarSesion = async () => {
       try {
-
         const res = await me();
-
         setUser(res.data.user);
         setPerfil(res.data.perfil);
+        setRol(res.data.perfil?.rol?.nombre_rol);
 
-        setRol(
-          res.data.perfil?.rol?.nombre_rol
-        );
-
+        // Actualizamos el localStorage con lo que diga el backend
+        localStorage.setItem("user", JSON.stringify(res.data.user));
+        localStorage.setItem("perfil", JSON.stringify(res.data.perfil));
+        localStorage.setItem("rol", res.data.perfil?.rol?.nombre_rol);
       } catch (error) {
-
+        // Si hay error de autenticación, limpiamos todo
         setUser(null);
         setPerfil(null);
         setRol(null);
-
+        localStorage.removeItem("user");
+        localStorage.removeItem("perfil");
+        localStorage.removeItem("rol");
       } finally {
         setLoading(false);
       }
@@ -39,7 +51,6 @@ export function AuthProvider({ children }) {
 
   const login = (userData, perfilData) => {
     const rolNombre = perfilData?.rol?.nombre_rol ?? null;
-
     setUser(userData);
     setPerfil(perfilData);
     setRol(rolNombre);
@@ -59,6 +70,14 @@ export function AuthProvider({ children }) {
     localStorage.removeItem("rol");
   };
 
+  const actualizarPerfilContexto = (nuevosDatos) => {
+    setPerfil((prev) => {
+      const perfilActualizado = { ...prev, ...nuevosDatos };
+      localStorage.setItem("perfil", JSON.stringify(perfilActualizado));
+      return perfilActualizado;
+    });
+  };
+
   const value = useMemo(
     () => ({
       user,
@@ -68,6 +87,7 @@ export function AuthProvider({ children }) {
       isAuthenticated: !!user,
       login,
       logout,
+      actualizarPerfilContexto,
     }),
     [user, perfil, rol, loading]
   );
@@ -81,10 +101,8 @@ export function AuthProvider({ children }) {
 
 export function useAuth() {
   const context = useContext(AuthContext);
-
   if (!context) {
     throw new Error("useAuth debe usarse dentro de AuthProvider");
   }
-
   return context;
 }

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { obtenerReportes } from "../../api/reportesApi"; 
+import { obtenerReportes } from "../../api/ventaApi"; 
 import "../../styles/Reportes.css";
 
 export default function ReportesAdmin() {
