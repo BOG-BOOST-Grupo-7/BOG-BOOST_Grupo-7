@@ -5,12 +5,12 @@ import {
   FaClock,
   FaCheckCircle,
   FaReply,
-  FaFilter,
   FaUserCircle,
   FaEnvelope,
   FaCalendarAlt,
   FaChevronLeft,
-  FaChevronRight
+  FaChevronRight,
+  FaSearch // 👈 Agregamos el icono de búsqueda
 } from "react-icons/fa";
 import "../../styles/AdminPQRS.css";
 
@@ -18,6 +18,7 @@ function AdminPQRS() {
   const [pqrs, setPQRS] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [estadoFiltro, setEstadoFiltro] = useState("todos");
+  const [busqueda, setBusqueda] = useState(""); // 👈 Estado para el buscador
   const [respuestas, setRespuestas] = useState({});
 
   // Estados de Paginación
@@ -65,21 +66,36 @@ function AdminPQRS() {
     }
   };
 
-  // Filtrado de PQRS
+  // 👇 LÓGICA DE FILTRADO Y BÚSQUEDA COMBINADA 👇
   const pqrsFiltradas = useMemo(() => {
-    if (estadoFiltro === "pendiente") {
-      return pqrs.filter((item) => !item.respuesta_pqrs);
-    }
-    if (estadoFiltro === "resuelto") {
-      return pqrs.filter((item) => item.respuesta_pqrs);
-    }
-    return pqrs;
-  }, [pqrs, estadoFiltro]);
+    return pqrs.filter((item) => {
+      // 1. Filtro por estado
+      let cumpleEstado = true;
+      if (estadoFiltro === "pendiente") cumpleEstado = !item.respuesta_pqrs;
+      if (estadoFiltro === "resuelto") cumpleEstado = !!item.respuesta_pqrs;
 
-  // Regresar a la página 1 al cambiar el filtro
+      // 2. Filtro por texto (Nombre, Correo o Mensaje)
+      const texto = busqueda.toLowerCase();
+      const nombreCompleto = item.perfil
+        ? `${item.perfil.primer_nombre ?? ""} ${item.perfil.segundo_nombre ?? ""} ${item.perfil.primer_apellido ?? ""} ${item.perfil.segundo_apellido ?? ""}`.toLowerCase()
+        : "";
+      const correo = (item.perfil?.correo || "").toLowerCase();
+      const mensaje = (item.mensaje_pqrs || "").toLowerCase();
+
+      const cumpleBusqueda = 
+        texto === "" || 
+        nombreCompleto.includes(texto) || 
+        correo.includes(texto) || 
+        mensaje.includes(texto);
+
+      return cumpleEstado && cumpleBusqueda;
+    });
+  }, [pqrs, estadoFiltro, busqueda]);
+
+  // Regresar a la página 1 al cambiar el filtro o la búsqueda
   useEffect(() => {
     setPaginaActual(1);
-  }, [estadoFiltro]);
+  }, [estadoFiltro, busqueda]);
 
   // Lógica de Paginación
   const totalPaginas = Math.ceil(pqrsFiltradas.length / filasPorPagina) || 1;
@@ -96,7 +112,6 @@ function AdminPQRS() {
 
   return (
     <div className="admin-pqrs">
-      <h1 className="admin-pqrs-title">Gestión de PQRS</h1>
 
       {/* Tarjetas de Resumen */}
       <div className="admin-pqrs-summary">
@@ -114,12 +129,23 @@ function AdminPQRS() {
         </div>
       </div>
 
-      {/* Barra superior / Filtros */}
-      <div className="admin-pqrs-action-bar">
-        <div className="admin-pqrs-filter">
-          <FaFilter />
+      {/* 👇 BARRA SUPERIOR CON BUSCADOR Y FILTRO MODIFICADO 👇 */}
+      <div className="action-bar">
+        <div className="search-group">
+          <FaSearch />
+          <input
+            type="text"
+            className="usuarios-input"
+            placeholder="Buscar por cliente o mensaje..."
+            value={busqueda}
+            onChange={(e) => setBusqueda(e.target.value)}
+          />
+        </div>
+
+        <div className="filter-group">
+          <label>Estado:</label>
           <select
-            className="admin-pqrs-select"
+            className="usuarios-select"
             value={estadoFiltro}
             onChange={(e) => setEstadoFiltro(e.target.value)}
           >
@@ -153,7 +179,7 @@ function AdminPQRS() {
             ) : pqrsPaginadas.length === 0 ? (
               <tr>
                 <td colSpan="6" className="admin-pqrs-loading">
-                  No existen PQRS.
+                  No existen PQRS que coincidan.
                 </td>
               </tr>
             ) : (
@@ -228,28 +254,26 @@ function AdminPQRS() {
 
       {/* Controles de Paginación */}
       {!cargando && pqrsFiltradas.length > 0 && (
-        <div className="pagination-container" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "1rem", padding: "0.5rem 1rem" }}>
-          <span className="pagination-info" style={{ fontSize: "0.9rem", color: "#666" }}>
+        <div className="pagination-container">
+          <span className="pagination-info">
             Mostrando del {(paginaActual - 1) * filasPorPagina + 1} al{" "}
             {Math.min(paginaActual * filasPorPagina, pqrsFiltradas.length)} de {pqrsFiltradas.length} PQRS
           </span>
-          <div className="pagination-buttons" style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+          <div className="pagination-buttons">
             <button
               className="btn-orange"
               onClick={() => setPaginaActual((prev) => Math.max(prev - 1, 1))}
               disabled={paginaActual === 1}
-              style={{ opacity: paginaActual === 1 ? 0.5 : 1, cursor: paginaActual === 1 ? "not-allowed" : "pointer" }}
             >
               <FaChevronLeft /> Anterior
             </button>
-            <span style={{ margin: "0 0.5rem", fontWeight: "bold" }}>
+            <span className="pagination-current">
               Página {paginaActual} de {totalPaginas}
             </span>
             <button
               className="btn-orange"
               onClick={() => setPaginaActual((prev) => Math.min(prev + 1, totalPaginas))}
               disabled={paginaActual === totalPaginas}
-              style={{ opacity: paginaActual === totalPaginas ? 0.5 : 1, cursor: paginaActual === totalPaginas ? "not-allowed" : "pointer" }}
             >
               Siguiente <FaChevronRight />
             </button>

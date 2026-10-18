@@ -718,47 +718,61 @@ export const misVentas = async (req, res) => {
 // =====================================================
 export const obtenerReportes = async (req, res) => {
   try {
-    // 1. USUARIOS REGISTRADOS POR MES
+    // Función auxiliar para obtener la fecha del Lunes de esa semana (formato YYYY-MM-DD)
+    const obtenerLunes = (fechaString) => {
+      const fecha = new Date(fechaString);
+      const dia = fecha.getDay() || 7; // Convierte el domingo (0) a 7
+      fecha.setDate(fecha.getDate() - dia + 1);
+      return fecha.toISOString().split("T")[0];
+    };
+
+    // 1. USUARIOS REGISTRADOS POR MES Y SEMANA
     const { data: perfiles, error: errorPerfiles } = await supabase
       .schema("cliente")
       .from("perfil")
       .select("fecha_creacion")
       .order("fecha_creacion", { ascending: true });
 
-    if (errorPerfiles) {
-      console.error("Error en perfiles:", errorPerfiles);
-      return res.status(400).json({ mensaje: "Error en perfiles", detalle: errorPerfiles });
-    }
+    if (errorPerfiles) throw new Error("Error en perfiles");
 
     const usuariosPorMes = {};
+    const usuariosPorSemana = {};
+
     perfiles.forEach((perfil) => {
       if (perfil.fecha_creacion) {
         const mes = perfil.fecha_creacion.slice(0, 7);
         usuariosPorMes[mes] = (usuariosPorMes[mes] || 0) + 1;
+
+        const semana = obtenerLunes(perfil.fecha_creacion);
+        usuariosPorSemana[semana] = (usuariosPorSemana[semana] || 0) + 1;
       }
     });
 
-    // 2. VENTAS Y TOTALES POR MES
+    // 2. VENTAS Y TOTALES POR MES Y SEMANA
     const { data: ventas, error: errorVentas } = await supabase
       .schema("ventas")
       .from("venta")
       .select("id_venta, id_negocio, fecha_venta, total")
       .order("fecha_venta", { ascending: true });
 
-    if (errorVentas) {
-      console.error("Error en ventas:", errorVentas);
-      return res.status(400).json({ mensaje: "Error en ventas", detalle: errorVentas });
-    }
+    if (errorVentas) throw new Error("Error en ventas");
 
     const ventasPorMes = {};
+    const ventasPorSemana = {};
+
     ventas.forEach((venta) => {
       if (venta.fecha_venta) {
+        // Agrupación por mes
         const mes = venta.fecha_venta.slice(0, 7);
-        if (!ventasPorMes[mes]) {
-          ventasPorMes[mes] = { cantidad_ventas: 0, ingresos_totales: 0 };
-        }
+        if (!ventasPorMes[mes]) ventasPorMes[mes] = { cantidad_ventas: 0, ingresos_totales: 0 };
         ventasPorMes[mes].cantidad_ventas += 1;
         ventasPorMes[mes].ingresos_totales += Number(venta.total || 0);
+
+        // Agrupación por semana
+        const semana = obtenerLunes(venta.fecha_venta);
+        if (!ventasPorSemana[semana]) ventasPorSemana[semana] = { cantidad_ventas: 0, ingresos_totales: 0 };
+        ventasPorSemana[semana].cantidad_ventas += 1;
+        ventasPorSemana[semana].ingresos_totales += Number(venta.total || 0);
       }
     });
 
@@ -768,17 +782,11 @@ export const obtenerReportes = async (req, res) => {
       .from("negocio")
       .select("id_negocio, nombre_negocio, logo");
 
-    if (errorNegocios) {
-      console.error("Error en negocios:", errorNegocios);
-      return res.status(400).json({ mensaje: "Error en negocios", detalle: errorNegocios });
-    }
+    if (errorNegocios) throw new Error("Error en negocios");
 
     const negociosDict = {};
     negocios.forEach(n => {
-      negociosDict[n.id_negocio] = {
-        nombre: n.nombre_negocio,
-        logo: n.logo
-      };
+      negociosDict[n.id_negocio] = { nombre: n.nombre_negocio, logo: n.logo };
     });
 
     const ventasPorNegocioMap = {};
@@ -788,7 +796,7 @@ export const obtenerReportes = async (req, res) => {
 
       if (!ventasPorNegocioMap[idNegocio]) {
         ventasPorNegocioMap[idNegocio] = {
-          nombre_negocio: infoNegocio?.nombre_negocio || infoNegocio?.nombre || "Negocio desconocido",
+          nombre_negocio: infoNegocio?.nombre || "Negocio desconocido",
           logo: infoNegocio?.logo || "",
           cantidad_ventas: 0,
           ingresos_totales: 0
@@ -798,8 +806,7 @@ export const obtenerReportes = async (req, res) => {
       ventasPorNegocioMap[idNegocio].ingresos_totales += Number(venta.total || 0);
     });
 
-    const ventasPorNegocio = Object.values(ventasPorNegocioMap)
-      .sort((a, b) => b.ingresos_totales - a.ingresos_totales);
+    const ventasPorNegocio = Object.values(ventasPorNegocioMap).sort((a, b) => b.ingresos_totales - a.ingresos_totales);
 
     // 3. PRODUCTOS MÁS VENDIDOS
     const { data: detalles, error: errorDetalles } = await supabase
@@ -807,25 +814,17 @@ export const obtenerReportes = async (req, res) => {
       .from("detalle_venta")
       .select("cantidad, id_producto");
 
-    if (errorDetalles) {
-      console.error("Error en detalles_venta:", errorDetalles);
-      return res.status(400).json({ mensaje: "Error en detalles_venta", detalle: errorDetalles });
-    }
+    if (errorDetalles) throw new Error("Error en detalles_venta");
 
     const { data: productos, error: errorProductos } = await supabase
       .schema("catalogo")
       .from("producto")
       .select("id_producto, nombre_producto, imagen, precio");
 
-    if (errorProductos) {
-      console.error("Error en productos:", errorProductos);
-      return res.status(400).json({ mensaje: "Error en productos", detalle: errorProductos });
-    }
+    if (errorProductos) throw new Error("Error en productos");
 
     const productosDict = {};
-    productos.forEach(p => {
-      productosDict[p.id_producto] = p;
-    });
+    productos.forEach(p => { productosDict[p.id_producto] = p; });
 
     const productosMap = {};
     detalles.forEach((item) => {
@@ -846,15 +845,18 @@ export const obtenerReportes = async (req, res) => {
       .sort((a, b) => b.total_vendidos - a.total_vendidos)
       .slice(0, 5);
 
+    // 4. RESPUESTA FINAL CON DATOS SEMANALES
     res.json({
       usuariosPorMes,
+      usuariosPorSemana, // 👈 NUEVO
       ventasPorMes,
+      ventasPorSemana,   // 👈 NUEVO
       ventasPorNegocio,
       productosMasVendidos
     });
 
   } catch (error) {
     console.error("Error crítico en reporte:", error);
-    res.status(500).json({ mensaje: "Error interno del servidor al generar reportes", error: error.message });
+    res.status(500).json({ mensaje: "Error interno del servidor", error: error.message });
   }
 };

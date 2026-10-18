@@ -37,26 +37,25 @@ function FormularioCompra({
     const [showComprobante, setShowComprobante] = useState(false);
     const [ventaConfirmada, setVentaConfirmada] = useState(null);
 
-   useEffect(() => {
-    console.log("Carrito actual en FormularioCompra:", carrito); // <-- ¿Aquí sí imprime algo?
+    // 👇 ESTADO PARA BLOQUEAR EL BOTÓN Y EVITAR DOBLE CLIC 👇
+    const [procesando, setProcesando] = useState(false);
 
-    if (carrito && carrito.length > 0) {
-        const id = carrito[0].id_negocio;
-        
-        if (id !== undefined && id !== null) {
-            cargarDatos(id);
-        } else {
-            console.warn("El producto en el carrito no tiene id_negocio");
+    useEffect(() => {
+        if (carrito && carrito.length > 0) {
+            const id = carrito[0].id_negocio;
+            if (id !== undefined && id !== null) {
+                cargarDatos(id);
+            } else {
+                console.warn("El producto en el carrito no tiene id_negocio");
+            }
         }
-    }
-    cargarPerfil();
-}, [carrito]);
+        cargarPerfil();
+    }, [carrito]);
 
     const cargarDatos = async (id) => {
         try {
             const pagos = await obtenerMediosPagoPorNegocio(id);
             const envios = await obtenerMetodosEnvioPorNegocio(id);
-            console.log("Lo que devuelve obtenerMetodosEnvioPorNegocio:", envios);
             setMediosPago(pagos);
             setMetodosEnvio(envios);
         } catch (error) {
@@ -82,16 +81,45 @@ function FormularioCompra({
         }
     };
 
+    // 👇 VALIDACIÓN: Nombres/Apellidos (solo letras) y Documento (solo números) 👇
     const handlePerfilChange = (e) => {
+        const { name, value } = e.target;
+        let valorValidado = value;
+
+        const camposNombres = ["primer_nombre", "segundo_nombre", "primer_apellido", "segundo_apellido"];
+        
+        if (camposNombres.includes(name)) {
+            valorValidado = value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, "");
+        }
+
+        if (name === "numero_documento") {
+            valorValidado = value.replace(/\D/g, ""); 
+        }
+
         setPerfil({
             ...perfil,
-            [e.target.name]: e.target.value
+            [name]: valorValidado
         });
     };
 
+    // 👇 VALIDACIÓN: Teléfono (solo números, máximo 10) 👇
+    const handleTelefonoChange = (e) => {
+        const soloNumeros = e.target.value.replace(/\D/g, "").slice(0, 10);
+        setTelefono(soloNumeros);
+    };
+
     const confirmarCompra = async () => {
+        // 👇 1. SI YA ESTÁ PROCESANDO, IGNORAMOS EL CLIC 👇
+        if (procesando) return;
+
+        // Validaciones
         if (!perfil.primer_nombre || !perfil.primer_apellido || !perfil.id_tipo_documento || !perfil.numero_documento) {
             toast.error("Completa los datos de tu perfil.");
+            return;
+        }
+
+        if (telefono.length !== 10) {
+            toast.error("El teléfono debe tener exactamente 10 números.");
             return;
         }
 
@@ -101,6 +129,9 @@ function FormularioCompra({
         }
 
         try {
+            // 👇 2. BLOQUEAMOS EL BOTÓN 👇
+            setProcesando(true); 
+
             await actualizarPerfil({
                 primer_nombre: perfil.primer_nombre,
                 segundo_nombre: perfil.segundo_nombre,
@@ -127,12 +158,15 @@ function FormularioCompra({
             // Guardamos la venta y abrimos el modal
             setVentaConfirmada(data.venta);
             setShowComprobante(true);
+            
         } catch (error) {
             console.error(error);
             toast.error(error.response?.data?.mensaje || "Error del servidor");
+        } finally {
+            // 👇 3. DESBLOQUEAMOS EL BOTÓN SI ALGO FALLA Y SE QUEDA EN EL FORMULARIO 👇
+            setProcesando(false); 
         }
     };
-
 
     const metodoSeleccionado = metodosEnvio.find((m) => m.id_metodo_envio == idMetodoEnvio);
     const costoEnvio = Number(metodoSeleccionado?.costo_envio || 0);
@@ -140,7 +174,6 @@ function FormularioCompra({
 
     return (
         <div className="modal-overlay">
-            {/* Si no se ha mostrado el comprobante, mostramos el formulario */}
             {!showComprobante ? (
                 <div className="modal-compra">
                     <h2>Finalizar compra</h2>
@@ -184,7 +217,14 @@ function FormularioCompra({
                                 ))}
                             </select>
                             <label>Teléfono</label>
-                            <input className="campo-compra" type="text" value={telefono} onChange={(e) => setTelefono(e.target.value)} />
+                            <input 
+                                className="campo-compra" 
+                                type="text" 
+                                value={telefono} 
+                                onChange={handleTelefonoChange} 
+                                placeholder="Ej: 3001234567"
+                                maxLength="10"
+                            />
                             <label>Dirección</label>
                             <input className="campo-compra" type="text" value={direccion} onChange={(e) => setDireccion(e.target.value)} />
                             
@@ -198,18 +238,20 @@ function FormularioCompra({
                         </div>
                     </div>
                     <div className="botones-modal">
-                        <button onClick={onCerrar}>Cancelar</button>
-                        <button onClick={confirmarCompra}>Confirmar compra</button>
+                        <button onClick={onCerrar} disabled={procesando}>Cancelar</button>
+                        {/* 👇 BOTÓN DESHABILITADO MIENTRAS PROCESA 👇 */}
+                        <button onClick={confirmarCompra} disabled={procesando}>
+                            {procesando ? "Procesando..." : "Confirmar compra"}
+                        </button>
                     </div>
                 </div>
             ) : (
-                // Cuando showComprobante es true, renderizamos el modal
                 <ModalComprobante 
                     venta={ventaConfirmada} 
                     onClose={() => {
                         setShowComprobante(false);
-                        onCompraExitosa(); // Limpia el carrito
-                        onCerrar();        // Cierra el formulario
+                        onCompraExitosa(); 
+                        onCerrar();        
                     }} 
                 />
             )}
