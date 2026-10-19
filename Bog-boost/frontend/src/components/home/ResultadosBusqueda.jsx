@@ -252,7 +252,8 @@ const ResultadosBusqueda = () => {
       {/* ======================== */}
       {/* LAYOUT CON SIDEBAR DE FILTROS */}
       {/* ======================== */}
-      <div className="layout-busqueda">
+      {/* 👇 Aquí está el cambio: añadimos la clase condicional si estamos en Negocios */}
+      <div className={`layout-busqueda ${tabActiva === "negocios" ? "sin-filtros" : ""}`}>
 
         {/* SIDEBAR DE FILTROS (solo si hay productos) */}
         {resultados.productos.length > 0 && tabActiva !== "negocios" && (

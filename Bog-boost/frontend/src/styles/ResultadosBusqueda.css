@@ -1,9 +1,5 @@
-/* =========================================================
-   CSS ORIGINAL (intacto)
-========================================================= */
-
 .busqueda-page {
-  max-width: 1600px;                 /* 👈 página más ancha */
+  max-width: 1600px;                 
   margin: 0 auto;
   padding: 40px 30px;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -133,17 +129,17 @@
 }
 
 /* ============================================================
-   GRID DE NEGOCIOS  ← VARIOS POR FILA (Opción A)
+   GRID DE NEGOCIOS  ← 5 COLUMNAS EXACTAS
 ============================================================ */
 .grid-negocios-pro {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  grid-template-columns: repeat(5, 1fr); /* 👈 Fuerza 5 columnas exactas */
   gap: 20px;
+  width: 100%;
 }
 
 /* ============================================================
-   TARJETA DE NEGOCIO  ← VERTICAL INTERNA (Opción 1)
-   logo arriba, texto abajo, centrado
+   TARJETA DE NEGOCIO  ← VERTICAL INTERNA
 ============================================================ */
 .negocio-card-pro {
   background: #fff;
@@ -151,7 +147,7 @@
   border-radius: 12px;
   padding: 22px 18px;
   display: flex;
-  flex-direction: column;         /* 👈 logo arriba, texto abajo */
+  flex-direction: column;         
   align-items: center;
   text-align: center;
   gap: 14px;
@@ -160,7 +156,7 @@
   box-shadow: 0 2px 5px rgba(0,0,0,0.02);
   text-decoration: none;
   color: inherit;
-  width: 100%;                    /* 👈 ocupa todo el ancho de su celda */
+  width: 100%;                    
 }
 
 .negocio-card-pro:hover {
@@ -241,10 +237,9 @@
   gap: 30px;
 }
 
-@media (max-width: 900px) {
-  .layout-busqueda {
-    grid-template-columns: 1fr;
-  }
+/* 👇 NUEVO: Cuando se quitan los filtros (pestaña Negocios), ocupa todo el ancho */
+.layout-busqueda.sin-filtros {
+  display: block; 
 }
 
 .contenido-busqueda {
@@ -504,9 +499,36 @@
   cursor: not-allowed;
 }
 
-/* ============================
+/* =========================================================
    RESPONSIVE GENERAL
-============================ */
+========================================================= */
+
+/* Adaptación para pantallas medianas (Laptops pequeñas) */
+@media (max-width: 1200px) {
+  .grid-negocios-pro {
+    grid-template-columns: repeat(4, 1fr); /* 4 columnas */
+  }
+}
+
+/* Adaptación para Tablets */
+@media (max-width: 900px) {
+  .layout-busqueda {
+    grid-template-columns: 1fr; /* El menú lateral pasa arriba */
+  }
+  
+  .grid-negocios-pro {
+    grid-template-columns: repeat(3, 1fr); /* 3 columnas */
+  }
+}
+
+/* Adaptación para Celulares grandes */
+@media (max-width: 768px) {
+  .grid-negocios-pro {
+    grid-template-columns: repeat(2, 1fr); /* 2 columnas */
+  }
+}
+
+/* Adaptación para Celulares */
 @media (max-width: 600px) {
   .busqueda-page {
     padding: 25px 15px;
@@ -536,5 +558,12 @@
 
   .sidebar-filtros {
     position: static;
+  }
+}
+
+/* Adaptación para Celulares muy pequeños */
+@media (max-width: 480px) {
+  .grid-negocios-pro {
+    grid-template-columns: 1fr; /* 1 columna */
   }
 }

@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-
 import {
     FaPlus,
     FaEdit,
@@ -7,102 +6,89 @@ import {
 } from "react-icons/fa";
 
 import {
-    obtenerMisMetodosEnvio,
-    crearMetodoEnvio,
-    actualizarMetodoEnvio,
-    eliminarMetodoEnvio
-} from "../api/metodoEnvioApi";
+    obtenerMisMediosPago,
+    crearMedioPago,
+    actualizarMedioPago,
+    eliminarMedioPago
+} from "../../api/medioPagoApi";
 
-import "../styles/PerfilNegocio.css";
+import "../../styles/PerfilNegocio.css";
 
-export default function ModalMetodosEnvio({
+export default function ModalMediosPago({
     abierto,
     onClose,
     idNegocio
 }) {
-    const [metodos, setMetodos] = useState([]);
-
+    const [medios, setMedios] = useState([]);
     const [formulario, setFormulario] = useState({
-        nombre_metodo: "",
-        descripcion_metodo: "",
-        costo_envio: ""
+        nombre_medio: "",
+        numero_medio: "",
+        llave_medio: ""
     });
 
     const [editando, setEditando] = useState(null);
 
     useEffect(() => {
         if (abierto) {
-            cargarMetodos();
+            cargarMedios();
             limpiarFormulario();
         }
     }, [abierto]);
 
-    const cargarMetodos = async () => {
+    const cargarMedios = async () => {
         try {
-            const data = await obtenerMisMetodosEnvio();
-            setMetodos(data);
+            const data = await obtenerMisMediosPago();
+            setMedios(data);
         } catch (error) {
             console.error(error);
         }
     };
 
     const guardar = async () => {
-        if (
-            formulario.costo_envio === "" ||
-            formulario.costo_envio < 0
-        ) {
-            alert("Ingresa un costo de envío válido.");
-            return;
-        }
-
         try {
             if (editando) {
-                await actualizarMetodoEnvio(
+                await actualizarMedioPago(
                     editando,
                     formulario
                 );
             } else {
-                await crearMetodoEnvio({
+                await crearMedioPago({
                     ...formulario,
                     id_negocio: idNegocio
                 });
             }
 
             limpiarFormulario();
-            cargarMetodos();
+            cargarMedios();
         } catch (error) {
             console.error(error);
         }
     };
 
-    const editar = (metodo) => {
-        setEditando(
-            metodo.id_metodo_envio
-        );
-
+    const editar = (medio) => {
+        setEditando(medio.id_medio_pago);
         setFormulario({
-            nombre_metodo: metodo.nombre_metodo,
-            descripcion_metodo: metodo.descripcion_metodo,
-            costo_envio: metodo.costo_envio
+            nombre_medio: medio.nombre_medio,
+            numero_medio: medio.numero_medio,
+            llave_medio: medio.llave_medio
         });
     };
 
     const eliminar = async (id) => {
-        if (!window.confirm("¿Eliminar este método de envío?")) {
+        if (!window.confirm("¿Eliminar este medio de pago?")) {
             return;
         }
 
-        await eliminarMetodoEnvio(id);
-        cargarMetodos();
+        await eliminarMedioPago(id);
+        cargarMedios();
     };
 
     const limpiarFormulario = () => {
         setFormulario({
-            nombre_metodo: "",
-            descripcion_metodo: "",
-            costo_envio: ""
+            nombre_medio: "",
+            numero_medio: "",
+            llave_medio: ""
         });
-
         setEditando(null);
     };
 
@@ -115,8 +101,8 @@ export default function ModalMetodosEnvio({
                     <h2>
                         {
                             editando
-                                ? "Editar método de envío"
-                                : "Administrar métodos de envío"
+                                ? "Editar medio de pago"
+                                : "Administrar medios de pago"
                         }
                     </h2>
                 </div>
@@ -124,18 +110,18 @@ export default function ModalMetodosEnvio({
                 <div className="modal-body">
                     <div className="form-group">
                         <label>
-                            Nombre
+                            Nombre del medio
                         </label>
                         <input
                             type="text"
-                            placeholder="Ej: Domicilio"
-                            value={formulario.nombre_metodo}
+                            placeholder="Ej: Nequi"
+                            value={formulario.nombre_medio}
                             onChange={(e) => {
                                 // Permitir solo letras, acentos, eñes y espacios
                                 const soloLetras = e.target.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, "");
                                 setFormulario({
                                     ...formulario,
-                                    nombre_metodo: soloLetras
+                                    nombre_medio: soloLetras
                                 });
                             }}
                         />
@@ -143,37 +129,36 @@ export default function ModalMetodosEnvio({
 
                     <div className="form-group">
                         <label>
-                            Descripción
+                            Número
                         </label>
                         <input
-                            placeholder="Descripción"
-                            value={formulario.descripcion_metodo}
-                            onChange={(e) =>
+                            type="text"
+                            inputMode="numeric"
+                            placeholder="Número"
+                            value={formulario.numero_medio}
+                            onChange={(e) => {
+                                // Permitir únicamente números
+                                const soloNumeros = e.target.value.replace(/\D/g, "");
                                 setFormulario({
                                     ...formulario,
-                                    descripcion_metodo: e.target.value
-                                })
-                            }
+                                    numero_medio: soloNumeros
+                                });
+                            }}
                         />
                     </div>
 
                     <div className="form-group">
                         <label>
-                            Costo
+                            Llave
                         </label>
                         <input
-                            type="number"
-                            min="0"
-                            step="0.01"
-                            placeholder="Ej: 15000"
-                            value={formulario.costo_envio}
+                            type="text"
+                            placeholder="Correo o celular"
+                            value={formulario.llave_medio}
                             onChange={(e) =>
                                 setFormulario({
                                     ...formulario,
-                                    costo_envio:
-                                        e.target.value === ""
-                                            ? ""
-                                            : Number(e.target.value)
+                                    llave_medio: e.target.value
                                 })
                             }
                         />
@@ -205,44 +190,39 @@ export default function ModalMetodosEnvio({
 
                     <div className="lista-medios">
                         {
-                            metodos.length === 0 ? (
+                            medios.length === 0 ? (
                                 <p className="sin-medios">
-                                    No has registrado métodos de envío.
+                                    No has registrado medios de pago.
                                 </p>
                             ) : (
-                                metodos.map((metodo) => (
+                                medios.map((medio) => (
                                     <div
                                         className="card-medio"
-                                        key={metodo.id_metodo_envio}
+                                        key={medio.id_medio_pago}
                                     >
                                         <h4>
-                                            {metodo.nombre_metodo}
+                                            {medio.nombre_medio}
                                         </h4>
                                         <p>
-                                            <strong>Descripción:</strong>{" "}
-                                            {metodo.descripcion_metodo}
+                                            <strong>Número:</strong>{" "}
+                                            {medio.numero_medio}
                                         </p>
                                         <p>
-                                            <strong>Costo:</strong>{" "}
-                                            {Number(metodo.costo_envio).toLocaleString("es-CO", {
-                                                style: "currency",
-                                                currency: "COP"
-                                            })}
+                                            <strong>Llave:</strong>{" "}
+                                            {medio.llave_medio}
                                         </p>
                                         <div className="acciones-medio">
                                             <button
                                                 className="btn-orange"
-                                                onClick={() =>
-                                                    editar(metodo)
-                                                }
+                                                onClick={() => editar(medio)}
                                             >
-                                                <FaEdit />
+                                                Editar
                                             </button>
                                             <button
                                                 className="btn-delete"
                                                 onClick={() =>
                                                     eliminar(
-                                                        metodo.id_metodo_envio
+                                                        medio.id_medio_pago
                                                     )
                                                 }
                                             >

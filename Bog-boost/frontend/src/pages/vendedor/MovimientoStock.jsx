@@ -17,7 +17,7 @@ import {
 
 import { listarMovimientos, getNegocioUsuario } from "../../api/movimientoStockApi";
 import { obtenerMisProductos, eliminarProducto } from "../../api/productoApi";
-import ModalProductos from "../../components/ModalProductos";
+import ModalProductos from "../../components/negocio/ModalProductos";
 
 import "../../styles/MovimientoStock.css";
 

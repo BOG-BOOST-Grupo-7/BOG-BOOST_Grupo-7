@@ -11,9 +11,9 @@ import {
     crearCategoria,
     actualizarCategoria,
     eliminarCategoria
-} from "../api/categoriaApi";
+} from "../../api/categoriaApi";
 
-import "../styles/PerfilNegocio.css";
+import "../../styles/PerfilNegocio.css";
 
 export default function ModalCategorias({
     abierto,

@@ -12,7 +12,7 @@ import {
     FaListAlt
 } from "react-icons/fa";
 
-import ModalCategorias from "../../components/ModalCategorias";
+import ModalCategorias from "../../components/negocio/ModalCategorias";
 import "../../styles/ListaNegociosAdmin.css";
 import { obtenerNegocios, obtenerNegocioPorId } from "../../api/negocioApi";
 import { obtenerCategorias, eliminarCategoria } from "../../api/categoriaApi";

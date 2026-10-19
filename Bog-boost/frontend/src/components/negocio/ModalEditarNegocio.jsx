@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { actualizarNegocio } from "../api/negocioApi";
+import { actualizarNegocio } from "../../api/negocioApi";
 
 export default function ModalEditarNegocio({
     negocio,

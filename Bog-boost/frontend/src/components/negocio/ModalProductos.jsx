@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { FaPlus, FaEdit } from "react-icons/fa";
-import { crearProducto, actualizarProducto } from "../api/productoApi";
-import { obtenerCategorias } from "../api/categoriaApi";
-import { subirImagenProducto } from "../api/uploadApi";
-import "../styles/PerfilNegocio.css";
+import { crearProducto, actualizarProducto } from "../../api/productoApi";
+import { obtenerCategorias } from "../../api/categoriaApi";
+import { subirImagenProducto } from "../../api/uploadApi";
+import "../../styles/PerfilNegocio.css";
 
 export default function ModalProductos({ abierto, onClose, idNegocio, productoAEditar }) {
     const [categorias, setCategorias] = useState([]);

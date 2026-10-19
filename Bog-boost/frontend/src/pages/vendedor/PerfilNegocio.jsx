@@ -4,9 +4,9 @@ import { FaEdit } from "react-icons/fa";
 import { obtenerMiNegocio, actualizarNegocio } from "../../api/negocioApi";
 import { obtenerMisProductos } from "../../api/productoApi";
 
-import ModalEditarNegocio from "../../components/ModalEditarNegocio";
-import ModalMediosPago from "../../components/ModalMediosPago";
-import ModalMetodosEnvio from "../../components/ModalMetodosEnvio";
+import ModalEditarNegocio from "../../components/negocio/ModalEditarNegocio";
+import ModalMediosPago from "../../components/negocio/ModalMediosPago";
+import ModalMetodosEnvio from "../../components/negocio/ModalMetodosEnvio";
 
 import "../../styles/PerfilNegocio.css";
 
