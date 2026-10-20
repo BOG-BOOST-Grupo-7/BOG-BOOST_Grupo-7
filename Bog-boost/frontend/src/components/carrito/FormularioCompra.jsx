@@ -37,7 +37,7 @@ function FormularioCompra({
     const [showComprobante, setShowComprobante] = useState(false);
     const [ventaConfirmada, setVentaConfirmada] = useState(null);
 
-    // 👇 ESTADO PARA BLOQUEAR EL BOTÓN Y EVITAR DOBLE CLIC 👇
+    
     const [procesando, setProcesando] = useState(false);
 
     useEffect(() => {
@@ -81,7 +81,7 @@ function FormularioCompra({
         }
     };
 
-    // 👇 VALIDACIÓN: Nombres/Apellidos (solo letras) y Documento (solo números) 👇
+    
     const handlePerfilChange = (e) => {
         const { name, value } = e.target;
         let valorValidado = value;
@@ -102,14 +102,14 @@ function FormularioCompra({
         });
     };
 
-    // 👇 VALIDACIÓN: Teléfono (solo números, máximo 10) 👇
+    
     const handleTelefonoChange = (e) => {
         const soloNumeros = e.target.value.replace(/\D/g, "").slice(0, 10);
         setTelefono(soloNumeros);
     };
 
     const confirmarCompra = async () => {
-        // 👇 1. SI YA ESTÁ PROCESANDO, IGNORAMOS EL CLIC 👇
+        
         if (procesando) return;
 
         // Validaciones
@@ -129,7 +129,7 @@ function FormularioCompra({
         }
 
         try {
-            // 👇 2. BLOQUEAMOS EL BOTÓN 👇
+            
             setProcesando(true); 
 
             await actualizarPerfil({
@@ -163,7 +163,7 @@ function FormularioCompra({
             console.error(error);
             toast.error(error.response?.data?.mensaje || "Error del servidor");
         } finally {
-            // 👇 3. DESBLOQUEAMOS EL BOTÓN SI ALGO FALLA Y SE QUEDA EN EL FORMULARIO 👇
+            
             setProcesando(false); 
         }
     };
@@ -239,7 +239,6 @@ function FormularioCompra({
                     </div>
                     <div className="botones-modal">
                         <button onClick={onCerrar} disabled={procesando}>Cancelar</button>
-                        {/* 👇 BOTÓN DESHABILITADO MIENTRAS PROCESA 👇 */}
                         <button onClick={confirmarCompra} disabled={procesando}>
                             {procesando ? "Procesando..." : "Confirmar compra"}
                         </button>

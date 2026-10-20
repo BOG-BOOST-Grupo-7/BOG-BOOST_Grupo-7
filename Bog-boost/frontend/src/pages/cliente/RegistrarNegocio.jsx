@@ -1,16 +1,12 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-
-// ============================================
-// IMPORTS DE APIS
-// ============================================
 import { obtenerMiPerfil } from "../../api/perfilApi";
 import { registrarNegocio } from "../../api/negocioApi";
 import { subirLogo as subirLogoApi } from "../../api/uploadApi";
 import { getAvailableStands } from "../../api/mapaApis";
 
-import "../../styles/RegistrarNegocio.css"; // Archivo CSS unificado
+import "../../styles/RegistrarNegocio.css"; 
 
 function RegistrarNegocio() {
     const { user } = useAuth();

@@ -5,11 +5,6 @@ export const obtenerNotificaciones = async () => {
     return data;
 };
 
-export const obtenerNotificacion = async (id) => {
-    const { data } = await axiosClient.get(`/notificacion/${id}`);
-    return data;
-};
-
 export const marcarComoLeida = async (id) => {
     const { data } = await axiosClient.put(
         `/notificacion/${id}/leida`

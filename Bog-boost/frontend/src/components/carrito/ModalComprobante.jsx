@@ -58,7 +58,7 @@ const ModalComprobante = ({ venta, onClose, esVendedor = false }) => {
 
   return (
     <div className="modal-overlay">
-      {/* Cambia a .modal-comprobante-content si deseas aislarlo totalmente en el CSS */}
+      
       <div className="modal-content modal-comprobante-content">
         
         <div className="modal-header">
@@ -67,7 +67,7 @@ const ModalComprobante = ({ venta, onClose, esVendedor = false }) => {
         </div>
 
         <div className="modal-body">
-          {/* Tarjeta de información adaptada */}
+          
           <div className="card-medio">
             <h4>{esVendedor ? `Detalles de la Venta #${venta.id_venta}` : `Detalles del pedido #${venta.id_venta}`}</h4>
             

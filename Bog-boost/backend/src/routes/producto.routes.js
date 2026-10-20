@@ -1,7 +1,5 @@
 import { Router } from "express";
-
 import authMiddleware from "../middlewares/auth.js";
-
 import vendedorMiddleware from "../middlewares/vendedor.js";
 
 import {
@@ -12,20 +10,14 @@ import {
   actualizarProducto,
   eliminarProducto,
   obtenerProductosPorNegocioId,
-  buscarProductosYNegocios
-}
-from "../controllers/producto.controller.js";
+  buscarProductosYNegocios,
+  obtenerMasVendidos
+} from "../controllers/producto.controller.js";
 
 const router = Router();
 
-// ============================
-// BUSCADOR (debe ir ANTES de /:id)
-// ============================
 router.get("/buscar", buscarProductosYNegocios);
-
-// ============================
-// RUTAS DE PRODUCTOS
-// ============================
+router.get("/mas-vendidos", obtenerMasVendidos);
 router.get("/", listarProductos);
 router.get("/mis-productos", authMiddleware, vendedorMiddleware, obtenerMisProductos);
 router.get("/negocio/:id", obtenerProductosPorNegocioId);

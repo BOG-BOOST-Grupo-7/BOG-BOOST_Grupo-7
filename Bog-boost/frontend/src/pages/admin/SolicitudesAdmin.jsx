@@ -94,7 +94,7 @@ function SolicitudesAdmin() {
         setSolicitudSeleccionada(null);
     };
 
-    // 👇 LÓGICA DE FILTRADO Y BÚSQUEDA COMBINADA 👇
+    // LÓGICA DE FILTRADO Y BÚSQUEDA COMBINADA 
     const solicitudesFiltradas = useMemo(() => {
         return solicitudes.filter((s) => {
             // Filtro por estado

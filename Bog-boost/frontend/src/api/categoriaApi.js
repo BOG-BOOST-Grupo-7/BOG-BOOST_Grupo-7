@@ -5,11 +5,6 @@ export const obtenerCategorias = async () => {
     return data;
 };
 
-export const obtenerCategoriaPorId = async (id) => {
-    const { data } = await axiosClient.get(`/categoria/${id}`);
-    return data;
-};
-
 export const obtenerProductosPorCategoria = async (id) => {
     const { data } = await axiosClient.get(`/categoria/${id}/productos`);
     return data;

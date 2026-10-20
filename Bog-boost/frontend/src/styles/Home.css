@@ -1,10 +1,9 @@
 /* ==========================================================
    1. ESTILOS GLOBALES DE LA TARJETA (ProductCard)
-   Se verán EXACTAMENTE IGUAL tanto en el carrusel como fuera de él.
    ================================================---------- */
 .product-card {
   height: 320px;
-  width: 100%; /* Por defecto toma todo el contenedor disponible */
+  width: 100%;
   display: flex;
   flex-direction: column;
   background: #fafafa;
@@ -106,11 +105,9 @@
   background: #e3a82d;
 }
 
-
 /* ==========================================================
-   2. CONTENEDORES Y DISTRIBUCIÓN (Home y Carrusel)
+   2. CONTENEDORES Y DISTRIBUCIÓN (Home)
    ================================================---------- */
-
 .container-home {
   max-width: 1200px;
   margin: 0 auto;
@@ -135,123 +132,28 @@
   box-sizing: border-box;
 }
 
-.carruseles-column {
+.catalogo-column {
   display: flex;
   flex-direction: column;
   gap: 24px;
+  min-width: 0; /* Evita que el grid se desborde */
 }
 
-/* Contenedor del Carrusel */
-.carrusel-container {
-  background: #ffffff;
-  border-radius: 16px;
-  padding: 20px 24px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-  border: 1px solid #eaeaea;
-}
-
-.carrusel-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
-  border-bottom: 2px solid #f9f9f9;
-  padding-bottom: 10px;
-}
-
+/* ==========================================================
+   3. TÍTULOS DE SECCIÓN
+   ================================================---------- */
 .carrusel-title {
   font-size: 20px;
   font-weight: 700;
   color: #1a1a1a;
   margin: 0;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #f9f9f9;
 }
 
-/* Indicadores de página estilo puntos modernos */
-.carrusel-indicadores {
-  display: flex;
-  gap: 6px;
-}
-
-.indicador-punto {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: #dcdcdc;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.indicador-punto.activo {
-  width: 22px;
-  border-radius: 4px;
-  background: #f5b952;
-}
-
-.carrusel-wrapper {
-  display: flex;
-  align-items: center;
-  position: relative;
-  gap: 12px;
-}
-
-.carrusel-columnas-container {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  width: 100%;
-  overflow: hidden;
-}
-
-/* Control del layout exclusivo del carrusel */
-.carrusel-track {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  width: 100%;
-}
-
-/* Forzar que cada tarjeta mida exactamente el 25% solo cuando está DENTRO del track del carrusel */
-.carrusel-track > .product-card {
-  flex: 1;
-  min-width: 0; 
-  max-width: calc(25% - 9px); 
-}
-
-/* Botones de navegación del carrusel */
-.carrusel-btn {
-  background: #ffffff;
-  border: 1px solid #e0e0e0;
-  color: #333;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  font-size: 16px;
-  box-shadow: 0 3px 10px rgba(0,0,0,0.08);
-  transition: all 0.2s ease;
-  flex-shrink: 0;
-  z-index: 2;
-}
-
-.carrusel-btn:hover {
-  background: #f5b952;
-  border-color: #f5b952;
-  color: #000;
-  transform: scale(1.08);
-}
-
-.sin-productos {
-  text-align: center;
-  color: #888;
-  font-size: 14px;
-  padding: 30px 0;
-  width: 100%;
-}
-
-/* Resto de componentes (Mapa y Registro) */
+/* ==========================================================
+   4. COMPONENTES LATERALES (Mapa y Registro)
+   ================================================---------- */
 .tarjeta-mapa {
   background: white;
   border-radius: 16px;
@@ -366,7 +268,7 @@ html, body {
 }
 
 /* ==========================================================
-   3. BANNER DE COBERTURA Y ENTREGAS (Profesional)
+   5. BANNER DE COBERTURA
    ================================================---------- */
 .aviso-cobertura {
   display: flex;
@@ -409,20 +311,110 @@ html, body {
   line-height: 1.4;
 }
 
-/* Responsivo para pantallas pequeñas */
-@media (max-width: 768px) {
-  .aviso-cobertura {
-    padding: 12px 15px;
-  }
-  .aviso-texto h4 {
-    font-size: 14px;
-  }
-  .aviso-texto p {
-    font-size: 12px;
-  }
+/* ==========================================================
+   6. FILTROS / PESTAÑAS DE INICIO
+   ================================================---------- */
+.filtros-home-container {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-bottom: 30px;
+  flex-wrap: wrap;
 }
 
-/* Diseño Responsivo */
+.filtro-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  color: #555;
+  padding: 10px 22px;
+  border-radius: 30px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+}
+
+.filtro-btn:hover {
+  background: #fdfbf7;
+  border-color: #f5b952;
+  color: #d99a36;
+}
+
+.filtro-btn.activo {
+  background: #f5b952;
+  color: #000;
+  border-color: #f5b952;
+  box-shadow: 0 4px 12px rgba(245, 185, 82, 0.3);
+}
+
+.filtro-btn svg {
+  font-size: 16px;
+}
+
+/* ==========================================================
+   7. CATÁLOGO COMPLETO (GRID Y PAGINACIÓN)
+   ================================================---------- */
+.catalogo-completo-container {
+  background: #fff;
+  border-radius: 16px;
+  padding: 25px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  border: 1px solid #eaeaea;
+}
+
+.grid-productos-home {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.paginacion-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 1px solid #eee;
+}
+
+.pag-btn {
+  background: #fff;
+  border: 1px solid #f5b952;
+  color: #d99a36;
+  padding: 8px 20px;
+  border-radius: 20px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+.pag-btn:hover:not(:disabled) {
+  background: #f5b952;
+  color: #000;
+}
+
+.pag-btn:disabled {
+  border-color: #ddd;
+  color: #aaa;
+  cursor: not-allowed;
+}
+
+.pag-info {
+  font-size: 14px;
+  font-weight: 600;
+  color: #555;
+}
+
+/* ==========================================================
+   8. RESPONSIVE GENERAL
+   ================================================---------- */
 @media (max-width: 1024px) {
   .main-content {
     grid-template-columns: 1fr;
@@ -435,8 +427,8 @@ html, body {
   .negocio-card {
     flex: 1;
   }
-  .carrusel-track > .product-card {
-    max-width: calc(33.333% - 8px); 
+  .grid-productos-home {
+    grid-template-columns: repeat(3, 1fr);
   }
 }
 
@@ -447,10 +439,25 @@ html, body {
   .view-title {
     font-size: 22px;
   }
-  .carrusel-track > .product-card {
-    max-width: calc(50% - 6px); 
+  .aviso-cobertura {
+    padding: 12px 15px;
+  }
+  .aviso-texto h4 {
+    font-size: 14px;
+  }
+  .aviso-texto p {
+    font-size: 12px;
   }
   .right-column {
     flex-direction: column;
+  }
+  .grid-productos-home {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .grid-productos-home {
+    grid-template-columns: 1fr;
   }
 }

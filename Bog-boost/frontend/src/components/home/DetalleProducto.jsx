@@ -22,7 +22,7 @@ function DetalleProducto() {
     const [otrosProductos, setOtrosProductos] = useState([]);
     const [mostrarTodos, setMostrarTodos] = useState(false);
 
-    // 👇 Estado para controlar el modal de la imagen (Zoom)
+    // Estado para controlar el modal de la imagen (Zoom)
     const [imagenExpandida, setImagenExpandida] = useState(false);
 
     useEffect(() => {

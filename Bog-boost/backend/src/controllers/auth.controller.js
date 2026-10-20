@@ -187,57 +187,13 @@ export const logout = async (req, res) => {
     }
   };
 
-export const listarUsuarios = async (req, res) => {
-  try {
-
-    const { data, error } = await supabase
-      .schema("cliente")
-      .from("perfil")
-      .select(`
-        *,
-        rol(
-          nombre_rol
-        )
-      `);
-
-    if (error) {
-      return res.status(400).json(error);
-    }
-
-    res.json(data);
-
-  } catch (error) {
-    res.status(500).json(error);
-  }
-};
-
-export const obtenerUsuarioPorId = async (req, res) => {
-    try {
-      const { id } = req.params;
-
-      const {
-        data,
-        error
-      } = await supabase.auth.admin.getUserById(id);
-
-      if (error) {
-        return res.status(404).json(error);
-      }
-      res.json(
-        data.user
-      );
-
-    } catch (error) {
-      res.status(500).json(error);
-    }
-  };
 
 export const recuperarPassword = async (req, res) => {
     try {
       const { email } = req.body;
 
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: "http://localhost:5173/cambiar-password" // Cambia esto según tu ruta de frontend
+        redirectTo: "http://localhost:5173/cambiar-password" 
       });
 
       if (error) {
@@ -272,89 +228,6 @@ export const cambiarPassword = async (req, res) => {
       res.json({
         mensaje: "Contraseña actualizada",
         usuario: data.user
-      });
-
-    } catch (error) {
-      res.status(500).json(error);
-    }
-  };
-
-export const solicitarReactivacion = async (req, res) => {
-    try {
-      const { email } = req.body;
-      const { error } = await supabase.auth.resetPasswordForEmail(
-            email,
-            {
-              redirectTo:
-                "http://localhost:3000/reactivar-cuenta"
-            }
-          );
-
-      if (
-        error?.code ===
-        "over_email_send_rate_limit"
-      ) {
-        return res.status(429).json({
-            mensaje: "Ya se envió un correo recientemente. Intenta nuevamente en unos minutos."
-          });
-      }
-
-      if (error) {
-        return res.status(400).json(error);
-      }
-
-      res.json({
-        mensaje: "Se envió un correo para reactivar la cuenta"
-      });
-
-    } catch (error) {
-      res.status(500).json(error);
-    }
-  };
-
-export const reactivarCuenta = async (req, res) => {
-    try {
-      const { email } = req.body;
-
-      const {
-        data: usuarios,
-        error: errorUsuarios
-      } = await supabase.auth.admin.listUsers();
-
-      if (errorUsuarios) {
-        return res.status(400).json(errorUsuarios);
-      }
-
-      const usuario =
-        usuarios.users.find(
-          u => u.email === email
-        );
-
-      if (!usuario) {
-        return res.status(404).json({
-            mensaje: "Usuario no encontrado"
-          });
-      }
-
-      const {
-        error
-      } = await supabase
-          .schema("cliente")
-          .from("perfil")
-          .update({
-            estado_usuario:
-              "ACTIVO"
-          })
-          .eq(
-            "id_perfil",
-            usuario.id
-          );
-
-      if (error) {
-        return res.status(400).json(error);
-      }
-      res.json({
-        mensaje: "Cuenta reactivada correctamente"
       });
 
     } catch (error) {

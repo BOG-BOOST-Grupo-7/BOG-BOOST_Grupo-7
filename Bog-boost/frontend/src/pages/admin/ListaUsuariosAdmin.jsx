@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useAuth } from "../../context/AuthContext"; // 👈 IMPORTANTE AGREGAR ESTO
+import { useAuth } from "../../context/AuthContext";
 import {
     FaUsers,
     FaUserCheck,
@@ -26,7 +26,7 @@ import {
 } from "../../api/rolApi";
 
 export default function ListaUsuariosAdmin() {
-    // 👇 Extraemos el rol del usuario logueado para saber quién está mirando
+    //  Extraemos el rol del usuario logueado para saber quién está mirando
     const { rol: rolLogueado } = useAuth(); 
     const esSuperAdmin = rolLogueado === "SUPER_ADMIN";
 
@@ -280,7 +280,7 @@ export default function ListaUsuariosAdmin() {
                                     <td>{nombreCompleto(usuario)}</td>
                                     <td>{usuario.email}</td>
                                     <td>
-                                        {/* 👇 LÓGICA DE PERMISOS AQUÍ 👇 */}
+                                        {/* LÓGICA DE PERMISOS AQUÍ */}
                                         {esSuperAdmin ? (
                                             <select
                                                 className="usuarios-select"
@@ -319,7 +319,7 @@ export default function ListaUsuariosAdmin() {
                                                 <FaEye />
                                             </button>
                                             
-                                            {/* 👇 SOLO EL SUPER ADMIN VE EL BOTÓN GUARDAR 👇 */}
+                                            {/* SOLO EL SUPER ADMIN VE EL BOTÓN GUARDAR */}
                                             {esSuperAdmin && (
                                                 <button
                                                     className="btn-guardar"

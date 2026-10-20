@@ -5,7 +5,6 @@ import adminMiddleware from "../middlewares/admin.js";
 
 import {
   listarCategorias,
-  obtenerCategoriaPorId,
   obtenerProductosPorCategoria,
   crearCategoria,
   actualizarCategoria,
@@ -16,7 +15,6 @@ from "../controllers/categoria.controller.js";
 const router = Router();
 
 router.get("/", listarCategorias);
-router.get("/:id", obtenerCategoriaPorId);
 router.get("/:id/productos", obtenerProductosPorCategoria);
 router.post("/crear", authMiddleware, adminMiddleware, crearCategoria);
 router.put( "/actualizar/:id", authMiddleware, adminMiddleware, actualizarCategoria);

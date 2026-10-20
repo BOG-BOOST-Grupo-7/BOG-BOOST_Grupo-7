@@ -11,7 +11,7 @@ import {
 import { subirFotoPerfil } from "../../api/uploadApi";
 
 function Perfil() {
-    // 👇 1. Extraemos la función del contexto 👇
+    
     const { logout, actualizarPerfilContexto } = useAuth();
     const fileInputRef = useRef(null);
 

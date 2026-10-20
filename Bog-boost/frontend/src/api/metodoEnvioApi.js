@@ -58,14 +58,3 @@ export const eliminarMetodoEnvio = async (id) => {
     return data;
 
 };
-
-// (Opcional) Obtener un método de envío por id
-export const obtenerMetodoEnvioPorId = async (id) => {
-
-    const { data } = await axiosClient.get(
-        `/metodos-envio/${id}`
-    );
-
-    return data;
-
-};

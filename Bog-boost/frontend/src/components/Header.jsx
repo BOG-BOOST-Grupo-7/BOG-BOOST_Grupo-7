@@ -51,14 +51,16 @@ function Header() {
     user?.email?.charAt(0)?.toUpperCase() ||
     "U";
 
-  const fotoPerfil = perfil?.foto_perfil;
+  
+  const fotoPerfil = perfil?.foto_perfil || user?.foto_perfil || user?.logo;
 
   useEffect(() => {
     cargarCategorias();
     if (isAuthenticated) {
       cargarNotificaciones();
     }
-  }, [isAuthenticated]);
+    
+  }, [isAuthenticated, user, perfil]);
 
   const cargarNotificaciones = async () => {
     try {
@@ -87,7 +89,6 @@ function Header() {
 
       {/* MENU ESCRITORIO */}
       <nav className="menu">
-        {/* 👇 AGREGADO: ADMINISTRADOR 👇 */}
         {rol === "SUPER_ADMIN" || rol === "ADMINISTRADOR" ? (
           <a onClick={() => go("/admin")}>Panel Principal</a>
         ) : rol === "VENDEDOR" ? (
@@ -165,7 +166,6 @@ function Header() {
           </div>
         )}
 
-        {/* 👇 AGREGADO: Ocultar carrito al ADMINISTRADOR también 👇 */}
         {rol !== "SUPER_ADMIN" && rol !== "ADMINISTRADOR" && rol !== "VENDEDOR" && (
           <div className="cart-icon" onClick={() => go("/carrito")}>
             <i className="fas fa-shopping-cart"></i>
@@ -218,7 +218,6 @@ function Header() {
           )}
         </div>
 
-        {/* 👇 AGREGADO: ADMINISTRADOR EN MENÚ MÓVIL 👇 */}
         {rol === "SUPER_ADMIN" || rol === "ADMINISTRADOR" ? (
           <a onClick={() => go("/admin")}>Panel Principal</a>
         ) : rol === "VENDEDOR" ? (
@@ -272,7 +271,7 @@ function Header() {
             <a onClick={() => go("/contacto")}>Contáctenos/PQRS</a>
             <a onClick={() => go("/registrar-negocio")}>Registrar negocio</a>
           </>
-        ) : rol === "SUPER_ADMIN" || rol === "ADMINISTRADOR" ? ( /* 👈 AGREGADO AQUÍ */
+        ) : rol === "SUPER_ADMIN" || rol === "ADMINISTRADOR" ? (
           <>
             <a onClick={() => go("/perfil")}>Perfil</a>
             <a onClick={() => go("/admin/negocios")}>Negocios</a>

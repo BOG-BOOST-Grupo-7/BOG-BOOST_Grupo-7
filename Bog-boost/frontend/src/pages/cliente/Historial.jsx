@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { obtenerMisCompras } from "../../api/ventaApi"; // Ajusta según tu archivo de API
+import { obtenerMisCompras } from "../../api/ventaApi";
 import ModalComprobante from "../../components/carrito/ModalComprobante";
 import "../../styles/Historial.css";
 

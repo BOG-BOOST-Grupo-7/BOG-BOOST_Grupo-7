@@ -127,6 +127,49 @@
     width: 100%;
 }
 
+/* ==========================================
+   PAGINACIÓN
+   ========================================== */
+.paginacion-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+    margin-top: 40px;
+    padding-top: 20px;
+    border-top: 1px solid #eee;
+}
+
+.pag-btn {
+    background: #fff;
+    border: 1px solid #f5b952;
+    color: #d99a36;
+    padding: 8px 20px;
+    border-radius: 20px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+    font-size: 14px;
+}
+
+.pag-btn:hover:not(:disabled) {
+    background: #f5b952;
+    color: #000;
+}
+
+.pag-btn:disabled {
+    border-color: #ddd;
+    color: #aaa;
+    cursor: not-allowed;
+}
+
+.pag-info {
+    font-size: 14px;
+    font-weight: 600;
+    color: #555;
+}
+
 /* Diseño responsivo de la cuadrícula de productos */
 @media (max-width: 1024px) {
     .productos-grid {

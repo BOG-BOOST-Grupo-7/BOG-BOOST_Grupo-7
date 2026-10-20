@@ -17,7 +17,6 @@ const router = Router();
 
 router.get("/", authMiddleware, superAdminMiddleware, listarRoles);
 router.put("/usuario", authMiddleware, superAdminMiddleware, cambiarRolUsuario);
-router.get("/:id", authMiddleware, superAdminMiddleware, obtenerRolPorId);
 router.post("/crear", authMiddleware, superAdminMiddleware, crearRol);
 router.put("/actualizar/:id", authMiddleware, superAdminMiddleware, actualizarRol);
 router.delete("/eliminar/:id", authMiddleware, superAdminMiddleware, eliminarRol);

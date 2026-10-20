@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "../../supabase"; // Ajusta la ruta según tu estructura real
+import { supabase } from "../../supabase"; 
 import "../../styles/Registro.css";
 
 export default function ActualizarPassword() {

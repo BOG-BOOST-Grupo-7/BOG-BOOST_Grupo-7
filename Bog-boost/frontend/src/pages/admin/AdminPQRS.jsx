@@ -10,7 +10,7 @@ import {
   FaCalendarAlt,
   FaChevronLeft,
   FaChevronRight,
-  FaSearch // 👈 Agregamos el icono de búsqueda
+  FaSearch 
 } from "react-icons/fa";
 import "../../styles/AdminPQRS.css";
 
@@ -18,7 +18,7 @@ function AdminPQRS() {
   const [pqrs, setPQRS] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [estadoFiltro, setEstadoFiltro] = useState("todos");
-  const [busqueda, setBusqueda] = useState(""); // 👈 Estado para el buscador
+  const [busqueda, setBusqueda] = useState(""); 
   const [respuestas, setRespuestas] = useState({});
 
   // Estados de Paginación
@@ -66,7 +66,7 @@ function AdminPQRS() {
     }
   };
 
-  // 👇 LÓGICA DE FILTRADO Y BÚSQUEDA COMBINADA 👇
+  
   const pqrsFiltradas = useMemo(() => {
     return pqrs.filter((item) => {
       // 1. Filtro por estado
@@ -92,7 +92,7 @@ function AdminPQRS() {
     });
   }, [pqrs, estadoFiltro, busqueda]);
 
-  // Regresar a la página 1 al cambiar el filtro o la búsqueda
+  
   useEffect(() => {
     setPaginaActual(1);
   }, [estadoFiltro, busqueda]);
@@ -129,7 +129,7 @@ function AdminPQRS() {
         </div>
       </div>
 
-      {/* 👇 BARRA SUPERIOR CON BUSCADOR Y FILTRO MODIFICADO 👇 */}
+      {/* BARRA SUPERIOR CON BUSCADOR Y FILTRO */}
       <div className="action-bar">
         <div className="search-group">
           <FaSearch />

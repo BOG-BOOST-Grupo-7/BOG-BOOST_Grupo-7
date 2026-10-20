@@ -19,7 +19,3 @@ export const responderPQRS = (id, respuesta_pqrs) => {
         respuesta_pqrs
     });
 };
-
-export const obtenerPQRS = (id) => {
-    return axiosClient.get(`/pqrs/${id}`);
-};

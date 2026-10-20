@@ -162,88 +162,16 @@ export const crearPQRS = async (req, res) => {
         }
       }
     } catch (notifError) {
-      // Si ocurre un error enviando la notificación, no interrumpimos la respuesta del PQRS
+      
       console.error("Error al enviar notificaciones a los administradores:", notifError);
     }
 
-    // Responder exitosamente con el PQRS creado
+    
     res.status(201).json(nuevoPQRS);
 
   } catch (error) {
     console.error("Error en crearPQRS:", error);
     res.status(500).json({ mensaje: "Error interno del servidor", error });
-  }
-};
-
-export const obtenerPQRSporId = async (req, res) => {
-  try {
-
-    const { id } = req.params;
-
-    // ==========================
-    // Obtener PQRS
-    // ==========================
-
-    const { data: pqrs, error } = await supabase
-      .schema("cliente")
-      .from("pqrs")
-      .select("*")
-      .eq("id_pqrs", id)
-      .single();
-
-    if (error) {
-      return res.status(404).json(error);
-    }
-
-    // ==========================
-    // Obtener perfil
-    // ==========================
-
-    const {
-      data: perfil,
-      error: errorPerfil
-    } = await supabase
-      .schema("cliente")
-      .from("perfil")
-      .select(`
-        id_perfil,
-        primer_nombre,
-        segundo_nombre,
-        primer_apellido,
-        segundo_apellido
-      `)
-      .eq("id_perfil", pqrs.id_perfil)
-      .single();
-
-    if (errorPerfil) {
-      return res.status(400).json(errorPerfil);
-    }
-
-    // ==========================
-    // Obtener correo
-    // ==========================
-
-    const {
-      data: usuario,
-      error: errorUsuario
-    } = await supabase.auth.admin.getUserById(
-      pqrs.id_perfil
-    );
-
-    if (errorUsuario) {
-      console.error(errorUsuario);
-    }
-
-    res.json({
-      ...pqrs,
-      perfil: {
-        ...perfil,
-        correo: usuario?.user?.email ?? null
-      }
-    });
-
-  } catch (error) {
-    res.status(500).json(error);
   }
 };
 
@@ -303,12 +231,12 @@ export const responderPQRS = async (req, res) => {
             }
           ]);
       } catch (notifError) {
-        // Si falla la notificación, no interrumpimos la respuesta exitosa al administrador
+        
         console.error("Error al enviar la notificación al usuario:", notifError);
       }
     }
 
-    // Responder exitosamente con el PQRS actualizado
+    
     res.json(pqrsActualizado);
 
   } catch (error) {

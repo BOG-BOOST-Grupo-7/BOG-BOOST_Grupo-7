@@ -14,9 +14,14 @@ const ResultadosBusqueda = () => {
   const [resultados, setResultados] = useState({ productos: [], negocios: [] });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [tabActiva, setTabActiva] = useState("todo"); // "todo" | "productos" | "negocios"
+  const [tabActiva, setTabActiva] = useState("todo");
 
-  // Estado local de filtros (inputs controlados)
+  // Estados para la paginación
+  const [paginaProductos, setPaginaProductos] = useState(1);
+  const [paginaNegocios, setPaginaNegocios] = useState(1);
+  const itemsPorPagina = 12; // Puedes cambiarlo a 10 o 15
+
+  // Estado local de filtros
   const [filtros, setFiltros] = useState({
     categoria: categoriaParam,
     orden: ordenParam,
@@ -24,7 +29,7 @@ const ResultadosBusqueda = () => {
     precioMax: precioMaxParam,
   });
 
-  // Sincroniza filtros locales si cambia la URL (ej: botón atrás)
+  // Sincroniza filtros locales si cambia la URL
   useEffect(() => {
     setFiltros({
       categoria: categoriaParam,
@@ -34,9 +39,13 @@ const ResultadosBusqueda = () => {
     });
   }, [categoriaParam, ordenParam, precioMinParam, precioMaxParam]);
 
-  // ============================
+  // Reiniciamos las páginas si cambian los filtros o la pestaña
+  useEffect(() => {
+    setPaginaProductos(1);
+    setPaginaNegocios(1);
+  }, [tabActiva, categoriaParam, ordenParam, precioMinParam, precioMaxParam, query]);
+
   // FETCH
-  // ============================
   useEffect(() => {
     if (!query.trim()) {
       setResultados({ productos: [], negocios: [] });
@@ -66,9 +75,7 @@ const ResultadosBusqueda = () => {
     };
   }, [query]);
 
-  // ============================
   // CATEGORÍAS DISPONIBLES
-  // ============================
   const categoriasDisponibles = useMemo(() => {
     const set = new Set();
     resultados.productos.forEach((p) => {
@@ -79,9 +86,7 @@ const ResultadosBusqueda = () => {
     return Array.from(set).sort();
   }, [resultados.productos]);
 
-  // ============================
   // PRODUCTOS FILTRADOS Y ORDENADOS
-  // ============================
   const productosFiltrados = useMemo(() => {
     let lista = [...resultados.productos];
 
@@ -104,14 +109,10 @@ const ResultadosBusqueda = () => {
         lista.sort((a, b) => Number(b.precio) - Number(a.precio));
         break;
       case "nombre-asc":
-        lista.sort((a, b) =>
-          a.nombre_producto.localeCompare(b.nombre_producto)
-        );
+        lista.sort((a, b) => a.nombre_producto.localeCompare(b.nombre_producto));
         break;
       case "nombre-desc":
-        lista.sort((a, b) =>
-          b.nombre_producto.localeCompare(a.nombre_producto)
-        );
+        lista.sort((a, b) => b.nombre_producto.localeCompare(a.nombre_producto));
         break;
       default:
         break;
@@ -120,9 +121,18 @@ const ResultadosBusqueda = () => {
     return lista;
   }, [resultados.productos, filtros]);
 
-  // ============================
+  // APLICAR PAGINACIÓN
+  const indexUltimoProducto = paginaProductos * itemsPorPagina;
+  const indexPrimerProducto = indexUltimoProducto - itemsPorPagina;
+  const productosPaginados = productosFiltrados.slice(indexPrimerProducto, indexUltimoProducto);
+  const totalPaginasProductos = Math.ceil(productosFiltrados.length / itemsPorPagina);
+
+  const indexUltimoNegocio = paginaNegocios * itemsPorPagina;
+  const indexPrimerNegocio = indexUltimoNegocio - itemsPorPagina;
+  const negociosPaginados = resultados.negocios.slice(indexPrimerNegocio, indexUltimoNegocio);
+  const totalPaginasNegocios = Math.ceil(resultados.negocios.length / itemsPorPagina);
+
   // ACTUALIZAR URL CON FILTROS
-  // ============================
   const aplicarFiltros = (nuevos) => {
     const params = new URLSearchParams(searchParams);
     Object.entries(nuevos).forEach(([key, value]) => {
@@ -139,14 +149,9 @@ const ResultadosBusqueda = () => {
   };
 
   const hayFiltrosActivos =
-    filtros.categoria ||
-    filtros.orden !== "relevancia" ||
-    filtros.precioMin ||
-    filtros.precioMax;
+    filtros.categoria || filtros.orden !== "relevancia" || filtros.precioMin || filtros.precioMax;
 
-  // ============================
   // SIN QUERY
-  // ============================
   if (!query.trim()) {
     return (
       <div className="busqueda-page">
@@ -159,18 +164,13 @@ const ResultadosBusqueda = () => {
     );
   }
 
-  // ============================
-  // LOADING (spinner + skeleton opcional)
-  // ============================
+  // LOADING
   if (loading) {
     return (
       <div className="busqueda-page">
         <div className="busqueda-header">
-          <h1>
-            Resultados para <span className="query-highlight">"{query}"</span>
-          </h1>
+          <h1>Resultados para <span className="query-highlight">"{query}"</span></h1>
         </div>
-
         <div className="busqueda-loading">
           <div className="spinner"></div>
           <p>Buscando...</p>
@@ -179,9 +179,7 @@ const ResultadosBusqueda = () => {
     );
   }
 
-  // ============================
   // ERROR
-  // ============================
   if (error) {
     return (
       <div className="busqueda-page">
@@ -189,82 +187,50 @@ const ResultadosBusqueda = () => {
           <i className="fas fa-exclamation-triangle fa-3x"></i>
           <h3>Ups, algo salió mal</h3>
           <p>{error}</p>
-          <button
-            className="btn-reintentar"
-            onClick={() => window.location.reload()}
-          >
-            Reintentar
-          </button>
+          <button className="btn-reintentar" onClick={() => window.location.reload()}>Reintentar</button>
         </div>
       </div>
     );
   }
 
-  const { negocios } = resultados;
   const totalProductos = productosFiltrados.length;
-  const totalNegocios = negocios.length;
+  const totalNegocios = resultados.negocios.length;
   const totalResultados = totalProductos + totalNegocios;
   const sinResultados = totalResultados === 0;
-  const sinProductosPorFiltro =
-    totalProductos === 0 && resultados.productos.length > 0;
+  const sinProductosPorFiltro = totalProductos === 0 && resultados.productos.length > 0;
 
   return (
     <div className="busqueda-page">
-
-      {/* ======================== */}
       {/* HEADER */}
-      {/* ======================== */}
       <div className="busqueda-header">
-        <h1>
-          Resultados para <span className="query-highlight">"{query}"</span>
-        </h1>
-        <p className="busqueda-counter">
-          {totalResultados} resultado(s) encontrado(s)
-        </p>
+        <h1>Resultados para <span className="query-highlight">"{query}"</span></h1>
+        <p className="busqueda-counter">{totalResultados} resultado(s) encontrado(s)</p>
 
         {/* TABS */}
         {!sinResultados && (
           <div className="busqueda-tabs">
-            <button
-              className={`tab-btn ${tabActiva === "todo" ? "active" : ""}`}
-              onClick={() => setTabActiva("todo")}
-            >
+            <button className={`tab-btn ${tabActiva === "todo" ? "active" : ""}`} onClick={() => setTabActiva("todo")}>
               Todo ({totalResultados})
             </button>
-            <button
-              className={`tab-btn ${tabActiva === "productos" ? "active" : ""}`}
-              onClick={() => setTabActiva("productos")}
-              disabled={resultados.productos.length === 0}
-            >
+            <button className={`tab-btn ${tabActiva === "productos" ? "active" : ""}`} onClick={() => setTabActiva("productos")} disabled={resultados.productos.length === 0}>
               Productos ({totalProductos})
             </button>
-            <button
-              className={`tab-btn ${tabActiva === "negocios" ? "active" : ""}`}
-              onClick={() => setTabActiva("negocios")}
-              disabled={totalNegocios === 0}
-            >
+            <button className={`tab-btn ${tabActiva === "negocios" ? "active" : ""}`} onClick={() => setTabActiva("negocios")} disabled={totalNegocios === 0}>
               Negocios ({totalNegocios})
             </button>
           </div>
         )}
       </div>
 
-      {/* ======================== */}
       {/* LAYOUT CON SIDEBAR DE FILTROS */}
-      {/* ======================== */}
-      {/* 👇 Aquí está el cambio: añadimos la clase condicional si estamos en Negocios */}
       <div className={`layout-busqueda ${tabActiva === "negocios" ? "sin-filtros" : ""}`}>
-
-        {/* SIDEBAR DE FILTROS (solo si hay productos) */}
+        {/* SIDEBAR DE FILTROS */}
         {resultados.productos.length > 0 && tabActiva !== "negocios" && (
           <aside className="sidebar-filtros">
-
             <div className="filtros-header">
               <h3>Filtros</h3>
               {hayFiltrosActivos && (
-                <button className="btn-limpiar" onClick={limpiarFiltros}>
-                  Limpiar
-                </button>
+                <button className="btn-limpiar" onClick={limpiarFiltros}>Limpiar</button>
               )}
             </div>
 
@@ -290,27 +256,9 @@ const ResultadosBusqueda = () => {
             <div className="filtro-grupo">
               <label>Rango de precio</label>
               <div className="filtro-precio">
-                <input
-                  type="number"
-                  placeholder="Mín"
-                  min="0"
-                  value={filtros.precioMin}
-                  onChange={(e) =>
-                    setFiltros({ ...filtros, precioMin: e.target.value })
-                  }
-                  onBlur={() => aplicarFiltros(filtros)}
-                />
+                <input type="number" placeholder="Mín" min="0" value={filtros.precioMin} onChange={(e) => setFiltros({ ...filtros, precioMin: e.target.value })} onBlur={() => aplicarFiltros(filtros)} />
                 <span>—</span>
-                <input
-                  type="number"
-                  placeholder="Máx"
-                  min="0"
-                  value={filtros.precioMax}
-                  onChange={(e) =>
-                    setFiltros({ ...filtros, precioMax: e.target.value })
-                  }
-                  onBlur={() => aplicarFiltros(filtros)}
-                />
+                <input type="number" placeholder="Máx" min="0" value={filtros.precioMax} onChange={(e) => setFiltros({ ...filtros, precioMax: e.target.value })} onBlur={() => aplicarFiltros(filtros)} />
               </div>
             </div>
 
@@ -331,29 +279,17 @@ const ResultadosBusqueda = () => {
                 <option value="nombre-desc">Nombre: Z → A</option>
               </select>
             </div>
-
           </aside>
         )}
 
         {/* CONTENIDO */}
         <div className="contenido-busqueda">
-
           {/* SIN RESULTADOS */}
           {sinResultados && (
             <div className="busqueda-empty">
               <i className="fas fa-box-open fa-3x"></i>
               <h3>Sin resultados</h3>
-              <p>
-                No encontramos nada para "<strong>{query}</strong>".
-              </p>
-              <div className="sugerencias">
-                <p>Prueba con:</p>
-                <ul>
-                  <li>Revisar la ortografía</li>
-                  <li>Usar palabras más generales</li>
-                  <li>Buscar por categoría desde el menú</li>
-                </ul>
-              </div>
+              <p>No encontramos nada para "<strong>{query}</strong>".</p>
             </div>
           )}
 
@@ -362,13 +298,8 @@ const ResultadosBusqueda = () => {
             <div className="busqueda-empty">
               <i className="fas fa-filter fa-3x"></i>
               <h3>Ningún producto coincide con los filtros</h3>
-              <p>
-                Sí encontramos {resultados.productos.length} producto(s),
-                pero ninguno pasa los filtros aplicados.
-              </p>
-              <button className="btn-reintentar" onClick={limpiarFiltros}>
-                Limpiar filtros
-              </button>
+              <p>Sí encontramos {resultados.productos.length} producto(s), pero ninguno pasa los filtros aplicados.</p>
+              <button className="btn-reintentar" onClick={limpiarFiltros}>Limpiar filtros</button>
             </div>
           )}
 
@@ -381,33 +312,23 @@ const ResultadosBusqueda = () => {
               </div>
 
               <div className="grid-productos-pro">
-                {productosFiltrados.map((p) => (
-                  <Link
-                    key={p.id_producto}
-                    to={`/producto/${p.id_producto}`}
-                    className="producto-card-pro"
-                  >
+                {productosPaginados.map((p) => (
+                  <Link key={p.id_producto} to={`/producto/${p.id_producto}`} className="producto-card-pro">
                     <div className="producto-img-wrapper">
                       {p.imagen ? (
                         <img src={p.imagen} alt={p.nombre_producto} />
                       ) : (
-                        <div className="producto-img-placeholder">
-                          <i className="fas fa-image"></i>
-                        </div>
+                        <div className="producto-img-placeholder"><i className="fas fa-image"></i></div>
                       )}
                     </div>
                     <div className="producto-info">
                       {p.categoria?.nombre_categoria && (
-                        <span className="categoria-tag">
-                          {p.categoria.nombre_categoria}
-                        </span>
+                        <span className="categoria-tag">{p.categoria.nombre_categoria}</span>
                       )}
                       <h3>{p.nombre_producto}</h3>
                       {p.descripcion && (
                         <p className="producto-desc">
-                          {p.descripcion.length > 70
-                            ? p.descripcion.slice(0, 70) + "..."
-                            : p.descripcion}
+                          {p.descripcion.length > 70 ? p.descripcion.slice(0, 70) + "..." : p.descripcion}
                         </p>
                       )}
                       <p className="producto-precio">${p.precio}</p>
@@ -415,6 +336,27 @@ const ResultadosBusqueda = () => {
                   </Link>
                 ))}
               </div>
+
+              {/* PAGINACIÓN PRODUCTOS */}
+              {totalPaginasProductos > 1 && (
+                <div className="paginacion-container">
+                  <button 
+                    className="pag-btn" 
+                    disabled={paginaProductos === 1} 
+                    onClick={() => setPaginaProductos(paginaProductos - 1)}
+                  >
+                    Anterior
+                  </button>
+                  <span className="pag-info">Página {paginaProductos} de {totalPaginasProductos}</span>
+                  <button 
+                    className="pag-btn" 
+                    disabled={paginaProductos === totalPaginasProductos} 
+                    onClick={() => setPaginaProductos(paginaProductos + 1)}
+                  >
+                    Siguiente
+                  </button>
+                </div>
+              )}
             </section>
           )}
 
@@ -427,34 +369,44 @@ const ResultadosBusqueda = () => {
               </div>
 
               <div className="grid-negocios-pro">
-                {negocios.map((n) => (
-                  <Link
-                    key={n.id_negocio}
-                    to={`/negocios/${n.id_negocio}`}
-                    className="negocio-card-pro"
-                  >
+                {negociosPaginados.map((n) => (
+                  <Link key={n.id_negocio} to={`/negocios/${n.id_negocio}`} className="negocio-card-pro">
                     <div className="negocio-logo-container">
                       {n.logo ? (
                         <img src={n.logo} alt={n.nombre_negocio} />
                       ) : (
-                        <div className="negocio-logo-placeholder">
-                          <i className="fas fa-store"></i>
-                        </div>
+                        <div className="negocio-logo-placeholder"><i className="fas fa-store"></i></div>
                       )}
                     </div>
-
                     <div className="negocio-info">
                       <h3>{n.nombre_negocio}</h3>
-                      {n.descripcion_negocio && (
-                        <p>{n.descripcion_negocio}</p>
-                      )}
-                      <span className="visitar-link">
-                        Visitar <i className="fas fa-arrow-right"></i>
-                      </span>
+                      {n.descripcion_negocio && <p>{n.descripcion_negocio}</p>}
+                      <span className="visitar-link">Visitar <i className="fas fa-arrow-right"></i></span>
                     </div>
                   </Link>
                 ))}
               </div>
+
+              {/* PAGINACIÓN NEGOCIOS */}
+              {totalPaginasNegocios > 1 && (
+                <div className="paginacion-container">
+                  <button 
+                    className="pag-btn" 
+                    disabled={paginaNegocios === 1} 
+                    onClick={() => setPaginaNegocios(paginaNegocios - 1)}
+                  >
+                    Anterior
+                  </button>
+                  <span className="pag-info">Página {paginaNegocios} de {totalPaginasNegocios}</span>
+                  <button 
+                    className="pag-btn" 
+                    disabled={paginaNegocios === totalPaginasNegocios} 
+                    onClick={() => setPaginaNegocios(paginaNegocios + 1)}
+                  >
+                    Siguiente
+                  </button>
+                </div>
+              )}
             </section>
           )}
 

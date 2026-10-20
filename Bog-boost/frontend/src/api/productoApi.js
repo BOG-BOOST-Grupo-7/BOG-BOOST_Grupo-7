@@ -96,13 +96,26 @@ export const obtenerProductosPorNegocio = async (idNegocio) => {
 ========================== */
 export const buscarProductosYNegociosApi = async (query) => {
   try {
-    // Al usar axiosClient, solo necesitas poner la ruta relativa
+    
     const { data } = await axiosClient.get("/producto/buscar", {
       params: { q: query },
     });
-    return data; // Retorna { productos: [...], negocios: [...] }
+    return data;
   } catch (error) {
     console.error("Error al buscar:", error);
     throw error;
+  }
+};
+
+/* ==========================
+   OBTENER PRODUCTOS MÁS VENDIDOS
+========================== */
+export const obtenerProductosMasVendidos = async () => {
+  try {
+    const { data } = await axiosClient.get("/producto/mas-vendidos");
+    return data; 
+  } catch (error) {
+    console.error("Error al obtener más vendidos:", error);
+    return [];
   }
 };

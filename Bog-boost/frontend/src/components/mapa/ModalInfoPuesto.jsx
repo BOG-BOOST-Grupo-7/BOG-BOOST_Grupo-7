@@ -16,21 +16,21 @@ const ModalInfoPuesto = ({ puesto, negocio, alCerrar }) => {
   };
 
   return (
-    <div className="modal-fondo" onClick={alCerrar}>
-      <div className="modal-contenido" onClick={(e) => e.stopPropagation()}>
-        <button className="boton-cerrar" onClick={alCerrar}>×</button>
+    <div className="mip-fondo" onClick={alCerrar}>
+      <div className="mip-contenido" onClick={(e) => e.stopPropagation()}>
+        <button className="mip-boton-cerrar" onClick={alCerrar}>×</button>
 
         <h2>Puesto N° {puesto.numero}</h2>
 
         {estaOcupado ? (
           <div 
-            className="info-negocio clicable" 
+            className="mip-info-negocio mip-clicable" 
             onClick={irAlDetalleNegocio}
             title="Haz clic para ver el perfil del negocio"
           >
             {/* Logo del negocio si lo tiene registrado */}
             {negocio.logo && (
-              <div className="modal-logo-container">
+              <div className="mip-logo-container">
                 <img 
                   src={negocio.logo} 
                   alt={negocio.nombre_negocio} 
@@ -38,28 +38,28 @@ const ModalInfoPuesto = ({ puesto, negocio, alCerrar }) => {
               </div>
             )}
 
-            <div className="insignia ocupado">Ocupado</div>
+            <div className="mip-insignia mip-ocupado">Ocupado</div>
             
-            <div className="campo-info">
-              <span className="etiqueta">Nombre del negocio:</span>
-              <span className="valor">{negocio.nombre_negocio || 'Sin nombre'}</span>
+            <div className="mip-campo-info">
+              <span className="mip-etiqueta">Nombre del negocio:</span>
+              <span className="mip-valor">{negocio.nombre_negocio || 'Sin nombre'}</span>
             </div>
             
-            <div className="campo-info">
-              <span className="etiqueta">Descripción:</span>
-              <span className="valor">{negocio.descripcion_negocio || 'Sin descripción'}</span>
+            <div className="mip-campo-info">
+              <span className="mip-etiqueta">Descripción:</span>
+              <span className="mip-valor">{negocio.descripcion_negocio || 'Sin descripción'}</span>
             </div>
 
-            <div className="campo-info">
-              <span className="etiqueta">Teléfono de contacto:</span>
-              <span className="valor">{negocio.telefono_negocio || 'No especificado'}</span>
+            <div className="mip-campo-info">
+              <span className="mip-etiqueta">Teléfono de contacto:</span>
+              <span className="mip-valor">{negocio.telefono_negocio || 'No especificado'}</span>
             </div>
 
-            <span className="texto-ver-perfil">Ver perfil completo ➜</span>
+            <span className="mip-texto-ver-perfil">Ver perfil completo ➜</span>
           </div>
         ) : (
-          <div className="info-disponible">
-            <div className="insignia disponible">Disponible</div>
+          <div className="mip-info-disponible">
+            <div className="mip-insignia mip-disponible">Disponible</div>
             <p>
               Este puesto se encuentra libre. Se mostrará ocupado cuando el
               administrador apruebe un negocio registrado para este número.

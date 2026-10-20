@@ -23,9 +23,6 @@ export const listarNegocios = async (req, res) => {
       return res.status(400).json(error);
     }
 
-    // ==========================
-    // Obtener productos desde catalogo.producto
-    // ==========================
     const negocioIds = negocios.map((n) => n.id_negocio);
     let productos = [];
 
@@ -363,10 +360,10 @@ export const crearNegocio = async (req, res) => {
         }
       }
     } catch (errorNotif) {
-      // Capturamos cualquier error de notificación para que no afecte la respuesta principal
+      
       console.error("Error al enviar notificaciones a los administradores:", errorNotif);
     }
-    // -----------------------------------------------------
+    
 
     res.status(201).json({
       mensaje: "Negocio creado correctamente",
@@ -441,7 +438,7 @@ export const actualizarNegocio = async (req, res) => {
       return res.status(400).json(error);
     }
 
-    // Actualizar puesto
+    
     if (numero_puesto) {
       if (
         negocioActual.estado_negocio === "APROBADO"
@@ -661,7 +658,7 @@ export const obtenerNegociosPublicos = async (req, res) => {
         descripcion_negocio,
         logo
       `)
-      .eq("estado_negocio", "APROBADO"); // 👈 CORRECTO
+      .eq("estado_negocio", "APROBADO");
 
     if (error) {
       return res.status(400).json({

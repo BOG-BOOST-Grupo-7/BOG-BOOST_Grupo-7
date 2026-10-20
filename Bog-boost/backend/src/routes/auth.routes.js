@@ -1,19 +1,14 @@
 import { Router } from "express";
 
 import authMiddleware from "../middlewares/auth.js";
-import adminMiddleware from "../middlewares/admin.js";
 
 import {
   register,
   login,
   logout,
   me,
-  listarUsuarios,
-  obtenerUsuarioPorId,
   recuperarPassword,
-  cambiarPassword,
-  solicitarReactivacion,
-  reactivarCuenta
+  cambiarPassword
 }
   from "../controllers/auth.controller.js";
 
@@ -23,11 +18,7 @@ router.post("/register", register);
 router.post("/login", login);
 router.post("/logout", authMiddleware, logout);
 router.get("/me", authMiddleware, me);
-router.get("/usuarios", authMiddleware, adminMiddleware, listarUsuarios);
-router.get("/usuarios/:id", authMiddleware, adminMiddleware, obtenerUsuarioPorId);
 router.post("/recuperar-password", recuperarPassword);
 router.put("/cambiar-password", cambiarPassword);
-router.post("/solicitar-reactivacion", solicitarReactivacion);
-router.put("/reactivar-cuenta", reactivarCuenta);
 
 export default router;

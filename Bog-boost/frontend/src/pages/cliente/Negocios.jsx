@@ -8,6 +8,10 @@ function Negocios() {
     const [negocios, setNegocios] = useState([]);
     const navigate = useNavigate();
 
+    // Estados para la paginación
+    const [paginaActual, setPaginaActual] = useState(1);
+    const negociosPorPagina = 12; 
+
     useEffect(() => {
         cargarNegocios();
     }, []);
@@ -22,31 +26,62 @@ function Negocios() {
         }
     };
 
+    // Lógica de paginación
+    const indexUltimoNegocio = paginaActual * negociosPorPagina;
+    const indexPrimerNegocio = indexUltimoNegocio - negociosPorPagina;
+    const negociosPaginados = negocios.slice(indexPrimerNegocio, indexUltimoNegocio);
+    const totalPaginas = Math.ceil(negocios.length / negociosPorPagina);
+
     return (
         <div className="negocios-container">
             <h2>Negocios disponibles</h2>
 
             <div className="negocios-grid">
-                {negocios.map((negocio) => (
+                {negociosPaginados.map((negocio) => (
                     <div
                         key={negocio.id_negocio}
                         className="negocio-card"
-                        onClick={() =>
-                            navigate(`/negocios/${negocio.id_negocio}`)
-                        }
+                        onClick={() => navigate(`/negocios/${negocio.id_negocio}`)}
                     >
                         <img
-                            src={negocio.logo}
+                            src={negocio.logo || "https://via.placeholder.com/120?text=Sin+Logo"}
                             alt={negocio.nombre_negocio}
                             className="negocio-logo"
                         />
-
                         <h3>{negocio.nombre_negocio}</h3>
-
-                        <p>{negocio.descripcion_negocio}</p>
+                        <p>
+                            {negocio.descripcion_negocio && negocio.descripcion_negocio.length > 80
+                                ? `${negocio.descripcion_negocio.substring(0, 80)}...`
+                                : negocio.descripcion_negocio}
+                        </p>
                     </div>
                 ))}
             </div>
+
+            {/* Controles de Paginación */}
+            {totalPaginas > 1 && (
+                <div className="paginacion-container">
+                    <button
+                        className="pag-btn"
+                        disabled={paginaActual === 1}
+                        onClick={() => setPaginaActual(paginaActual - 1)}
+                    >
+                        Anterior
+                    </button>
+
+                    <span className="pag-info">
+                        Página {paginaActual} de {totalPaginas}
+                    </span>
+
+                    <button
+                        className="pag-btn"
+                        disabled={paginaActual === totalPaginas}
+                        onClick={() => setPaginaActual(paginaActual + 1)}
+                    >
+                        Siguiente
+                    </button>
+                </div>
+            )}
         </div>
     );
 }

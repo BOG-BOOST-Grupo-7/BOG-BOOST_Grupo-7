@@ -10,7 +10,7 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // 1. Recuperar inmediatamente del localStorage para que la foto aparezca rápido
+    
     const userStorage = localStorage.getItem("user");
     const perfilStorage = localStorage.getItem("perfil");
     const rolStorage = localStorage.getItem("rol");
@@ -21,7 +21,7 @@ export function AuthProvider({ children }) {
       setRol(rolStorage);
     }
 
-    // 2. Validar con el backend
+    
     const restaurarSesion = async () => {
       try {
         const res = await me();
@@ -29,7 +29,7 @@ export function AuthProvider({ children }) {
         setPerfil(res.data.perfil);
         setRol(res.data.perfil?.rol?.nombre_rol);
 
-        // Actualizamos el localStorage con lo que diga el backend
+        
         localStorage.setItem("user", JSON.stringify(res.data.user));
         localStorage.setItem("perfil", JSON.stringify(res.data.perfil));
         localStorage.setItem("rol", res.data.perfil?.rol?.nombre_rol);
@@ -51,6 +51,8 @@ export function AuthProvider({ children }) {
 
   const login = (userData, perfilData) => {
     const rolNombre = perfilData?.rol?.nombre_rol ?? null;
+    
+   
     setUser(userData);
     setPerfil(perfilData);
     setRol(rolNombre);
@@ -58,6 +60,25 @@ export function AuthProvider({ children }) {
     localStorage.setItem("user", JSON.stringify(userData));
     localStorage.setItem("perfil", JSON.stringify(perfilData));
     localStorage.setItem("rol", rolNombre);
+
+    
+    setTimeout(async () => {
+      try {
+        const res = await me();
+        if (res.data.perfil) {
+          setPerfil(res.data.perfil);
+          localStorage.setItem("perfil", JSON.stringify(res.data.perfil));
+          
+          
+          if (res.data.perfil?.rol?.nombre_rol) {
+            setRol(res.data.perfil.rol.nombre_rol);
+            localStorage.setItem("rol", res.data.perfil.rol.nombre_rol);
+          }
+        }
+      } catch (error) {
+        console.error("Error actualizando el perfil tras el login:", error);
+      }
+    }, 500); 
   };
 
   const logout = () => {

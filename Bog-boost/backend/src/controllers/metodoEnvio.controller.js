@@ -1,50 +1,5 @@
 import supabase from "../services/supabase.js";
 
-export const listarMetodosEnvio = async (req, res) => {
-    try {
-      const { data, error } =
-        await supabase
-          .schema("negocio")
-          .from("metodo_envio")
-          .select("*");
-
-      if (error) {
-        return res.status(400).json(error);
-      }
-
-      res.json(data);
-
-    } catch (error) {
-      res.status(500).json(error);
-    }
-};
-
-export const obtenerMetodoEnvioPorId = async (req, res) => {
-    try {
-      const { id } = req.params;
-
-      const { data, error } = await supabase
-          .schema("negocio")
-          .from("metodo_envio")
-          .select("*")
-          .eq(
-            "id_metodo_envio",
-            id
-          )
-          .single();
-
-      if (error) {
-        return res.status(404).json(error);
-      }
-
-      res.json(data);
-
-    } catch (error) {
-      res.status(500).json(error);
-    }
-};
-
-
 export const obtenerMisMetodosEnvio = async (req, res) => {
 
   try {
@@ -256,11 +211,10 @@ export const obtenerMetodosEnvioPorNegocio = async (req, res) => {
   try {
     const { id } = req.params;
 
-    // --- AGREGA ESTO ---
     if (!id || id === 'undefined' || id === 'null') {
       return res.status(400).json({ error: "ID de negocio inválido" });
     }
-    // ------------------
+    
 
     const { data, error } = await supabase
       .schema("negocio")

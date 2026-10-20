@@ -13,6 +13,9 @@ function NegocioDetalle() {
     const [productos, setProductos] = useState([]);
     const [loading, setLoading] = useState(true);
 
+    const [paginaActual, setPaginaActual] = useState(1);
+    const productosPorPagina = 12; 
+
     useEffect(() => {
         cargarDatosNegocio();
     }, [id]);
@@ -35,12 +38,18 @@ function NegocioDetalle() {
         }
     };
 
+    // Lógica de paginación
+    const indexUltimoProducto = paginaActual * productosPorPagina;
+    const indexPrimerProducto = indexUltimoProducto - productosPorPagina;
+    const productosPaginados = productos.slice(indexPrimerProducto, indexUltimoProducto);
+    const totalPaginas = Math.ceil(productos.length / productosPorPagina);
+
     if (loading) return <p style={{ textAlign: "center", padding: "40px" }}>Cargando...</p>;
     if (!negocio) return <p style={{ textAlign: "center", padding: "40px" }}>No se encontró el negocio.</p>;
 
     return (
         <div className="perfil-negocio" style={{ padding: "30px 20px" }}>
-            {/* Contenedor principal con logo e información lado a lado */}
+            {/* Contenedor principal con logo e información */}
             <div className="profile-grid-single">
                 <div className="profile-card logo-card">
                     {
@@ -62,7 +71,6 @@ function NegocioDetalle() {
                         {negocio.nombre_negocio}
                     </h2>
                 
-
                     <p>
                         <strong>Descripción</strong>
                     </p>
@@ -81,7 +89,7 @@ function NegocioDetalle() {
                     </p>
 
                     <p>
-                    <Link to="/mapa-mercado" className="boton-mapa">
+                        <Link to="/mapa-mercado" className="boton-mapa">
                             Ver Mapa del Mercado
                         </Link>
                     </p>
@@ -93,11 +101,38 @@ function NegocioDetalle() {
                 {productos.length === 0 ? (
                     <p style={{ color: "#777", fontStyle: "italic", padding: "20px" }}>Este negocio aún no tiene productos disponibles.</p>
                 ) : (
-                    <div className="productos-grid">
-                        {productos.map((p) => (
-                            <ProductCard key={p.id_producto} producto={p} />
-                        ))}
-                    </div>
+                    <>
+                        <div className="productos-grid">
+                            {productosPaginados.map((p) => (
+                                <ProductCard key={p.id_producto} producto={p} />
+                            ))}
+                        </div>
+
+                        {/* Controles de Paginación */}
+                        {totalPaginas > 1 && (
+                            <div className="paginacion-container">
+                                <button
+                                    className="pag-btn"
+                                    disabled={paginaActual === 1}
+                                    onClick={() => setPaginaActual(paginaActual - 1)}
+                                >
+                                    Anterior
+                                </button>
+
+                                <span className="pag-info">
+                                    Página {paginaActual} de {totalPaginas}
+                                </span>
+
+                                <button
+                                    className="pag-btn"
+                                    disabled={paginaActual === totalPaginas}
+                                    onClick={() => setPaginaActual(paginaActual + 1)}
+                                >
+                                    Siguiente
+                                </button>
+                            </div>
+                        )}
+                    </>
                 )}
             </div>
         </div>

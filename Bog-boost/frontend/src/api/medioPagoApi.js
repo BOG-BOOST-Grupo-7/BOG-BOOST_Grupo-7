@@ -9,32 +9,11 @@ export const obtenerMediosPagoPorNegocio = async (idNegocio) => {
     return data;
 
 }
-// Obtener todos los medios de pago
-export const obtenerMediosPago = async () => {
-
-    const { data } = await axiosClient.get(
-        "/medios-pago"
-    );
-
-    return data;
-
-};
 
 export const obtenerMisMediosPago = async () => {
 
     const { data } = await axiosClient.get(
         "/medios-pago/mi-negocio"
-    );
-
-    return data;
-
-};
-
-// Obtener un medio de pago
-export const obtenerMedioPago = async (id) => {
-
-    const { data } = await axiosClient.get(
-        `/medios-pago/${id}`
     );
 
     return data;

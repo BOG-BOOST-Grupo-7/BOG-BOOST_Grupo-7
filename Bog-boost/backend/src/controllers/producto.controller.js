@@ -482,3 +482,42 @@ export const buscarProductosYNegocios = async (req, res) => {
     return res.status(500).json({ message: "Error interno del servidor al buscar." });
   }
 };
+
+// =====================================================
+// OBTENER PRODUCTOS MÁS VENDIDOS (Para filtro de inicio)
+// =====================================================
+export const obtenerMasVendidos = async (req, res) => {
+  try {
+    // 1. Traemos todos los detalles de ventas
+    const { data: detalles, error } = await supabase
+      .schema("ventas")
+      .from("detalle_venta")
+      .select("id_producto, cantidad");
+
+    if (error) {
+      return res.status(400).json(error);
+    }
+
+    // 2. Agrupamos y sumamos las cantidades por producto
+    const conteoProductos = {};
+    detalles.forEach((detalle) => {
+      const id = detalle.id_producto;
+      if (!conteoProductos[id]) {
+        conteoProductos[id] = 0;
+      }
+      conteoProductos[id] += Number(detalle.cantidad);
+    });
+
+    // 3. Ordenamos de mayor a menor y tomamos los 10 primeros IDs
+    const topMasVendidos = Object.keys(conteoProductos)
+      .map((id) => ({ id_producto: Number(id), total_vendidos: conteoProductos[id] }))
+      .sort((a, b) => b.total_vendidos - a.total_vendidos)
+      .slice(0, 24)
+      .map((item) => item.id_producto);
+
+    return res.json(topMasVendidos);
+  } catch (error) {
+    console.error("Error al obtener más vendidos:", error);
+    return res.status(500).json({ mensaje: "Error interno del servidor" });
+  }
+};

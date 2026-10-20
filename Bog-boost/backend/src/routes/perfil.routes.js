@@ -8,9 +8,7 @@ import {
   obtenerPerfilPorId,
   obtenerMiPerfil,
   completarPerfil,
-  desactivarCuenta,
-  asignarAdministrador,
-  quitarAdministrador
+  desactivarCuenta
 } from "../controllers/perfil.controller.js";
 
 const router = Router();
@@ -20,7 +18,5 @@ router.get("/", authMiddleware, adminMiddleware, listarPerfiles);
 router.get("/:id", authMiddleware, adminMiddleware, obtenerPerfilPorId);
 router.put("/completar", authMiddleware, completarPerfil);
 router.put("/desactivar-cuenta", authMiddleware, desactivarCuenta);
-router.put("/asignar-administrador", authMiddleware, asignarAdministrador);
-router.put("/quitar-administrador", authMiddleware, quitarAdministrador);
 
 export default router;

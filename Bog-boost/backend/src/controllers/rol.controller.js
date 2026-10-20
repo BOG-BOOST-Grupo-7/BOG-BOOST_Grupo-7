@@ -18,28 +18,6 @@ export const listarRoles = async (req, res) => {
     }
 };
 
-export const obtenerRolPorId = async (req, res) => {
-    try {
-      const { id } = req.params;
-
-      const { data, error } = await supabase
-          .schema("cliente")
-          .from("rol")
-          .select("*")
-          .eq("id_rol", id)
-          .single();
-
-      if (error) {
-        return res.status(404).json(error);
-      }
-
-      res.json(data);
-
-    } catch (error) {
-      res.status(500).json(error);
-    }
-};
-
 export const crearRol = async (req, res) => {
     try {
       const {

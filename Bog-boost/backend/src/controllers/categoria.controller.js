@@ -20,31 +20,6 @@ export const listarCategorias = async (req, res) => {
     }
 };
 
-export const obtenerCategoriaPorId = async (req, res) => {
-    try {
-      const { id } = req.params;
-
-      const { data, error } = await supabase
-          .schema("catalogo")
-          .from("categoria")
-          .select("*")
-          .eq(
-            "id_categoria",
-            id
-          )
-          .single();
-
-      if (error) {
-        return res.status(404).json(error);
-      }
-
-      res.json(data);
-
-    } catch (error) {
-      res.status(500).json(error);
-    }
-};
-
 export const crearCategoria = async (req, res) => {
     try {
       const {
@@ -138,7 +113,7 @@ export const obtenerProductosPorCategoria = async (req, res) => {
     try {
         const { id } = req.params;
 
-        // 1. Opcional: Verificar primero si la categoría existe
+        // 1. Verificar primero si la categoría existe
         const { data: categoria, error: errorCat } = await supabase
             .schema("catalogo")
             .from("categoria")

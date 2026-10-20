@@ -25,7 +25,7 @@ export default function ReportesAdmin() {
   // Pestañas
   const [pestanaActiva, setPestanaActiva] = useState("mensual");
 
-  // 👇 Estados para los filtros
+  // Estados para los filtros
   const [filtroAnio, setFiltroAnio] = useState("todos");
   const [filtroMesSemanal, setFiltroMesSemanal] = useState("todos");
 

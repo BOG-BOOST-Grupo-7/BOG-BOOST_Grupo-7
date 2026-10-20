@@ -18,7 +18,7 @@ function ProductCard({ producto }) {
             return;
         }
 
-        // 🟢 logueado → agregar al carrito global
+        
         agregarProducto({
             id_producto: producto.id_producto,
             id_negocio: producto.id_negocio,
