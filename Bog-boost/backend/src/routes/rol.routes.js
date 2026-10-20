@@ -5,7 +5,6 @@ import superAdminMiddleware from "../middlewares/superAdmin.js";
 
 import {
   listarRoles,
-  obtenerRolPorId,
   crearRol,
   actualizarRol,
   eliminarRol,

@@ -75,7 +75,7 @@ function Home() {
         <div className="aviso-icono"><FaTruck /></div>
         <div className="aviso-texto">
           <h4>Cobertura de Entregas y Envíos</h4>
-          <p>Actualmente realizamos despachos locales únicamente en <strong>Bogotá y alrededores</strong>.</p>
+          <p>Actualmente realizamos despachos locales <strong> únicamente en Bogotá</strong>.</p>
         </div>
       </div>
 
