@@ -1,16 +1,10 @@
 import { useEffect, useState } from "react";
-import {
-    FaPlus,
-    FaEdit,
-    FaTrash,
-    FaTimes
-} from "react-icons/fa";
+import { FaTimes } from "react-icons/fa";
 
 import {
     obtenerCategorias,
     crearCategoria,
-    actualizarCategoria,
-    eliminarCategoria
+    actualizarCategoria
 } from "../../api/categoriaApi";
 
 import "../../styles/PerfilNegocio.css";
@@ -24,7 +18,8 @@ export default function ModalCategorias({
     const [editando, setEditando] = useState(null);
     const [formulario, setFormulario] = useState({
         nombre_categoria: "",
-        id_categoria_padre: ""
+        id_categoria_padre: "",
+        estado: "ACTIVO" // 👈 Nuevo campo
     });
     const [errorValidacion, setErrorValidacion] = useState("");
 
@@ -35,7 +30,8 @@ export default function ModalCategorias({
                 setEditando(categoriaAEditar.id_categoria);
                 setFormulario({
                     nombre_categoria: categoriaAEditar.nombre_categoria || "",
-                    id_categoria_padre: categoriaAEditar.id_categoria_padre || ""
+                    id_categoria_padre: categoriaAEditar.id_categoria_padre || "",
+                    estado: categoriaAEditar.estado || "ACTIVO" // 👈 Cargar estado
                 });
             } else {
                 limpiarFormulario();
@@ -105,7 +101,8 @@ export default function ModalCategorias({
     const limpiarFormulario = () => {
         setFormulario({
             nombre_categoria: "",
-            id_categoria_padre: ""
+            id_categoria_padre: "",
+            estado: "ACTIVO"
         });
         setEditando(null);
         setErrorValidacion("");
@@ -145,7 +142,7 @@ export default function ModalCategorias({
                                 });
                                 if (errorValidacion) setErrorValidacion("");
                             }}
-                            placeholder="Ej. Ropa,  Mascotas..."
+                            placeholder="Ej. Ropa, Mascotas..."
                         />
                     </div>
 
@@ -173,6 +170,25 @@ export default function ModalCategorias({
                                 })}
                         </select>
                     </div>
+
+                    {/* 👇 Nuevo campo para activar/desactivar */}
+                    {editando && (
+                        <div className="form-group">
+                            <label>Estado</label>
+                            <select
+                                value={formulario.estado}
+                                onChange={(e) =>
+                                    setFormulario({
+                                        ...formulario,
+                                        estado: e.target.value
+                                    })
+                                }
+                            >
+                                <option value="ACTIVO">Activo (visible en el catálogo)</option>
+                                <option value="INACTIVO">Inactivo (oculto en el catálogo)</option>
+                            </select>
+                        </div>
+                    )}
                 </div>
 
                 <div className="modal-footer">

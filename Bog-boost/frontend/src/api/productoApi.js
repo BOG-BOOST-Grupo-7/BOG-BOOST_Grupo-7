@@ -1,9 +1,5 @@
 import { axiosClient } from "./axiosClient";
 
-/* ==========================
-   LISTAR TODOS
-========================== */
-
 export const obtenerProductos = async () => {
 
     const { data } = await axiosClient.get("/producto");
@@ -11,10 +7,6 @@ export const obtenerProductos = async () => {
     return data;
 
 };
-
-/* ==========================
-   LISTAR MIS PRODUCTOS
-========================== */
 
 export const obtenerMisProductos = async () => {
 
@@ -24,10 +16,6 @@ export const obtenerMisProductos = async () => {
 
 };
 
-/* ==========================
-   OBTENER POR ID
-========================== */
-
 export const obtenerProducto = async (id) => {
 
     const { data } = await axiosClient.get(`/producto/${id}`);
@@ -35,10 +23,6 @@ export const obtenerProducto = async (id) => {
     return data;
 
 };
-
-/* ==========================
-   CREAR
-========================== */
 
 export const crearProducto = async (producto) => {
 
@@ -50,10 +34,6 @@ export const crearProducto = async (producto) => {
     return data;
 
 };
-
-/* ==========================
-   ACTUALIZAR
-========================== */
 
 export const actualizarProducto = async (
     id,
@@ -69,10 +49,6 @@ export const actualizarProducto = async (
 
 };
 
-/* ==========================
-   ELIMINAR
-========================== */
-
 export const eliminarProducto = async (id) => {
 
     const { data } = await axiosClient.delete(
@@ -83,17 +59,11 @@ export const eliminarProducto = async (id) => {
 
 };
 
-/* ==========================
-   OBTENER PRODUCTOS POR NEGOCIO
-========================== */
 export const obtenerProductosPorNegocio = async (idNegocio) => {
     const { data } = await axiosClient.get(`/producto/negocio/${idNegocio}`);
     return data;
 };
 
-/* ==========================
-   BUSCADOR GLOBAL (Productos + Negocios)
-========================== */
 export const buscarProductosYNegociosApi = async (query) => {
   try {
     
@@ -107,9 +77,6 @@ export const buscarProductosYNegociosApi = async (query) => {
   }
 };
 
-/* ==========================
-   OBTENER PRODUCTOS MÁS VENDIDOS
-========================== */
 export const obtenerProductosMasVendidos = async () => {
   try {
     const { data } = await axiosClient.get("/producto/mas-vendidos");

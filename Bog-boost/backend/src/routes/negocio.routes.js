@@ -9,10 +9,10 @@ import {
   obtenerNegocioPorId,
   obtenerMiNegocio,
   crearNegocio,
+  desactivarNegocio,
   aprobarNegocio,
   rechazarNegocio,
   actualizarNegocio,
-  eliminarNegocio,
   obtenerNegociosPublicos
 }
 from "../controllers/negocio.controller.js";
@@ -27,6 +27,6 @@ router.post("/solicitud", authMiddleware, crearNegocio);
 router.put("/aprobar", authMiddleware, adminMiddleware, aprobarNegocio);
 router.put("/rechazar",authMiddleware,adminMiddleware, rechazarNegocio);
 router.put("/actualizar/:id", authMiddleware, vendedorMiddleware, actualizarNegocio);
-router.delete("/eliminar/:id", authMiddleware, vendedorMiddleware, eliminarNegocio);
+router.put("/:id/desactivar", authMiddleware, vendedorMiddleware, desactivarNegocio);
 
 export default router;

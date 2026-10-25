@@ -89,14 +89,14 @@ export const actualizarNegocio = async (id, datos) => {
   return data;
 };
 
-// Eliminar negocio
-export const eliminarNegocio = async (id) => {
-  const { data } = await axiosClient.delete(
-    `/negocio/eliminar/${id}`
+export const desactivarNegocio = async (id) => {
+  const { data } = await axiosClient.put(
+    `/negocio/${id}/desactivar`
   );
 
   return data;
 };
+
 // ===============================
 // PÚBLICO
 // ===============================

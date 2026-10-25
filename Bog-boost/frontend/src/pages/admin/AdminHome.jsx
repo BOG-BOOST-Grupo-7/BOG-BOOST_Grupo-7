@@ -5,7 +5,7 @@ function AdminHome() {
     const opciones = [
         {
             titulo: "Negocios",
-            descripcion: "Gestiona los negocios registrados y su estado actual.",
+            descripcion: "Gestiona los negocios registrados y las categorías para los productos.",
             icono: "fas fa-store",
             color: "#F5B952",
             ruta: "/admin/negocios"

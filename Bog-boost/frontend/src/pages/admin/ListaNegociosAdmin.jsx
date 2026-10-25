@@ -27,16 +27,13 @@ function ListaNegociosAdmin() {
     const [mostrarModalCategorias, setMostrarModalCategorias] = useState(false);
     const [categoriaAEditar, setCategoriaAEditar] = useState(null);
 
-    // Nuevo estado para alternar entre la vista de "negocios" y la vista de tabla de "categorias"
-    const [vistaActual, setVistaActual] = useState("negocios"); // "negocios" | "categorias"
+    const [vistaActual, setVistaActual] = useState("negocios");
     const [busquedaCategorias, setBusquedaCategorias] = useState("");
     const [categoriaPadreFiltro, setCategoriaPadreFiltro] = useState("todos");
 
-    // Paginación de Negocios
     const [paginaActual, setPaginaActual] = useState(1);
     const elementosPorPagina = 5;
 
-    // Paginación de Categorías
     const [paginaActualCategorias, setPaginaActualCategorias] = useState(1);
     const elementosPorPaginaCategorias = 5;
 
@@ -86,7 +83,6 @@ function ListaNegociosAdmin() {
             .join(" ");
     };
 
-    // Filtrado de Negocios
     const negociosFiltrados = useMemo(() => {
         return negocios.filter((negocio) => {
             const textoBusqueda = busqueda.toLowerCase().trim();
@@ -94,17 +90,15 @@ function ListaNegociosAdmin() {
             const correoPropietario = (negocio.perfil?.correo || "").toLowerCase();
             const nombreCompletoPropietario = nombrePropietario(negocio.perfil).toLowerCase();
 
-            const cumpleBusqueda =
+            return (
                 textoBusqueda === "" ||
                 nombreNegocio.includes(textoBusqueda) ||
                 correoPropietario.includes(textoBusqueda) ||
-                nombreCompletoPropietario.includes(textoBusqueda);
-
-            return cumpleBusqueda;
+                nombreCompletoPropietario.includes(textoBusqueda)
+            );
         });
     }, [negocios, busqueda]);
 
-    // Filtrado de Categorías para la tabla
     const categoriasFiltradas = useMemo(() => {
         return listaCategoriasGenerales.filter((cat) => {
             const textoBusq = busquedaCategorias.toLowerCase().trim();
@@ -129,7 +123,6 @@ function ListaNegociosAdmin() {
         return negociosFiltrados.slice(inicio, inicio + elementosPorPagina);
     }, [negociosFiltrados, paginaActual]);
 
-    // Paginación de Categorías
     const totalPaginasCategorias = Math.ceil(categoriasFiltradas.length / elementosPorPaginaCategorias) || 1;
     const categoriasPaginadas = useMemo(() => {
         const inicio = (paginaActualCategorias - 1) * elementosPorPaginaCategorias;
@@ -154,29 +147,22 @@ function ListaNegociosAdmin() {
         );
     }, [negocios]);
 
-    const limpiarFiltros = () => {
-        setBusqueda("");
-    };
-
+    const limpiarFiltros = () => setBusqueda("");
     const limpiarFiltrosCategorias = () => {
         setBusquedaCategorias("");
         setCategoriaPadreFiltro("todos");
     };
 
     const verNegocio = async (id) => {
-    try {
-        const negocio = await obtenerNegocioPorId(id);
-        console.log("1. Datos del negocio obtenidos:", negocio);
-        
-        setNegocioSeleccionado(negocio);
-        setMostrarModal(true);
-        
-        console.log("2. Estados actualizados: mostrarModal debería ser true");
-    } catch (error) {
-        console.error(error);
-        alert("No fue posible obtener el negocio.");
-    }
-};
+        try {
+            const negocio = await obtenerNegocioPorId(id);
+            setNegocioSeleccionado(negocio);
+            setMostrarModal(true);
+        } catch (error) {
+            console.error(error);
+            alert("No fue posible obtener el negocio.");
+        }
+    };
 
     const cerrarModal = () => {
         setMostrarModal(false);
@@ -194,13 +180,21 @@ function ListaNegociosAdmin() {
     };
 
     const eliminarCatTabla = async (id) => {
-        if (!window.confirm("¿Estás seguro de eliminar esta categoría?")) return;
+        const confirmar = window.confirm(
+            "¿Estás seguro de eliminar esta categoría?\n\n" +
+            "• Si NO tiene productos ni subcategorías, se eliminará .\n" +
+            "• Si YA tiene productos o subcategorías, se marcará como INACTIVA y desaparecerá del catálogo."
+        );
+
+        if (!confirmar) return;
+
         try {
-            await eliminarCategoria(id);
+            const respuesta = await eliminarCategoria(id);
+            alert(respuesta.mensaje);
             await recargarCategorias();
         } catch (error) {
             console.error(error);
-            alert("No se pudo eliminar la categoría.");
+            alert(error.response?.data?.mensaje || "No se pudo procesar la solicitud.");
         }
     };
 
@@ -210,36 +204,25 @@ function ListaNegociosAdmin() {
                 {vistaActual === "negocios" ? "Lista de Negocios" : "Lista de Categorías"}
             </h1>
 
-            {/* RESUMEN */}
             <div className="negocios-summary">
                 <div className="summary-card">
                     <FaStore />
-                    <span>
-                        Total Negocios <strong>{totalNegocios}</strong>
-                    </span>
+                    <span>Total Negocios <strong>{totalNegocios}</strong></span>
                 </div>
                 <div className="summary-card">
                     <FaTags style={{ color: "#2196F3" }} />
-                    <span>
-                        Categorías <strong>{totalCategorias}</strong>
-                    </span>
+                    <span>Categorías <strong>{totalCategorias}</strong></span>
                 </div>
                 <div className="summary-card">
                     <FaBoxOpen style={{ color: "#4CAF50" }} />
-                    <span>
-                        Productos <strong>{totalProductos}</strong>
-                    </span>
+                    <span>Productos <strong>{totalProductos}</strong></span>
                 </div>
             </div>
 
-            {/* BARRA DE ACCIÓN / FILTROS Y BÚSQUEDA */}
             <div className="action-bar" style={{ flexDirection: "column", alignItems: "flex-start", gap: "15px" }}>
                 <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", width: "100%", justifyContent: "space-between" }}>
                     <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
-                        <button
-                            className="btn-orange"
-                            onClick={abrirModalCrearCategoria}
-                        >
+                        <button className="btn-orange" onClick={abrirModalCrearCategoria}>
                             <FaPlusCircle /> Agregar Categorías
                         </button>
 
@@ -263,7 +246,6 @@ function ListaNegociosAdmin() {
                     </div>
                 </div>
 
-                {/* Filtros colocados debajo de las acciones principales */}
                 <div style={{ width: "100%", display: "flex", gap: "15px", flexWrap: "wrap", alignItems: "center" }}>
                     {vistaActual === "negocios" ? (
                         <>
@@ -277,7 +259,6 @@ function ListaNegociosAdmin() {
                                     onChange={(e) => setBusqueda(e.target.value)}
                                 />
                             </div>
-
                             <div className="filter-group">
                                 <button className="btn-orange" onClick={limpiarFiltros}>
                                     <FaUndo /> Limpiar
@@ -296,7 +277,6 @@ function ListaNegociosAdmin() {
                                     onChange={(e) => setBusquedaCategorias(e.target.value)}
                                 />
                             </div>
-
                             <div className="filter-group" style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
                                 <select
                                     className="usuarios-select"
@@ -323,7 +303,6 @@ function ListaNegociosAdmin() {
                 </div>
             </div>
 
-            {/* TABLA DINÁMICA */}
             {vistaActual === "negocios" ? (
                 <div className="table-container">
                     <table className="negocios-table">
@@ -340,31 +319,17 @@ function ListaNegociosAdmin() {
                         </thead>
                         <tbody>
                             {loading ? (
-                                <tr>
-                                    <td colSpan="7" style={{ textAlign: "center", padding: "40px" }}>
-                                        Cargando negocios...
-                                    </td>
-                                </tr>
+                                <tr><td colSpan="7" style={{ textAlign: "center", padding: "40px" }}>Cargando negocios...</td></tr>
                             ) : negociosPaginados.length === 0 ? (
-                                <tr>
-                                    <td colSpan="7" className="sin-datos">
-                                        No existen negocios con los filtros seleccionados.
-                                    </td>
-                                </tr>
+                                <tr><td colSpan="7" className="sin-datos">No existen negocios con los filtros seleccionados.</td></tr>
                             ) : (
                                 negociosPaginados.map((negocio) => (
                                     <tr key={negocio.id_negocio}>
                                         <td>
                                             {negocio.logo ? (
-                                                <img
-                                                    src={negocio.logo}
-                                                    alt={negocio.nombre_negocio}
-                                                    className="logo-business"
-                                                />
+                                                <img src={negocio.logo} alt={negocio.nombre_negocio} className="logo-business" />
                                             ) : (
-                                                <div className="logo-business logo-placeholder">
-                                                    <FaStore />
-                                                </div>
+                                                <div className="logo-business logo-placeholder"><FaStore /></div>
                                             )}
                                         </td>
                                         <td>
@@ -380,9 +345,7 @@ function ListaNegociosAdmin() {
                                         <td>
                                             <strong>Descripción</strong>
                                             <br />
-                                            <small>
-                                                {negocio.descripcion_negocio || "Sin descripción"}
-                                            </small>
+                                            <small>{negocio.descripcion_negocio || "Sin descripción"}</small>
                                         </td>
                                         <td>
                                             <span className="product-badge">
@@ -390,23 +353,13 @@ function ListaNegociosAdmin() {
                                             </span>
                                         </td>
                                         <td>
-                                            <span
-                                                className={`status-badge ${
-                                                    negocio.estado_negocio === "APROBADO"
-                                                        ? "status-active"
-                                                        : "status-inactive"
-                                                }`}
-                                            >
+                                            <span className={`status-badge ${negocio.estado_negocio === "APROBADO" ? "status-active" : "status-inactive"}`}>
                                                 {negocio.estado_negocio}
                                             </span>
                                         </td>
                                         <td>
                                             <div className="action-buttons">
-                                                <button
-                                                    className="btn-icon view"
-                                                    title="Ver detalles"
-                                                    onClick={() => verNegocio(negocio.id_negocio)}
-                                                >
+                                                <button className="btn-icon view" title="Ver detalles" onClick={() => verNegocio(negocio.id_negocio)}>
                                                     <FaEye />
                                                 </button>
                                             </div>
@@ -425,22 +378,15 @@ function ListaNegociosAdmin() {
                                 <th>ID</th>
                                 <th>Nombre de Categoría</th>
                                 <th>Categoría Padre</th>
+                                <th>Estado</th>
                                 <th>Acciones</th>
                             </tr>
                         </thead>
                         <tbody>
                             {loading ? (
-                                <tr>
-                                    <td colSpan="4" style={{ textAlign: "center", padding: "40px" }}>
-                                        Cargando categorías...
-                                    </td>
-                                </tr>
+                                <tr><td colSpan="5" style={{ textAlign: "center", padding: "40px" }}>Cargando categorías...</td></tr>
                             ) : categoriasPaginadas.length === 0 ? (
-                                <tr>
-                                    <td colSpan="4" className="sin-datos">
-                                        No existen categorías con los filtros seleccionados.
-                                    </td>
-                                </tr>
+                                <tr><td colSpan="5" className="sin-datos">No existen categorías con los filtros seleccionados.</td></tr>
                             ) : (
                                 categoriasPaginadas.map((cat) => {
                                     const categoriaPadreObj = listaCategoriasGenerales.find(
@@ -451,26 +397,24 @@ function ListaNegociosAdmin() {
                                             <td>{cat.id_categoria}</td>
                                             <td>
                                                 <strong>{cat.nombre_categoria}</strong>
+                                                {cat.estado === "INACTIVO" && (
+                                                    <span className="badge-inactivo">INACTIVO</span>
+                                                )}
                                             </td>
                                             <td>
-                                                {categoriaPadreObj
-                                                    ? categoriaPadreObj.nombre_categoria
-                                                    : "Ninguna"}
+                                                {categoriaPadreObj ? categoriaPadreObj.nombre_categoria : "Ninguna"}
+                                            </td>
+                                            <td>
+                                                <span className={`status-badge ${cat.estado === "INACTIVO" ? "status-inactive" : "status-active"}`}>
+                                                    {cat.estado || "ACTIVO"}
+                                                </span>
                                             </td>
                                             <td>
                                                 <div className="action-buttons" style={{ display: "flex", gap: "5px" }}>
-                                                    <button
-                                                        className="btn-icon edit"
-                                                        title="Editar categoría"
-                                                        onClick={() => abrirModalEditarCategoria(cat)}
-                                                    >
+                                                    <button className="btn-icon edit" title="Editar categoría" onClick={() => abrirModalEditarCategoria(cat)}>
                                                         <FaEdit />
                                                     </button>
-                                                    <button
-                                                        className="btn-icon delete"
-                                                        title="Eliminar categoría"
-                                                        onClick={() => eliminarCatTabla(cat.id_categoria)}
-                                                    >
+                                                    <button className="btn-icon delete" title="Eliminar categoría" onClick={() => eliminarCatTabla(cat.id_categoria)}>
                                                         <FaTrash />
                                                     </button>
                                                 </div>
@@ -484,52 +428,22 @@ function ListaNegociosAdmin() {
                 </div>
             )}
 
-            {/* PAGINACIÓN */}
             {vistaActual === "negocios" && !loading && negociosFiltrados.length > 0 && (
                 <div className="pagination-container" style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "10px", marginTop: "15px" }}>
-                    <button
-                        className="btn-orange"
-                        disabled={paginaActual === 1}
-                        onClick={() => setPaginaActual((prev) => Math.max(prev - 1, 1))}
-                    >
-                        Anterior
-                    </button>
-                    <span>
-                        Página {paginaActual} de {totalPaginas}
-                    </span>
-                    <button
-                        className="btn-orange"
-                        disabled={paginaActual === totalPaginas}
-                        onClick={() => setPaginaActual((prev) => Math.min(prev + 1, totalPaginas))}
-                    >
-                        Siguiente
-                    </button>
+                    <button className="btn-orange" disabled={paginaActual === 1} onClick={() => setPaginaActual((prev) => Math.max(prev - 1, 1))}>Anterior</button>
+                    <span>Página {paginaActual} de {totalPaginas}</span>
+                    <button className="btn-orange" disabled={paginaActual === totalPaginas} onClick={() => setPaginaActual((prev) => Math.min(prev + 1, totalPaginas))}>Siguiente</button>
                 </div>
             )}
 
             {vistaActual === "categorias" && !loading && categoriasFiltradas.length > 0 && (
                 <div className="pagination-container" style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "10px", marginTop: "15px" }}>
-                    <button
-                        className="btn-orange"
-                        disabled={paginaActualCategorias === 1}
-                        onClick={() => setPaginaActualCategorias((prev) => Math.max(prev - 1, 1))}
-                    >
-                        Anterior
-                    </button>
-                    <span>
-                        Página {paginaActualCategorias} de {totalPaginasCategorias}
-                    </span>
-                    <button
-                        className="btn-orange"
-                        disabled={paginaActualCategorias === totalPaginasCategorias}
-                        onClick={() => setPaginaActualCategorias((prev) => Math.min(prev + 1, totalPaginasCategorias))}
-                    >
-                        Siguiente
-                    </button>
+                    <button className="btn-orange" disabled={paginaActualCategorias === 1} onClick={() => setPaginaActualCategorias((prev) => Math.max(prev - 1, 1))}>Anterior</button>
+                    <span>Página {paginaActualCategorias} de {totalPaginasCategorias}</span>
+                    <button className="btn-orange" disabled={paginaActualCategorias === totalPaginasCategorias} onClick={() => setPaginaActualCategorias((prev) => Math.min(prev + 1, totalPaginasCategorias))}>Siguiente</button>
                 </div>
             )}
 
-            {/* MODAL DETALLES DE NEGOCIO */}
             {mostrarModal && negocioSeleccionado && (
                 <div className="modal-overlay" onClick={cerrarModal}>
                     <div className="modal-content" onClick={(e) => e.stopPropagation()}>
@@ -552,39 +466,25 @@ function ListaNegociosAdmin() {
                             </div>
                             <div className="detalle-item">
                                 <span className="detalle-label">Descripción</span>
-                                <span className="detalle-valor">
-                                    {negocioSeleccionado.descripcion_negocio || "Sin descripción"}
-                                </span>
+                                <span className="detalle-valor">{negocioSeleccionado.descripcion_negocio || "Sin descripción"}</span>
                             </div>
                             <div className="detalle-item">
                                 <span className="detalle-label">Teléfono</span>
-                                <span className="detalle-valor">
-                                    {negocioSeleccionado.telefono_negocio || "No registrado"}
-                                </span>
+                                <span className="detalle-valor">{negocioSeleccionado.telefono_negocio || "No registrado"}</span>
                             </div>
                             <div className="detalle-item">
                                 <span className="detalle-label">Estado</span>
-                                <span
-                                    className={`status-badge ${
-                                        negocioSeleccionado.estado_negocio === "APROBADO"
-                                            ? "status-active"
-                                            : "status-inactive"
-                                    }`}
-                                >
+                                <span className={`status-badge ${negocioSeleccionado.estado_negocio === "APROBADO" ? "status-active" : "status-inactive"}`}>
                                     {negocioSeleccionado.estado_negocio}
                                 </span>
                             </div>
                             <div className="detalle-item">
                                 <span className="detalle-label">Puesto</span>
-                                <span className="detalle-valor">
-                                    {negocioSeleccionado.puesto?.[0]?.numero_puesto || "Sin asignar"}
-                                </span>
+                                <span className="detalle-valor">{negocioSeleccionado.puesto?.[0]?.numero_puesto || "Sin asignar"}</span>
                             </div>
                             <div className="detalle-item">
                                 <span className="detalle-label">Productos registrados</span>
-                                <span className="detalle-valor">
-                                    {negocioSeleccionado.productos?.length || 0}
-                                </span>
+                                <span className="detalle-valor">{negocioSeleccionado.productos?.length || 0}</span>
                             </div>
                         </div>
                         <div className="modal-footer">
@@ -594,7 +494,6 @@ function ListaNegociosAdmin() {
                 </div>
             )}
 
-            {/* MODAL DE GESTIÓN DE CATEGORÍAS */}
             <ModalCategorias
                 abierto={mostrarModalCategorias}
                 categoriaAEditar={categoriaAEditar}

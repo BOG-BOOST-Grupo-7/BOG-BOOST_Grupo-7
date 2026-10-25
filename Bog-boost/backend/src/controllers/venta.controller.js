@@ -1,5 +1,8 @@
 import supabase from "../services/supabase.js";
 
+const telefonoRegex = /^\d{10}$/;
+const direccionRegex = /^[A-Za-z0-9ÁÉÍÓÚáéíóúÑñ#\-\s,\.]+$/;
+
 export const confirmarCarrito = async (req, res) => {
   try {
     const {
@@ -10,15 +13,33 @@ export const confirmarCarrito = async (req, res) => {
       carrito
     } = req.body;
 
+    // Validaciones iniciales
     if (!carrito || carrito.length === 0) {
       return res.status(400).json({ mensaje: "El carrito está vacío" });
+    }
+    if (!id_medio_pago) {
+      return res.status(400).json({ mensaje: "Selecciona un medio de pago." });
+    }
+    if (!id_metodo_envio) {
+      return res.status(400).json({ mensaje: "Selecciona un método de envío." });
+    }
+    if (!telefono || !telefonoRegex.test(String(telefono).trim())) {
+      return res.status(400).json({ mensaje: "El teléfono debe tener exactamente 10 números." });
+    }
+    if (!direccion || !direccion.trim()) {
+      return res.status(400).json({ mensaje: "La dirección es obligatoria." });
+    }
+    if (!direccionRegex.test(direccion.trim())) {
+      return res.status(400).json({ mensaje: "La dirección contiene caracteres no permitidos." });
+    }
+    if (direccion.trim().length < 10 || direccion.trim().length > 150) {
+      return res.status(400).json({ mensaje: "La dirección debe tener entre 10 y 150 caracteres." });
     }
 
     let total = 0;
     const detallesDB = [];
     const detallesRespuesta = [];
 
-    // 1. Obtener ID Negocio del primer producto
     const { data: primerProducto, error: errorPrimerProducto } = await supabase
       .schema("catalogo")
       .from("producto")
@@ -32,7 +53,6 @@ export const confirmarCarrito = async (req, res) => {
 
     const id_negocio = primerProducto.id_negocio;
 
-    // 2. Validar productos, calcular total y preparar estructuras
     for (const item of carrito) {
       const { data: producto, error } = await supabase
         .schema("catalogo")
@@ -70,7 +90,6 @@ export const confirmarCarrito = async (req, res) => {
       });
     }
 
-    // 3. Validar medio de pago
     const { data: medioPago, error: errorMedioPago } = await supabase
       .schema("negocio")
       .from("medio_pago")
@@ -83,7 +102,6 @@ export const confirmarCarrito = async (req, res) => {
       return res.status(400).json({ mensaje: "El medio de pago no pertenece al negocio." });
     }
 
-    // 4. Validar método de envío
     const { data: metodoEnvio, error: errorEnvio } = await supabase
       .schema("negocio")
       .from("metodo_envio")
@@ -98,7 +116,6 @@ export const confirmarCarrito = async (req, res) => {
 
     total += Number(metodoEnvio.costo_envio);
 
-    // 5. Crear Venta
     const { data: ventaData, error: errorVenta } = await supabase
       .schema("ventas")
       .from("venta")
@@ -107,8 +124,8 @@ export const confirmarCarrito = async (req, res) => {
         id_negocio,
         id_medio_pago,
         id_metodo_envio,
-        telefono,
-        direccion,
+        telefono: telefono.trim(),
+        direccion: direccion.trim(),
         total
       }])
       .select();
@@ -127,7 +144,6 @@ export const confirmarCarrito = async (req, res) => {
       console.error("Error al buscar el perfil del vendedor del negocio:", errorNegocio);
     }
 
-    // 6. Insertar Detalles, actualizar Stock y evaluar alerta de stock bajo
     for (const detalle of detallesDB) {
       await supabase
         .schema("ventas")
@@ -143,8 +159,6 @@ export const confirmarCarrito = async (req, res) => {
 
       const nuevoStock = prod.stock - detalle.cantidad;
 
-      console.log(`[DEBUG STOCK] Producto: ${prod.nombre_producto} | Stock Actual en DB: ${prod.stock} | Cantidad Vendida: ${detalle.cantidad} | Nuevo Stock Calculado: ${nuevoStock}`);
-
       await supabase
         .schema("catalogo")
         .from("producto")
@@ -156,40 +170,29 @@ export const confirmarCarrito = async (req, res) => {
 
       if (nuevoStock <= 2 && !errorNegocio && negocioData?.id_perfil) {
         try {
-          const { error: errorNotifStock } = await supabase
+          await supabase
             .schema("cliente")
             .from("notificacion")
-            .insert([
-              {
-                id_perfil: negocioData.id_perfil,
-                mensaje: `⚠️ Alerta: El producto "${prod.nombre_producto}" tiene stock bajo (Quedan ${nuevoStock} unidades).`,
-                tipo: "ALERTA",
-                estado_notificacion: false
-              }
-            ]);
-
-          if (errorNotifStock) {
-            console.error("❌ Error al enviar notificación de stock bajo:", errorNotifStock);
-          } else {
-            console.log(`✅ Alerta de stock bajo enviada para el producto: ${prod.nombre_producto}`);
-          }
+            .insert([{
+              id_perfil: negocioData.id_perfil,
+              mensaje: `⚠️ Alerta: El producto "${prod.nombre_producto}" tiene stock bajo (Quedan ${nuevoStock} unidades).`,
+              tipo: "ALERTA",
+              estado_notificacion: false
+            }]);
         } catch (errStock) {
           console.error("Error general en alerta de stock:", errStock);
         }
       }
     }
 
-    // 7. Crear Seguimiento
     await supabase
       .schema("ventas")
       .from("seguimiento")
       .insert([{ id_venta: venta.id_venta, estado_seguimiento: "PENDIENTE", fecha_entrega: null }]);
 
-    // 8. ENVIAR NOTIFICACIONES DE VENTA
     try {
       const notificaciones = [];
-
-      if (req.user && req.user.id && venta?.id_venta) {
+      if (req.user?.id && venta?.id_venta) {
         notificaciones.push({
           id_perfil: req.user.id,
           mensaje: `¡Tu compra #${venta.id_venta} ha sido creada exitosamente!`,
@@ -197,8 +200,7 @@ export const confirmarCarrito = async (req, res) => {
           estado_notificacion: false
         });
       }
-
-      if (!errorNegocio && negocioData && negocioData.id_perfil && venta?.id_venta) {
+      if (!errorNegocio && negocioData?.id_perfil && venta?.id_venta) {
         notificaciones.push({
           id_perfil: negocioData.id_perfil,
           mensaje: `¡Has recibido una nueva venta (#${venta.id_venta}) en tu negocio!`,
@@ -206,25 +208,13 @@ export const confirmarCarrito = async (req, res) => {
           estado_notificacion: false
         });
       }
-
       if (notificaciones.length > 0) {
-        const { error: errorInsertarNotif } = await supabase
-          .schema("cliente")
-          .from("notificacion")
-          .insert(notificaciones);
-
-        if (errorInsertarNotif) {
-          console.error("❌ ERROR SUPABASE NOTIFICACIONES:", JSON.stringify(errorInsertarNotif, null, 2));
-        } else {
-          console.log("✅ Notificaciones de venta creadas correctamente para cliente y vendedor.");
-        }
+        await supabase.schema("cliente").from("notificacion").insert(notificaciones);
       }
-
     } catch (notifError) {
       console.error("Error general en el bloque de notificaciones:", notifError);
     }
 
-    // 9. Respuesta enriquecida
     return res.status(201).json({
       mensaje: "Compra realizada correctamente.",
       venta: {
@@ -237,6 +227,31 @@ export const confirmarCarrito = async (req, res) => {
 
   } catch (error) {
     console.error(error);
+    return res.status(500).json({ mensaje: "Error interno del servidor" });
+  }
+};
+
+export const obtenerDatosUltimaCompra = async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .schema("ventas")
+      .from("venta")
+      .select("telefono, direccion")
+      .eq("id_perfil", req.user.id)
+      .order("fecha_venta", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (error) {
+      return res.status(400).json(error);
+    }
+
+    return res.json({
+      telefono: data?.telefono || "",
+      direccion: data?.direccion || ""
+    });
+  } catch (error) {
+    console.error("Error obteniendo datos de última compra:", error);
     return res.status(500).json({ mensaje: "Error interno del servidor" });
   }
 };

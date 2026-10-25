@@ -156,7 +156,7 @@ function Perfil() {
                     foto_perfil: respuesta.url,
                 }));
 
-                // 👇 2. Actualizamos el contexto global 👇
+                // 2. Actualizamos el contexto global
                 actualizarPerfilContexto({ foto_perfil: respuesta.url });
             }
         } catch (error) {

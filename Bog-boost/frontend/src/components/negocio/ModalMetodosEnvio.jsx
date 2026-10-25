@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-
 import {
     FaPlus,
     FaEdit,
@@ -29,6 +28,7 @@ export default function ModalMetodosEnvio({
     });
 
     const [editando, setEditando] = useState(null);
+    const [error, setError] = useState("");
 
     useEffect(() => {
         if (abierto) {
@@ -47,20 +47,44 @@ export default function ModalMetodosEnvio({
     };
 
     const guardar = async () => {
+        setError("");
+
+        // Validaciones
+        if (!formulario.nombre_metodo.trim()) {
+            setError("El nombre del método de envío es obligatorio.");
+            return;
+        }
+        if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(formulario.nombre_metodo.trim())) {
+            setError("El nombre solo puede contener letras y espacios.");
+            return;
+        }
+        if (formulario.nombre_metodo.trim().length > 50) {
+            setError("El nombre no puede superar los 50 caracteres.");
+            return;
+        }
+
+        if (!formulario.descripcion_metodo.trim()) {
+            setError("La descripción es obligatoria.");
+            return;
+        }
+        if (formulario.descripcion_metodo.trim().length > 255) {
+            setError("La descripción no puede superar los 255 caracteres.");
+            return;
+        }
+
         if (
             formulario.costo_envio === "" ||
-            formulario.costo_envio < 0
+            formulario.costo_envio === null ||
+            isNaN(formulario.costo_envio) ||
+            Number(formulario.costo_envio) < 0
         ) {
-            alert("Ingresa un costo de envío válido.");
+            setError("El costo de envío debe ser un número mayor o igual a 0.");
             return;
         }
 
         try {
             if (editando) {
-                await actualizarMetodoEnvio(
-                    editando,
-                    formulario
-                );
+                await actualizarMetodoEnvio(editando, formulario);
             } else {
                 await crearMetodoEnvio({
                     ...formulario,
@@ -72,28 +96,38 @@ export default function ModalMetodosEnvio({
             cargarMetodos();
         } catch (error) {
             console.error(error);
+            setError(error.response?.data?.mensaje || "Error al guardar el método de envío.");
         }
     };
 
     const editar = (metodo) => {
-        setEditando(
-            metodo.id_metodo_envio
-        );
+        setEditando(metodo.id_metodo_envio);
 
         setFormulario({
             nombre_metodo: metodo.nombre_metodo,
             descripcion_metodo: metodo.descripcion_metodo,
             costo_envio: metodo.costo_envio
         });
+        setError("");
     };
 
     const eliminar = async (id) => {
-        if (!window.confirm("¿Eliminar este método de envío?")) {
-            return;
-        }
+        const confirmar = window.confirm(
+            "¿Estás seguro de eliminar este método de envío?\n\n" +
+            "• Si NO tiene ventas, se eliminará.\n" +
+            "• Si YA tiene ventas, se marcará como INACTIVO y desaparecerá del formulario de compra."
+        );
 
-        await eliminarMetodoEnvio(id);
-        cargarMetodos();
+        if (!confirmar) return;
+
+        try {
+            const respuesta = await eliminarMetodoEnvio(id);
+            alert(respuesta.mensaje);
+            cargarMetodos();
+        } catch (error) {
+            console.error("Error al eliminar:", error);
+            alert(error.response?.data?.mensaje || "No se pudo procesar la solicitud.");
+        }
     };
 
     const limpiarFormulario = () => {
@@ -104,6 +138,7 @@ export default function ModalMetodosEnvio({
         });
 
         setEditando(null);
+        setError("");
     };
 
     if (!abierto) return null;
@@ -113,40 +148,40 @@ export default function ModalMetodosEnvio({
             <div className="modal-content">
                 <div className="modal-header">
                     <h2>
-                        {
-                            editando
-                                ? "Editar método de envío"
-                                : "Administrar métodos de envío"
-                        }
+                        {editando
+                            ? "Editar método de envío"
+                            : "Administrar métodos de envío"}
                     </h2>
                 </div>
 
                 <div className="modal-body">
+                    {error && (
+                        <div className="error-banner" style={{ marginBottom: "15px" }}>
+                            {error}
+                        </div>
+                    )}
+
                     <div className="form-group">
-                        <label>
-                            Nombre
-                        </label>
+                        <label>Nombre</label>
                         <input
                             type="text"
                             placeholder="Ej: Domicilio"
                             value={formulario.nombre_metodo}
                             onChange={(e) => {
-                                // Permitir solo letras, acentos, eñes y espacios
                                 const soloLetras = e.target.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, "");
                                 setFormulario({
                                     ...formulario,
                                     nombre_metodo: soloLetras
                                 });
                             }}
+                            maxLength={50}
                         />
                     </div>
 
                     <div className="form-group">
-                        <label>
-                            Descripción
-                        </label>
+                        <label>Descripción</label>
                         <input
-                            placeholder="Descripción"
+                            placeholder="Descripción (máx. 255 caracteres)"
                             value={formulario.descripcion_metodo}
                             onChange={(e) =>
                                 setFormulario({
@@ -154,13 +189,12 @@ export default function ModalMetodosEnvio({
                                     descripcion_metodo: e.target.value
                                 })
                             }
+                            maxLength={255}
                         />
                     </div>
 
                     <div className="form-group">
-                        <label>
-                            Costo
-                        </label>
+                        <label>Costo</label>
                         <input
                             type="number"
                             min="0"
@@ -180,79 +214,63 @@ export default function ModalMetodosEnvio({
                     </div>
 
                     <div className="acciones-formulario">
-                        <button
-                            className="btn-green"
-                            onClick={guardar}
-                        >
+                        <button className="btn-green" onClick={guardar}>
                             {editando ? <FaEdit /> : <FaPlus />}
-                            <span>
-                                {editando ? "Actualizar" : "Guardar"}
-                            </span>
+                            <span>{editando ? "Actualizar" : "Guardar"}</span>
                         </button>
 
-                        {
-                            editando && (
-                                <button
-                                    type="button"
-                                    className="btn-orange"
-                                    onClick={limpiarFormulario}
-                                >
-                                    Cancelar
-                                </button>
-                            )
-                        }
+                        {editando && (
+                            <button
+                                type="button"
+                                className="btn-orange"
+                                onClick={limpiarFormulario}
+                            >
+                                Cancelar
+                            </button>
+                        )}
                     </div>
 
                     <div className="lista-medios">
-                        {
-                            metodos.length === 0 ? (
-                                <p className="sin-medios">
-                                    No has registrado métodos de envío.
-                                </p>
-                            ) : (
-                                metodos.map((metodo) => (
-                                    <div
-                                        className="card-medio"
-                                        key={metodo.id_metodo_envio}
-                                    >
-                                        <h4>
-                                            {metodo.nombre_metodo}
-                                        </h4>
-                                        <p>
-                                            <strong>Descripción:</strong>{" "}
-                                            {metodo.descripcion_metodo}
-                                        </p>
-                                        <p>
-                                            <strong>Costo:</strong>{" "}
-                                            {Number(metodo.costo_envio).toLocaleString("es-CO", {
-                                                style: "currency",
-                                                currency: "COP"
-                                            })}
-                                        </p>
-                                        <div className="acciones-medio">
-                                            <button
-                                                className="btn-orange"
-                                                onClick={() =>
-                                                    editar(metodo)
-                                                }
-                                            >
-                                                <FaEdit />
-                                            </button>
-                                            <button
-                                                className="btn-delete"
-                                                onClick={() =>
-                                                    eliminar(
-                                                        metodo.id_metodo_envio
-                                                    )
-                                                }
-                                            >
-                                                <FaTrash />
-                                            </button>
-                                        </div>
+                        {metodos.length === 0 ? (
+                            <p className="sin-medios">
+                                No has registrado métodos de envío.
+                            </p>
+                        ) : (
+                            metodos.map((metodo) => (
+                                <div className="card-medio" key={metodo.id_metodo_envio}>
+                                    <h4>
+                                        {metodo.nombre_metodo}
+                                        {metodo.estado === "INACTIVO" && (
+                                            <span className="badge-inactivo">INACTIVO</span>
+                                        )}
+                                    </h4>
+                                    <p>
+                                        <strong>Descripción:</strong> {metodo.descripcion_metodo}
+                                    </p>
+                                    <p>
+                                        <strong>Costo:</strong>{" "}
+                                        {Number(metodo.costo_envio).toLocaleString("es-CO", {
+                                            style: "currency",
+                                            currency: "COP"
+                                        })}
+                                    </p>
+                                    <div className="acciones-medio">
+                                        <button
+                                            className="btn-orange"
+                                            onClick={() => editar(metodo)}
+                                        >
+                                            <FaEdit />
+                                        </button>
+                                        <button
+                                            className="btn-delete"
+                                            onClick={() => eliminar(metodo.id_metodo_envio)}
+                                        >
+                                            <FaTrash />
+                                        </button>
                                     </div>
-                                ))
-                            )
-                        }
+                                </div>
+                            ))
+                        )}
                     </div>
                 </div>
 

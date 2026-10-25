@@ -1,7 +1,9 @@
-import { useEffect, useState, useRef } from "react";
-import { FaEdit } from "react-icons/fa";
+import { useEffect, useState, useRef, useMemo } from "react";
+import { FaEdit, FaTrashAlt } from "react-icons/fa";
+import { useNavigate } from "react-router-dom"; 
+import toast from "react-hot-toast"; 
 
-import { obtenerMiNegocio, actualizarNegocio } from "../../api/negocioApi";
+import { obtenerMiNegocio, actualizarNegocio, desactivarNegocio } from "../../api/negocioApi";
 import { obtenerMisProductos } from "../../api/productoApi";
 
 import ModalEditarNegocio from "../../components/negocio/ModalEditarNegocio";
@@ -17,6 +19,10 @@ export default function PerfilNegocio() {
     const [mostrarModal, setMostrarModal] = useState(false);
     const [mostrarMediosPago, setMostrarMediosPago] = useState(false);
     const [mostrarModalEnvio, setMostrarModalEnvio] = useState(false);
+    const [desactivando, setDesactivando] = useState(false);
+    const navigate = useNavigate();
+    const [paginaActual, setPaginaActual] = useState(1);
+    const productosPorPagina = 8;
 
     // ==========================================
     // Lógica para actualizar el Logo
@@ -41,10 +47,10 @@ export default function PerfilNegocio() {
             await actualizarNegocio(negocio.id_negocio, formData);
             await cargarNegocio();
             
-            alert("Logo actualizado correctamente");
+            toast.success("Logo actualizado correctamente");
         } catch (error) {
             console.error("Error al actualizar el logo:", error);
-            alert("No se pudo actualizar el logo");
+            toast.error("No se pudo actualizar el logo");
         } finally {
             setSubiendoLogo(false);
         }
@@ -68,6 +74,47 @@ export default function PerfilNegocio() {
         }
     };
 
+    // ==========================================
+    // Lógica para Desactivar el Negocio
+    // ==========================================
+    const handleDesactivarNegocio = async () => {
+        const confirmar = window.confirm(
+            "⚠️ ADVERTENCIA ⚠️\n\n" +
+            "¿Estás seguro de que quieres desactivar tu negocio?\n\n" +
+            "Al hacerlo:\n" +
+            "• Tus productos dejarán de ser visibles en la página.\n" +
+            "• Tu puesto será liberado en el mapa del mercado.\n" +
+            "• No podrás recibir nuevos pedidos.\n\n" +
+            "NOTA: Tu historial de ventas y los datos de tus clientes se conservarán intactos.\n\n" +
+            "¿Deseas continuar?"
+        );
+
+        if (!confirmar) return;
+
+        try {
+            setDesactivando(true);
+            await desactivarNegocio(negocio.id_negocio);
+            
+            toast.success("Tu negocio ha sido desactivado correctamente.");
+            
+            setTimeout(() => {
+                navigate("/");
+            }, 2000);
+
+        } catch (error) {
+            console.error("Error al desactivar:", error);
+            toast.error("No se pudo desactivar el negocio. Intenta de nuevo.");
+        } finally {
+            setDesactivando(false);
+        }
+    };
+
+    // 👇 Lógica de paginación
+    const indexUltimoProducto = paginaActual * productosPorPagina;
+    const indexPrimerProducto = indexUltimoProducto - productosPorPagina;
+    const productosPaginados = productos.slice(indexPrimerProducto, indexUltimoProducto);
+    const totalPaginas = Math.ceil(productos.length / productosPorPagina);
+
     if (loading) return <div className="perfil-negocio"><h2>Cargando negocio...</h2></div>;
     if (!negocio) return <div className="perfil-negocio"><h2>No tienes un negocio registrado.</h2></div>
     
@@ -78,21 +125,17 @@ export default function PerfilNegocio() {
             </h1>
 
             <div className="profile-grid">
-                {/* Columna izquierda: Logo y Botones de configuración debajo */}
                 <div className="info-column">
                     <div className="profile-card logo-card">
-                        {
-                            negocio.logo ?
-                                <img
-                                    src={negocio.logo}
-                                    alt={negocio.nombre_negocio}
-                                    className="logo-negocio"
-                                />
-                                :
-                                <div className="logo-placeholder">
-                                    Sin logo
-                                </div>
-                        }
+                        {negocio.logo ? (
+                            <img
+                                src={negocio.logo}
+                                alt={negocio.nombre_negocio}
+                                className="logo-negocio"
+                            />
+                        ) : (
+                            <div className="logo-placeholder">Sin logo</div>
+                        )}
 
                         <button 
                             className="btn-edit" 
@@ -112,7 +155,6 @@ export default function PerfilNegocio() {
                         />
                     </div>
 
-                    {/* Botones de configuración colocados debajo del logo */}
                     <div className="config-buttons-bottom">
                         <button
                             className="btn-side"
@@ -126,40 +168,30 @@ export default function PerfilNegocio() {
                         >
                             Método de envío
                         </button>
+
+                        <button
+                            className="btn-side btn-danger"
+                            onClick={handleDesactivarNegocio}
+                            disabled={desactivando || negocio.estado_negocio === "INACTIVO"}
+                        >
+                            <FaTrashAlt style={{ marginRight: "8px" }} />
+                            {desactivando ? "Desactivando..." : "Desactivar negocio"}
+                        </button>
                     </div>
                 </div>
 
-                {/* Columna derecha: Información del Negocio */}
                 <div className="map-column">
                     <div className="map-column-inner">
                         <div className="profile-card info-card">
-                            <h2>
-                                {negocio.nombre_negocio}
-                            </h2>
-                            <p>
-                                <strong>Descripción</strong>
-                            </p>
-                            <p>
-                                {negocio.descripcion_negocio}
-                            </p>
-                            <p>
-                                <strong>Teléfono</strong>
-                            </p>
-                            <p>
-                                {negocio.telefono_negocio}
-                            </p>
-                            <p>
-                                <strong>Estado</strong>
-                            </p>
-                            <p>
-                                {negocio.estado_negocio}
-                            </p>
-                            <p>
-                                <strong>Puesto</strong>
-                            </p>
-                            <p>
-                                {negocio.puesto?.[0]?.numero_puesto || "No especificado"}
-                            </p>
+                            <h2>{negocio.nombre_negocio}</h2>
+                            <p><strong>Descripción</strong></p>
+                            <p>{negocio.descripcion_negocio}</p>
+                            <p><strong>Teléfono</strong></p>
+                            <p>{negocio.telefono_negocio}</p>
+                            <p><strong>Estado</strong></p>
+                            <p>{negocio.estado_negocio}</p>
+                            <p><strong>Puesto</strong></p>
+                            <p>{negocio.puesto?.[0]?.numero_puesto || "No especificado"}</p>
 
                             <button
                                 className="btn-edit"
@@ -173,39 +205,65 @@ export default function PerfilNegocio() {
                 </div>
             </div>
 
+            {/* ========================================== */}
+            {/* SECCIÓN DE PRODUCTOS CON PAGINACIÓN        */}
+            {/* ========================================== */}
             <div className="products-section">
-                <div className="productos-carrusel">
-                    {productos.map(producto => (
-                        <div
-                            className="producto-carrusel-card"
-                            key={producto.id_producto}
-                        >
-                            <div className="producto-carrusel-imagen">
-                                <img
-                                    src={producto.imagen}
-                                    alt={producto.nombre_producto}
-                                />
-                            </div>
-                            <div className="producto-carrusel-info">
-                                <h4>
-                                    {producto.nombre_producto}
-                                </h4>
-                                <p>
-                                    {producto.categoria?.nombre_categoria}
-                                </p>
-                                <span>
-                                    {Number(producto.precio).toLocaleString(
-                                        "es-CO",
-                                        {
-                                            style: "currency",
-                                            currency: "COP"
-                                        }
-                                    )}
-                                </span>
-                            </div>
+                <h3 className="section-title">Mis Productos ({productos.length})</h3>
+                
+                {productos.length === 0 ? (
+                    <p className="sin-productos">Aún no tienes productos registrados.</p>
+                ) : (
+                    <>
+                        <div className="productos-grid-paginados">
+                            {productosPaginados.map((producto) => (
+                                <div className="producto-carrusel-card" key={producto.id_producto}>
+                                    <div className="producto-carrusel-imagen">
+                                        <img
+                                            src={producto.imagen || "https://via.placeholder.com/150"}
+                                            alt={producto.nombre_producto}
+                                        />
+                                    </div>
+                                    <div className="producto-carrusel-info">
+                                        <h4>{producto.nombre_producto}</h4>
+                                        <p>{producto.categoria?.nombre_categoria}</p>
+                                        <span>
+                                            {Number(producto.precio).toLocaleString("es-CO", {
+                                                style: "currency",
+                                                currency: "COP"
+                                            })}
+                                        </span>
+                                    </div>
+                                </div>
+                            ))}
                         </div>
-                    ))}
-                </div>
+
+                        {/* Controles de paginación */}
+                        {totalPaginas > 1 && (
+                            <div className="paginacion-container">
+                                <button
+                                    className="pag-btn"
+                                    disabled={paginaActual === 1}
+                                    onClick={() => setPaginaActual(paginaActual - 1)}
+                                >
+                                    Anterior
+                                </button>
+
+                                <span className="pag-info">
+                                    Página {paginaActual} de {totalPaginas}
+                                </span>
+
+                                <button
+                                    className="pag-btn"
+                                    disabled={paginaActual === totalPaginas}
+                                    onClick={() => setPaginaActual(paginaActual + 1)}
+                                >
+                                    Siguiente
+                                </button>
+                            </div>
+                        )}
+                    </>
+                )}
             </div>
 
             {/* ========================================== */}

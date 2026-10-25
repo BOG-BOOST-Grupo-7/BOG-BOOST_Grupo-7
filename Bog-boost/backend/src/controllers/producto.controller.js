@@ -8,25 +8,30 @@ const calcularEstadoProducto = (stock) => {
 
 export const listarProductos = async (req, res) => {
   try {
-    // ==========================
-    // PRODUCTOS
-    // ==========================
+    // 1. Traer categorías activas
+    const { data: categoriasActivas, error: errorCat } = await supabase
+      .schema("catalogo")
+      .from("categoria")
+      .select("id_categoria")
+      .eq("estado", "ACTIVO");
+
+    if (errorCat) return res.status(400).json(errorCat);
+
+    const idsCategoriasActivas = categoriasActivas.map((c) => c.id_categoria);
+
+    // 2. Traer productos disponibles de categorías activas
     const { data: productos, error } = await supabase
       .schema("catalogo")
       .from("producto")
       .select("*")
-      .eq("estado_producto", "DISPONIBLE");
+      .eq("estado_producto", "DISPONIBLE")
+      .in("id_categoria", idsCategoriasActivas);
 
-    if (error) {
-      return res.status(400).json(error);
-    }
+    if (error) return res.status(400).json(error);
 
-    // ==========================
-    // AGREGAR CATEGORIA Y NEGOCIO
-    // ==========================
+    // 3. Agregar categoría y negocio
     const productosCompletos = await Promise.all(
       productos.map(async (producto) => {
-        // Categoría
         const { data: categoria } = await supabase
           .schema("catalogo")
           .from("categoria")
@@ -34,7 +39,6 @@ export const listarProductos = async (req, res) => {
           .eq("id_categoria", producto.id_categoria)
           .single();
 
-        // Negocio
         const { data: negocio } = await supabase
           .schema("negocio")
           .from("negocio")
@@ -251,38 +255,25 @@ export const actualizarProducto = async (req, res) => {
       caracteristicas,
       stock,
       precio,
-      imagen
+      imagen,
+      estado_producto
     } = req.body;
 
     if (stock < 0) {
-      return res.status(400).json({
-        mensaje: "El stock no puede ser negativo"
-      });
+      return res.status(400).json({ mensaje: "El stock no puede ser negativo" });
     }
 
-    // ============================
-    // BUSCAR EL PRODUCTO (Stock actual)
-    // ============================
     const { data: productoViejo } = await supabase
       .schema("catalogo")
       .from("producto")
-      .select(`
-        id_producto,
-        id_negocio,
-        stock
-      `)
+      .select("id_producto, id_negocio, stock, estado_producto")
       .eq("id_producto", id)
       .single();
 
     if (!productoViejo) {
-      return res.status(404).json({
-        mensaje: "Producto no encontrado"
-      });
+      return res.status(404).json({ mensaje: "Producto no encontrado" });
     }
 
-    // ============================
-    // VALIDAR QUE EL NEGOCIO ES DEL VENDEDOR
-    // ============================
     const { data: negocio } = await supabase
       .schema("negocio")
       .from("negocio")
@@ -292,19 +283,14 @@ export const actualizarProducto = async (req, res) => {
       .single();
 
     if (!negocio) {
-      return res.status(403).json({
-        mensaje: "No puedes modificar este producto"
-      });
+      return res.status(403).json({ mensaje: "No puedes modificar este producto" });
     }
 
-    // ============================
-    // CALCULAR ESTADO
-    // ============================
-    const estado_producto = calcularEstadoProducto(stock);
+    let nuevoEstado = estado_producto;
+    if (!nuevoEstado) {
+      nuevoEstado = calcularEstadoProducto(stock);
+    }
 
-    // ============================
-    // ACTUALIZAR PRODUCTO
-    // ============================
     const { error } = await supabase
       .schema("catalogo")
       .from("producto")
@@ -316,38 +302,27 @@ export const actualizarProducto = async (req, res) => {
         stock,
         precio,
         imagen,
-        estado_producto
+        estado_producto: nuevoEstado
       })
       .eq("id_producto", id);
 
-    if (error) {
-      return res.status(400).json(error);
-    }
+    if (error) return res.status(400).json(error);
 
-    // ============================
-    // REGISTRAR ENTRADA SI EL STOCK AUMENTÓ
-    // ============================
-    const stockAnterior = productoViejo.stock;
-    const stockNuevo = stock;
-
-    if (stockNuevo > stockAnterior) {
-      const diferencia = stockNuevo - stockAnterior;
+    // Registrar entrada si el stock aumentó
+    if (stock > productoViejo.stock) {
+      const diferencia = stock - productoViejo.stock;
       await supabase
         .schema("catalogo")
         .from("movimiento_stock")
-        .insert([
-          {
-            id_producto: id,
-            tipo_movimiento: "ENTRADA",
-            cantidad_productos: diferencia,
-            motivo: "Actualización de stock (Ingreso de mercancía)"
-          }
-        ]);
+        .insert([{
+          id_producto: id,
+          tipo_movimiento: "ENTRADA",
+          cantidad_productos: diferencia,
+          motivo: "Actualización de stock (Ingreso de mercancía)"
+        }]);
     }
 
-    res.json({
-      mensaje: "Producto actualizado"
-    });
+    res.json({ mensaje: "Producto actualizado" });
 
   } catch (error) {
     res.status(500).json(error);
@@ -366,7 +341,8 @@ export const eliminarProducto = async (req, res) => {
       .from("producto")
       .select(`
         id_producto,
-        id_negocio
+        id_negocio,
+        nombre_producto
       `)
       .eq("id_producto", id)
       .single();
@@ -395,53 +371,91 @@ export const eliminarProducto = async (req, res) => {
     }
 
     // ============================
-    // ELIMINAR
+    // VERIFICAR SI EL PRODUCTO TIENE VENTAS
     // ============================
-    const { error } = await supabase
-      .schema("catalogo")
-      .from("producto")
-      .delete()
-      .eq("id_producto", id);
+    const { data: ventasAsociadas, error: errorVentas } = await supabase
+      .schema("ventas")
+      .from("detalle_venta")
+      .select("id_detalle")
+      .eq("id_producto", id)
+      .limit(1);
 
-    if (error) {
-      return res.status(400).json(error);
+    if (errorVentas) {
+      return res.status(400).json(errorVentas);
     }
 
-    res.json({
-      mensaje: "Producto eliminado"
-    });
+    // ============================
+    // LÓGICA: SI TIENE VENTAS -> INACTIVAR, SI NO -> BORRAR
+    // ============================
+    if (ventasAsociadas && ventasAsociadas.length > 0) {
+      // Tiene ventas asociadas: se inactiva para no romper el historial
+      const { error: errorUpdate } = await supabase
+        .schema("catalogo")
+        .from("producto")
+        .update({ estado_producto: "INACTIVO" })
+        .eq("id_producto", id);
+
+      if (errorUpdate) return res.status(400).json(errorUpdate);
+
+      return res.json({
+        mensaje: `El producto "${producto.nombre_producto}" tiene ventas registradas y no se puede eliminar. Ha sido INACTIVADO y ya no aparecerá en el catálogo.`,
+        accion: "inactivado"
+      });
+    } else {
+      // No tiene ventas: se elimina de la base de datos
+      const { error: errorDelete } = await supabase
+        .schema("catalogo")
+        .from("producto")
+        .delete()
+        .eq("id_producto", id);
+
+      if (errorDelete) return res.status(400).json(errorDelete);
+
+      return res.json({
+        mensaje: `El producto "${producto.nombre_producto}" ha sido eliminado correctamente.`,
+        accion: "eliminado"
+      });
+    }
 
   } catch (error) {
+    console.error(error);
     res.status(500).json(error);
   }
 };
 
 export const obtenerProductosPorNegocioId = async (req, res) => {
-    try {
-        const { id } = req.params;
+  try {
+    const { id } = req.params;
 
-        const { data, error } = await supabase
-            .schema("catalogo")
-            .from("producto")
-            .select(`
-                *,
-                categoria(nombre_categoria)
-            `)
-            .eq("id_negocio", id);
+    // 1. Categorías activas
+    const { data: categoriasActivas } = await supabase
+      .schema("catalogo")
+      .from("categoria")
+      .select("id_categoria")
+      .eq("estado", "ACTIVO");
 
-        if (error) {
-            return res.status(400).json(error);
-        }
+    const idsCategoriasActivas = (categoriasActivas || []).map((c) => c.id_categoria);
 
-        res.json(data);
-    } catch (error) {
-        res.status(500).json({ mensaje: "Error interno del servidor", error });
-    }
+    // 2. Productos disponibles de categorías activas
+    const { data, error } = await supabase
+      .schema("catalogo")
+      .from("producto")
+      .select(`
+        *,
+        categoria(nombre_categoria)
+      `)
+      .eq("id_negocio", id)
+      .eq("estado_producto", "DISPONIBLE") 
+      .in("id_categoria", idsCategoriasActivas);
+
+    if (error) return res.status(400).json(error);
+
+    res.json(data);
+  } catch (error) {
+    res.status(500).json({ mensaje: "Error interno del servidor", error });
+  }
 };
 
-// =====================================================
-// BUSCADOR GLOBAL: Productos + Negocios
-// =====================================================
 export const buscarProductosYNegocios = async (req, res) => {
   const { q } = req.query;
 
@@ -452,17 +466,27 @@ export const buscarProductosYNegocios = async (req, res) => {
   const searchTerm = q.trim();
 
   try {
-    // 1. Buscar en productos usando el esquema 'catalogo'
+    // 1. Categorías activas
+    const { data: categoriasActivas } = await supabase
+      .schema("catalogo")
+      .from("categoria")
+      .select("id_categoria")
+      .eq("estado", "ACTIVO");
+
+    const idsCategoriasActivas = (categoriasActivas || []).map((c) => c.id_categoria);
+
+    // 2. Buscar productos disponibles de categorías activas
     const { data: productos, error: errorProductos } = await supabase
       .schema("catalogo")
       .from("producto")
       .select("*, categoria:id_categoria(nombre_categoria)")
       .eq("estado_producto", "DISPONIBLE")
+      .in("id_categoria", idsCategoriasActivas)
       .or(`nombre_producto.ilike.%${searchTerm}%,descripcion.ilike.%${searchTerm}%`);
 
     if (errorProductos) throw errorProductos;
 
-    // 2. Buscar en negocios usando el esquema 'negocio'
+    // 3. Buscar negocios aprobados
     const { data: negocios, error: errorNegocios } = await supabase
       .schema("negocio")
       .from("negocio")
@@ -483,9 +507,6 @@ export const buscarProductosYNegocios = async (req, res) => {
   }
 };
 
-// =====================================================
-// OBTENER PRODUCTOS MÁS VENDIDOS (Para filtro de inicio)
-// =====================================================
 export const obtenerMasVendidos = async (req, res) => {
   try {
     // 1. Traemos todos los detalles de ventas

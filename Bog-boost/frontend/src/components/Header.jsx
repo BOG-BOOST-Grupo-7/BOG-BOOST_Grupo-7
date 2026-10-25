@@ -51,7 +51,6 @@ function Header() {
     user?.email?.charAt(0)?.toUpperCase() ||
     "U";
 
-  
   const fotoPerfil = perfil?.foto_perfil || user?.foto_perfil || user?.logo;
 
   useEffect(() => {
@@ -59,7 +58,6 @@ function Header() {
     if (isAuthenticated) {
       cargarNotificaciones();
     }
-    
   }, [isAuthenticated, user, perfil]);
 
   const cargarNotificaciones = async () => {
@@ -74,7 +72,13 @@ function Header() {
   const cargarCategorias = async () => {
     try {
       const data = await obtenerCategorias();
-      setCategorias(data);
+      
+      // Filtramos solo las categorías ACTIVAS
+      const categoriasActivas = data.filter(
+        (cat) => cat.estado === "ACTIVO" || cat.estado === null || cat.estado === undefined
+      );
+      
+      setCategorias(categoriasActivas);
     } catch (error) {
       console.error(error);
     }

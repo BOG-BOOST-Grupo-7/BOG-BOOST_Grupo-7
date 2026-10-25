@@ -194,14 +194,22 @@ function AdminMovimientoStock() {
   };
 
   const manejarEliminarProducto = async (id_producto) => {
-    if (!window.confirm("¿Estás seguro de eliminar este producto?")) return;
+    const confirmar = window.confirm(
+      "¿Estás seguro de eliminar este producto?\n\n" +
+      "• Si el producto NO tiene ventas, se eliminará.\n" +
+      "• Si el producto YA tiene ventas, se marcará como INACTIVO y desaparecerá del catálogo, pero su historial de ventas se conservará."
+    );
+
+    if (!confirmar) return;
+
     try {
-      await eliminarProducto(id_producto);
+      const respuesta = await eliminarProducto(id_producto);
+      alert(respuesta.mensaje);
       cargarProductosTabla();
       cargarMovimientos();
     } catch (error) {
       console.error("Error al eliminar producto:", error);
-      alert("No se pudo eliminar el producto.");
+      alert(error.response?.data?.mensaje || "No se pudo procesar la solicitud.");
     }
   };
 
@@ -246,8 +254,8 @@ function AdminMovimientoStock() {
           {vistaActiva === "productos" && (
             <button className="btn-green btn-nuevo-prod-corto" onClick={abrirModalCrear}>
               <FaPlus /> Nuevo Producto
-              </button>
-            )}
+            </button>
+          )}
         </div>
 
         {/* Barra de Búsqueda y Filtros */}
@@ -280,7 +288,6 @@ function AdminMovimientoStock() {
                   <option value="TODOS">Todos</option>
                   <option value="ENTRADA">Entradas</option>
                   <option value="SALIDA">Salidas</option>
-                  <option value="AJUSTE">Ajustes</option>
                 </select>
               </>
             )}
@@ -358,6 +365,10 @@ function AdminMovimientoStock() {
                           )}
                           <div>
                             <strong>{prod.nombre_producto}</strong>
+                            {/* 👇 ETIQUETA INACTIVO MOVIDA AQUÍ */}
+                            {prod.estado_producto === "INACTIVO" && (
+                              <span className="badge-inactivo">INACTIVO</span>
+                            )}
                           </div>
                         </div>
                       </td>
@@ -435,7 +446,7 @@ function AdminMovimientoStock() {
           setModalProductosAbierto(false);
           setProductoAEditar(null);
           cargarProductosTabla();
-          cargarMovimientos(); 
+          cargarMovimientos();
         }}
         idNegocio={id_negocio}
       />

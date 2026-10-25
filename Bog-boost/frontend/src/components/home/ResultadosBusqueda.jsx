@@ -15,11 +15,9 @@ const ResultadosBusqueda = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [tabActiva, setTabActiva] = useState("todo");
-
-  // Estados para la paginación
   const [paginaProductos, setPaginaProductos] = useState(1);
   const [paginaNegocios, setPaginaNegocios] = useState(1);
-  const itemsPorPagina = 12; // Puedes cambiarlo a 10 o 15
+  const itemsPorPagina = 12; 
 
   // Estado local de filtros
   const [filtros, setFiltros] = useState({
@@ -39,13 +37,11 @@ const ResultadosBusqueda = () => {
     });
   }, [categoriaParam, ordenParam, precioMinParam, precioMaxParam]);
 
-  // Reiniciamos las páginas si cambian los filtros o la pestaña
   useEffect(() => {
     setPaginaProductos(1);
     setPaginaNegocios(1);
   }, [tabActiva, categoriaParam, ordenParam, precioMinParam, precioMaxParam, query]);
 
-  // FETCH
   useEffect(() => {
     if (!query.trim()) {
       setResultados({ productos: [], negocios: [] });
@@ -75,7 +71,6 @@ const ResultadosBusqueda = () => {
     };
   }, [query]);
 
-  // CATEGORÍAS DISPONIBLES
   const categoriasDisponibles = useMemo(() => {
     const set = new Set();
     resultados.productos.forEach((p) => {
@@ -121,7 +116,6 @@ const ResultadosBusqueda = () => {
     return lista;
   }, [resultados.productos, filtros]);
 
-  // APLICAR PAGINACIÓN
   const indexUltimoProducto = paginaProductos * itemsPorPagina;
   const indexPrimerProducto = indexUltimoProducto - itemsPorPagina;
   const productosPaginados = productosFiltrados.slice(indexPrimerProducto, indexUltimoProducto);
@@ -132,7 +126,6 @@ const ResultadosBusqueda = () => {
   const negociosPaginados = resultados.negocios.slice(indexPrimerNegocio, indexUltimoNegocio);
   const totalPaginasNegocios = Math.ceil(resultados.negocios.length / itemsPorPagina);
 
-  // ACTUALIZAR URL CON FILTROS
   const aplicarFiltros = (nuevos) => {
     const params = new URLSearchParams(searchParams);
     Object.entries(nuevos).forEach(([key, value]) => {
@@ -151,7 +144,6 @@ const ResultadosBusqueda = () => {
   const hayFiltrosActivos =
     filtros.categoria || filtros.orden !== "relevancia" || filtros.precioMin || filtros.precioMax;
 
-  // SIN QUERY
   if (!query.trim()) {
     return (
       <div className="busqueda-page">
@@ -164,7 +156,6 @@ const ResultadosBusqueda = () => {
     );
   }
 
-  // LOADING
   if (loading) {
     return (
       <div className="busqueda-page">
@@ -179,7 +170,6 @@ const ResultadosBusqueda = () => {
     );
   }
 
-  // ERROR
   if (error) {
     return (
       <div className="busqueda-page">

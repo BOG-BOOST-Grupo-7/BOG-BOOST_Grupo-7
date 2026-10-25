@@ -10,7 +10,6 @@ export const obtenerMetodosEnvioPorNegocio = async (idNegocio) => {
 
 };
 
-// Obtener los métodos de envío del negocio del vendedor
 export const obtenerMisMetodosEnvio = async () => {
 
     const { data } = await axiosClient.get(
@@ -21,7 +20,6 @@ export const obtenerMisMetodosEnvio = async () => {
 
 };
 
-// Crear un método de envío
 export const crearMetodoEnvio = async (metodo) => {
 
     const { data } = await axiosClient.post(
@@ -33,7 +31,6 @@ export const crearMetodoEnvio = async (metodo) => {
 
 };
 
-// Actualizar un método de envío
 export const actualizarMetodoEnvio = async (
     id,
     metodo
@@ -48,7 +45,6 @@ export const actualizarMetodoEnvio = async (
 
 };
 
-// Eliminar un método de envío
 export const eliminarMetodoEnvio = async (id) => {
 
     const { data } = await axiosClient.delete(

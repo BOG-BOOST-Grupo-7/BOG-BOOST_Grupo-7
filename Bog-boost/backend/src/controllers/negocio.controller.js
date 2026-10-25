@@ -1,5 +1,8 @@
 import supabase from "../services/supabase.js";
 
+const nombreRegex = /^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+$/;
+const telefonoRegex = /^\d{10}$/;
+
 export const listarNegocios = async (req, res) => {
   try {
     const { estado } = req.query;
@@ -260,99 +263,120 @@ export const crearNegocio = async (req, res) => {
       numero_puesto
     } = req.body;
 
-    // Verificar si el usuario ya tiene un negocio
-    const {
-      data: negocioExistente,
-      error: errorBusqueda
-    } = await supabase
+    // ============================
+    // 1. VALIDACIONES DE CAMPOS
+    // ============================
+    
+    // Nombre del negocio
+    if (!nombre_negocio || !nombre_negocio.trim()) {
+      return res.status(400).json({ mensaje: "El nombre del negocio es obligatorio." });
+    }
+    if (!nombreRegex.test(nombre_negocio.trim())) {
+      return res.status(400).json({ mensaje: "El nombre del negocio solo puede contener letras y espacios." });
+    }
+    if (nombre_negocio.trim().length > 50) {
+      return res.status(400).json({ mensaje: "El nombre del negocio no puede superar los 50 caracteres." });
+    }
+
+    // Descripción
+    if (!descripcion_negocio || !descripcion_negocio.trim()) {
+      return res.status(400).json({ mensaje: "La descripción del negocio es obligatoria." });
+    }
+    if (descripcion_negocio.trim().length < 10 || descripcion_negocio.trim().length > 200) {
+      return res.status(400).json({ mensaje: "La descripción debe tener entre 10 y 200 caracteres." });
+    }
+
+    // Teléfono (Exactamente 10 números)
+    if (!telefono_negocio || !telefono_negocio.trim()) {
+      return res.status(400).json({ mensaje: "El teléfono de contacto es obligatorio." });
+    }
+    if (!telefonoRegex.test(telefono_negocio.trim())) {
+      return res.status(400).json({ mensaje: "El teléfono debe contener exactamente 10 números." });
+    }
+
+    // Puesto
+    if (!numero_puesto) {
+      return res.status(400).json({ mensaje: "El número de puesto es obligatorio." });
+    }
+
+    // Logo
+    if (!logo || !logo.trim()) {
+      return res.status(400).json({ mensaje: "El logo del negocio es obligatorio." });
+    }
+
+    // ============================
+    // 2. VERIFICAR SI YA TIENE NEGOCIO
+    // ============================
+    const { data: negocioExistente, error: errorBusqueda } = await supabase
       .schema("negocio")
       .from("negocio")
       .select("id_negocio")
       .eq("id_perfil", req.user.id)
       .maybeSingle();
 
-    if (errorBusqueda) {
-      return res.status(400).json(errorBusqueda);
-    }
+    if (errorBusqueda) return res.status(400).json(errorBusqueda);
 
     if (negocioExistente) {
-      return res.status(409).json({
-        mensaje: "Ya tienes un negocio registrado."
-      });
+      return res.status(409).json({ mensaje: "Ya tienes un negocio registrado." });
     }
 
-    // Crear el negocio con estado PENDIENTE
-    const {
-      data: negocio,
-      error
-    } = await supabase
+    // ============================
+    // 3. CREAR NEGOCIO
+    // ============================
+    const { data: negocio, error } = await supabase
       .schema("negocio")
       .from("negocio")
-      .insert([
-        {
-          id_perfil: req.user.id,
-          nombre_negocio,
-          descripcion_negocio,
-          telefono_negocio,
-          logo,
-          estado_negocio: "PENDIENTE"
-        }
-      ])
+      .insert([{
+        id_perfil: req.user.id,
+        nombre_negocio: nombre_negocio.trim(),
+        descripcion_negocio: descripcion_negocio.trim(),
+        telefono_negocio: telefono_negocio.trim(),
+        logo,
+        estado_negocio: "PENDIENTE"
+      }])
       .select()
       .single();
 
-    if (error) {
-      return res.status(400).json(error);
-    }
+    if (error) return res.status(400).json(error);
 
-    console.log("Usuario:", req.user.id);
-    console.log("Negocio:", negocio);
-
-    // Registrar el puesto asociado al negocio
-    const {
-      error: errorPuesto
-    } = await supabase
+    // ============================
+    // 4. REGISTRAR PUESTO
+    // ============================
+    const { error: errorPuesto } = await supabase
       .schema("negocio")
       .from("puesto")
-      .insert([
-        {
-          id_negocio: negocio.id_negocio,
-          numero_puesto
-        }
-      ]);
+      .insert([{
+        id_negocio: negocio.id_negocio,
+        numero_puesto
+      }]);
 
-    if (errorPuesto) {
-      return res.status(400).json(errorPuesto);
-    }
+    if (errorPuesto) return res.status(400).json(errorPuesto);
 
-    // --- NOTIFICAR A LOS ADMINISTRADORES Y SUPER_ADMINS ---
+    // ============================
+    // 5. NOTIFICAR A ADMINS
+    // ============================
     try {
-      // 1. Buscar los IDs de los roles 'SUPER_ADMIN' y 'ADMINISTRADOR'
-      const { data: rolesAdmins, error: errorRoles } = await supabase
+      const { data: rolesAdmins } = await supabase
         .schema("cliente")
         .from("rol")
         .select("id_rol")
         .in("nombre_rol", ["SUPER_ADMIN", "ADMINISTRADOR"]);
 
-      if (!errorRoles && rolesAdmins && rolesAdmins.length > 0) {
+      if (rolesAdmins && rolesAdmins.length > 0) {
         const idsRoles = rolesAdmins.map((r) => r.id_rol);
-
-        // 2. Buscar directamente en cliente.perfil los usuarios que tengan esos id_rol
-        const { data: perfilesAdmins, error: errorPerfiles } = await supabase
+        const { data: perfilesAdmins } = await supabase
           .schema("cliente")
           .from("perfil")
           .select("id_perfil")
           .in("id_rol", idsRoles);
 
-        if (!errorPerfiles && perfilesAdmins && perfilesAdmins.length > 0) {
-          // 3. Crear el arreglo de notificaciones para cada administrador encontrado
+        if (perfilesAdmins && perfilesAdmins.length > 0) {
           const notificacionesAdmins = perfilesAdmins.map((admin) => ({
             id_perfil: admin.id_perfil,
-            mensaje: `Hay una nueva solicitud de negocio pendiente: "${nombre_negocio}".`,
+            mensaje: `Hay una nueva solicitud de negocio pendiente: "${nombre_negocio.trim()}".`,
             tipo: "SISTEMA"
           }));
 
-          // 4. Insertar las notificaciones de forma masiva
           await supabase
             .schema("cliente")
             .from("notificacion")
@@ -360,10 +384,8 @@ export const crearNegocio = async (req, res) => {
         }
       }
     } catch (errorNotif) {
-      
-      console.error("Error al enviar notificaciones a los administradores:", errorNotif);
+      console.error("Error al enviar notificaciones:", errorNotif);
     }
-    
 
     res.status(201).json({
       mensaje: "Negocio creado correctamente",
@@ -476,49 +498,146 @@ export const actualizarNegocio = async (req, res) => {
   }
 };
 
-export const eliminarNegocio = async (req, res) => {
+export const desactivarNegocio = async (req, res) => {
   try {
     const { id } = req.params;
+    const idPerfil = req.user.id;
 
-    console.log("ID negocio:", id);
-    console.log("Usuario:", req.user.id);
-
-    const { data, error } = await supabase
+    // ============================
+    // 1. Validar que el negocio existe y es del usuario
+    // ============================
+    const { data: negocio, error: errorBusqueda } = await supabase
       .schema("negocio")
       .from("negocio")
-      .delete()
-      .eq(
-        "id_negocio",
-        id
-      )
-      .eq(
-        "id_perfil",
-        req.user.id
-      )
-      .select();
+      .select("id_negocio, nombre_negocio, estado_negocio")
+      .eq("id_negocio", id)
+      .eq("id_perfil", idPerfil)
+      .single();
 
-    console.log("DATA:", data);
-    console.log("ERROR:", error);
-
-    if (error) {
-      return res.status(400).json(error);
-    }
-
-    if (!data.length) {
-      return res.status(403).json({
-        mensaje: "No tienes permiso para eliminar este negocio"
+    if (errorBusqueda || !negocio) {
+      return res.status(404).json({
+        mensaje: "Negocio no encontrado o no tienes permisos para desactivarlo."
       });
     }
 
-    res.json({
-      mensaje: "Negocio eliminado"
+    if (negocio.estado_negocio === "INACTIVO") {
+      return res.status(400).json({
+        mensaje: "Este negocio ya se encuentra inactivo."
+      });
+    }
+
+    // ============================
+    // 2. Cambiar estado del negocio a INACTIVO
+    // ============================
+    const { error: errorNegocio } = await supabase
+      .schema("negocio")
+      .from("negocio")
+      .update({ estado_negocio: "INACTIVO" })
+      .eq("id_negocio", id);
+
+    if (errorNegocio) {
+      return res.status(400).json(errorNegocio);
+    }
+
+    // ============================
+    // 3. Inactivar todos los productos del negocio
+    // ============================
+    const { error: errorProductos } = await supabase
+      .schema("catalogo")
+      .from("producto")
+      .update({ estado_producto: "INACTIVO" })
+      .eq("id_negocio", id);
+
+    if (errorProductos) {
+      console.error("Error inactivando productos:", errorProductos);
+    }
+
+    // ============================
+    // 4. Eliminar el puesto (para liberarlo en el mapa)
+    // ============================
+    const { error: errorPuesto } = await supabase
+      .schema("negocio")
+      .from("puesto")
+      .delete()
+      .eq("id_negocio", id);
+
+    if (errorPuesto) {
+      console.error("Error liberando puesto:", errorPuesto);
+    }
+
+    // ============================
+    // 5. NOTA: NO eliminamos métodos de envío ni medios de pago
+    // para no romper las llaves foráneas del historial de ventas.
+    // ============================
+
+    // ============================
+    // 6. Notificar al dueño del negocio (Vendedor)
+    // ============================
+    try {
+      await supabase
+        .schema("cliente")
+        .from("notificacion")
+        .insert([
+          {
+            id_perfil: idPerfil,
+            mensaje: `Tu negocio "${negocio.nombre_negocio}" ha sido desactivado. Tus productos ya no son visibles y tu puesto ha sido liberado en el mapa. El historial de ventas se ha conservado.`,
+            tipo: "INFORMATIVA"
+          }
+        ]);
+    } catch (errorNotif) {
+      console.error("No se pudo notificar al dueño:", errorNotif);
+    }
+
+    // ============================
+    // 7. NOTIFICAR A LOS ADMINISTRADORES Y SUPER_ADMINS
+    // ============================
+    try {
+      // 7.1. Buscar los IDs de los roles 'SUPER_ADMIN' y 'ADMINISTRADOR'
+      const { data: rolesAdmins, error: errorRoles } = await supabase
+        .schema("cliente")
+        .from("rol")
+        .select("id_rol")
+        .in("nombre_rol", ["SUPER_ADMIN", "ADMINISTRADOR"]);
+
+      if (!errorRoles && rolesAdmins && rolesAdmins.length > 0) {
+        const idsRoles = rolesAdmins.map((r) => r.id_rol);
+
+        // 7.2. Buscar los perfiles de los usuarios que tengan esos roles
+        const { data: perfilesAdmins, error: errorPerfiles } = await supabase
+          .schema("cliente")
+          .from("perfil")
+          .select("id_perfil")
+          .in("id_rol", idsRoles);
+
+        if (!errorPerfiles && perfilesAdmins && perfilesAdmins.length > 0) {
+          // 7.3. Crear el arreglo de notificaciones
+          const notificacionesAdmins = perfilesAdmins.map((admin) => ({
+            id_perfil: admin.id_perfil,
+            mensaje: `El negocio "${negocio.nombre_negocio}" ha sido desactivado por su dueño. Su puesto ha quedado libre en el mapa.`,
+            tipo: "SISTEMA"
+          }));
+
+          // 7.4. Insertar las notificaciones de forma masiva
+          await supabase
+            .schema("cliente")
+            .from("notificacion")
+            .insert(notificacionesAdmins);
+        }
+      }
+    } catch (errorNotifAdmin) {
+      console.error("Error al enviar notificaciones a los administradores:", errorNotifAdmin);
+    }
+
+    return res.json({
+      mensaje: "Negocio desactivado correctamente. El puesto ha sido liberado y el historial de ventas se conserva.",
+      negocio_id: id
     });
 
   } catch (error) {
-
-    console.log(error);
-
-    res.status(500).json(error);
+    console.error("Error al desactivar negocio:", error);
+    return res.status(500).json({
+      mensaje: "Error interno del servidor"
+    });
   }
 };
 

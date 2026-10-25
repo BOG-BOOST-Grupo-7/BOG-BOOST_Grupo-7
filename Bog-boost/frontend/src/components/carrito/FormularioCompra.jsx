@@ -4,7 +4,7 @@ import toast from "react-hot-toast";
 import { obtenerMiPerfil, actualizarPerfil } from "../../api/perfilApi";
 import { obtenerMediosPagoPorNegocio } from "../../api/medioPagoApi";
 import { obtenerMetodosEnvioPorNegocio } from "../../api/metodoEnvioApi";
-import { confirmarCarrito } from "../../api/ventaApi";
+import { confirmarCarrito, obtenerDatosUltimaCompra } from "../../api/ventaApi";
 import ModalComprobante from './ModalComprobante';
 
 import "../../styles/FormularioCompra.css";
@@ -31,13 +31,21 @@ function FormularioCompra({
     const [idMedioPago, setIdMedioPago] = useState("");
     const [idMetodoEnvio, setIdMetodoEnvio] = useState("");
     const [telefono, setTelefono] = useState("");
-    const [direccion, setDireccion] = useState("");
 
-    // Estados para controlar el Modal
+    // Dirección separada por campos para Bogotá
+    const [direccion, setDireccion] = useState({
+        tipoVia: "",
+        numeroVia: "",
+        sufijoVia: "",
+        numeroCruce: "",
+        numeroPlaca: "",
+        sufijoPlaca: "",
+        complemento: "",
+        barrio: ""
+    });
+
     const [showComprobante, setShowComprobante] = useState(false);
     const [ventaConfirmada, setVentaConfirmada] = useState(null);
-
-    
     const [procesando, setProcesando] = useState(false);
 
     useEffect(() => {
@@ -45,11 +53,10 @@ function FormularioCompra({
             const id = carrito[0].id_negocio;
             if (id !== undefined && id !== null) {
                 cargarDatos(id);
-            } else {
-                console.warn("El producto en el carrito no tiene id_negocio");
             }
         }
         cargarPerfil();
+        cargarDatosUltimaCompra();
     }, [carrito]);
 
     const cargarDatos = async (id) => {
@@ -81,7 +88,17 @@ function FormularioCompra({
         }
     };
 
-    
+    const cargarDatosUltimaCompra = async () => {
+        try {
+            const data = await obtenerDatosUltimaCompra();
+            if (data?.telefono) {
+                setTelefono(data.telefono);
+            }
+        } catch (error) {
+            console.error("No se pudieron cargar los últimos datos:", error);
+        }
+    };
+
     const handlePerfilChange = (e) => {
         const { name, value } = e.target;
         let valorValidado = value;
@@ -102,17 +119,33 @@ function FormularioCompra({
         });
     };
 
-    
     const handleTelefonoChange = (e) => {
         const soloNumeros = e.target.value.replace(/\D/g, "").slice(0, 10);
         setTelefono(soloNumeros);
     };
 
+    const handleDireccionChange = (e) => {
+        const { name, value } = e.target;
+        setDireccion((prev) => ({ ...prev, [name]: value }));
+    };
+
+    const construirDireccion = () => {
+        const { tipoVia, numeroVia, sufijoVia, numeroCruce, numeroPlaca, sufijoPlaca, complemento, barrio } = direccion;
+        if (!tipoVia || !numeroVia || !numeroCruce || !numeroPlaca || !barrio) return "";
+
+        let dir = `${tipoVia} ${numeroVia}`;
+        if (sufijoVia) dir += ` ${sufijoVia}`;
+        dir += ` # ${numeroCruce}-${numeroPlaca}`;
+        if (sufijoPlaca) dir += ` ${sufijoPlaca}`;
+        if (complemento) dir += `, ${complemento}`;
+        if (barrio) dir += `, Barrio ${barrio}`;
+        dir += `, Bogotá D.C.`;
+        return dir;
+    };
+
     const confirmarCompra = async () => {
-        
         if (procesando) return;
 
-        // Validaciones
         if (!perfil.primer_nombre || !perfil.primer_apellido || !perfil.id_tipo_documento || !perfil.numero_documento) {
             toast.error("Completa los datos de tu perfil.");
             return;
@@ -123,13 +156,19 @@ function FormularioCompra({
             return;
         }
 
-        if (!idMedioPago || !idMetodoEnvio || !telefono || !direccion) {
-            toast.error("Completa toda la información.");
+        if (!idMedioPago || !idMetodoEnvio) {
+            toast.error("Selecciona un medio de pago y un método de envío.");
             return;
         }
 
+        if (!direccion.tipoVia || !direccion.numeroVia || !direccion.numeroCruce || !direccion.numeroPlaca || !direccion.barrio) {
+            toast.error("Completa todos los campos de la dirección.");
+            return;
+        }
+
+        const direccionCompleta = construirDireccion();
+
         try {
-            
             setProcesando(true); 
 
             await actualizarPerfil({
@@ -145,7 +184,7 @@ function FormularioCompra({
                 id_medio_pago: Number(idMedioPago),
                 id_metodo_envio: Number(idMetodoEnvio),
                 telefono,
-                direccion,
+                direccion: direccionCompleta,
                 carrito: carrito.map((p) => ({
                     id_producto: p.id_producto,
                     cantidad: p.cantidad
@@ -155,7 +194,6 @@ function FormularioCompra({
             const data = await confirmarCarrito(payload);
             toast.success(data.mensaje);
 
-            // Guardamos la venta y abrimos el modal
             setVentaConfirmada(data.venta);
             setShowComprobante(true);
             
@@ -163,7 +201,6 @@ function FormularioCompra({
             console.error(error);
             toast.error(error.response?.data?.mensaje || "Error del servidor");
         } finally {
-            
             setProcesando(false); 
         }
     };
@@ -209,6 +246,8 @@ function FormularioCompra({
                                     <option key={medio.id_medio_pago} value={medio.id_medio_pago}>{medio.nombre_medio}</option>
                                 ))}
                             </select>
+
+                            {/* 👇 MÉTODO DE ENVÍO CON SU DESCRIPCIÓN */}
                             <label>Método de envío</label>
                             <select className="campo-compra" value={idMetodoEnvio} onChange={(e) => setIdMetodoEnvio(e.target.value)}>
                                 <option value="">Seleccione...</option>
@@ -216,6 +255,12 @@ function FormularioCompra({
                                     <option key={metodo.id_metodo_envio} value={metodo.id_metodo_envio}>{metodo.nombre_metodo}</option>
                                 ))}
                             </select>
+                            {metodoSeleccionado?.descripcion_metodo && (
+                                <p className="descripcion-envio">
+                                    <strong>Descripción:</strong> {metodoSeleccionado.descripcion_metodo}
+                                </p>
+                            )}
+
                             <label>Teléfono</label>
                             <input 
                                 className="campo-compra" 
@@ -225,8 +270,113 @@ function FormularioCompra({
                                 placeholder="Ej: 3001234567"
                                 maxLength="10"
                             />
-                            <label>Dirección</label>
-                            <input className="campo-compra" type="text" value={direccion} onChange={(e) => setDireccion(e.target.value)} />
+
+                            {/* Dirección profesional para Bogotá */}
+                            <label>Dirección (Bogotá D.C.)</label>
+                            <div className="direccion-grid">
+                                <select 
+                                    className="campo-compra direccion-campo" 
+                                    name="tipoVia" 
+                                    value={direccion.tipoVia} 
+                                    onChange={handleDireccionChange}
+                                    style={{ flex: '0 0 110px' }}
+                                >
+                                    <option value="">Tipo vía</option>
+                                    <option value="Calle">Calle</option>
+                                    <option value="Carrera">Carrera</option>
+                                    <option value="Avenida">Avenida</option>
+                                    <option value="Transversal">Transversal</option>
+                                    <option value="Diagonal">Diagonal</option>
+                                    <option value="Autopista">Autopista</option>
+                                </select>
+
+                                <input 
+                                    className="campo-compra direccion-campo" 
+                                    type="text" 
+                                    name="numeroVia" 
+                                    value={direccion.numeroVia} 
+                                    onChange={handleDireccionChange} 
+                                    placeholder="Nº(ej: 45)" 
+                                    maxLength={4}
+                                    style={{ flex: '0 0 60px' }}
+                                />
+
+                                <input 
+                                    className="campo-compra direccion-campo" 
+                                    type="text" 
+                                    name="sufijoVia" 
+                                    value={direccion.sufijoVia} 
+                                    onChange={handleDireccionChange} 
+                                    placeholder="(ej: Bis Sur)" 
+                                    maxLength={10}
+                                    style={{ flex: '0 0 110px' }}
+                                />
+
+                                <span className="direccion-hash">#</span>
+
+                                <input 
+                                    className="campo-compra direccion-campo" 
+                                    type="text" 
+                                    name="numeroCruce" 
+                                    value={direccion.numeroCruce} 
+                                    onChange={handleDireccionChange} 
+                                    placeholder="Cruce (ej: 12)" 
+                                    maxLength={4}
+                                    style={{ flex: '0 0 60px' }}
+                                />
+
+                                <span className="direccion-hash">-</span>
+
+                                <input 
+                                    className="campo-compra direccion-campo" 
+                                    type="text" 
+                                    name="numeroPlaca" 
+                                    value={direccion.numeroPlaca} 
+                                    onChange={handleDireccionChange} 
+                                    placeholder="(ej: 34)" 
+                                    maxLength={4}
+                                    style={{ flex: '0 0 60px' }}
+                                />
+
+                                <input 
+                                    className="campo-compra direccion-campo" 
+                                    type="text" 
+                                    name="sufijoPlaca" 
+                                    value={direccion.sufijoPlaca} 
+                                    onChange={handleDireccionChange} 
+                                    placeholder="(ej: Sur)" 
+                                    maxLength={10}
+                                    style={{ flex: '0 0 100px' }}
+                                />
+                            </div>
+
+                            <div className="direccion-grid">
+                                <input 
+                                    className="campo-compra direccion-campo" 
+                                    type="text" 
+                                    name="complemento" 
+                                    value={direccion.complemento} 
+                                    onChange={handleDireccionChange} 
+                                    placeholder="Apto, Torre, Interior..." 
+                                    maxLength={20}
+                                    style={{ flex: 1 }}
+                                />
+
+                                <input 
+                                    className="campo-compra direccion-campo" 
+                                    type="text" 
+                                    name="barrio" 
+                                    value={direccion.barrio} 
+                                    onChange={handleDireccionChange} 
+                                    placeholder="Barrio" 
+                                    maxLength={40}
+                                    style={{ flex: 1 }}
+                                />
+                            </div>
+
+                            <p className="direccion-preview">
+                                <strong>Dirección:</strong> {construirDireccion() || "Completa los campos"}
+                            </p>
                             
                             <div className="total-box">
                                 <h4>Resumen</h4>

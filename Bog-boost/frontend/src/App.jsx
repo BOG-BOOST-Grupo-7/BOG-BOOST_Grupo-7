@@ -42,7 +42,7 @@ import Carrito from "./pages/cliente/Carrito";
 import AdminMovimientoStock from "./pages/vendedor/MovimientoStock";
 import AdminVentasYSeguimiento from "./pages/vendedor/AdminVentasYSeguimiento";
 
-// 👇 COMPONENTE PARA REDIRIGIR AL ADMIN 👇
+
 const InicioRedireccion = () => {
   const { rol, loading } = useAuth();
   
@@ -61,7 +61,7 @@ function App() {
   return (
     <Routes>
       <Route path="/" element={<ClienteLayout />}>
-        {/* 👇 Usamos el componente de redirección aquí 👇 */}
+        {/* Usamos el componente de redirección aquí */}
         <Route index element={<InicioRedireccion />} />
         
         {/* Públicas */}

@@ -1,12 +1,12 @@
 .mapa-pagina {
   width: 100vw;
   min-height: 100vh;
-  padding: 12px;
+  padding: 20px;
   box-sizing: border-box;
   background: #f4f4f6;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: center; 
   font-family: Arial, sans-serif;
 }
 
@@ -14,6 +14,7 @@
   margin: 0 0 10px;
   color: #333;
   font-size: 20px;
+  text-align: center;
 }
 
 .mapa-controles {
@@ -35,6 +36,7 @@
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   transition: background 0.15s;
 }
+
 .mapa-controles button:hover {
   background: #f39c12;
   color: #fff;
@@ -51,34 +53,26 @@
 .mapa-viewport {
   width: 100%;
   max-width: 1400px;
-  height: calc(100vh - 120px);
+  height: calc(100vh - 150px);
   max-height: 85vh;
   overflow: auto;
   border: 2px solid #555;
   border-radius: 6px;
   background: #fff;
   box-sizing: border-box;
-  position: relative;
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
+  display: block;
+  margin: 0 auto; 
 }
 
 .mapa-contenido {
+  transform-origin: top left;
   transition: transform 0.15s ease-out;
-  transform-origin: top center;
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  padding: 10px;
-  min-width: 100%;
-  box-sizing: border-box;
+  display: block;
 }
 
-/* Aquí está la regla que buscabas 👇 */
 .mapa-svg {
   width: 100%;
-  max-width: 1600px;
+  max-width: 100%;
   height: auto;
   display: block;
   background: #fff;

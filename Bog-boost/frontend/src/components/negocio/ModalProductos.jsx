@@ -9,7 +9,8 @@ export default function ModalProductos({ abierto, onClose, idNegocio, productoAE
     const [categorias, setCategorias] = useState([]);
     const [previewImagen, setPreviewImagen] = useState("");
     const [subiendoImagen, setSubiendoImagen] = useState(false);
-    
+    const [error, setError] = useState("");
+
     const [formulario, setFormulario] = useState({
         id_categoria: "",
         nombre_producto: "",
@@ -17,14 +18,14 @@ export default function ModalProductos({ abierto, onClose, idNegocio, productoAE
         caracteristicas: "",
         stock: "",
         precio: "",
-        imagen: ""
+        imagen: "",
+        estado_producto: "DISPONIBLE"
     });
 
     useEffect(() => {
         if (abierto) {
             cargarCategorias();
             if (productoAEditar) {
-                // Si pasamos un producto para editar, rellenamos el formulario con sus datos
                 setFormulario({
                     id_categoria: productoAEditar.id_categoria || "",
                     nombre_producto: productoAEditar.nombre_producto || "",
@@ -32,19 +33,38 @@ export default function ModalProductos({ abierto, onClose, idNegocio, productoAE
                     caracteristicas: productoAEditar.caracteristicas || "",
                     stock: productoAEditar.stock ?? "",
                     precio: productoAEditar.precio ?? "",
-                    imagen: productoAEditar.imagen || ""
+                    imagen: productoAEditar.imagen || "",
+                    estado_producto: productoAEditar.estado_producto || "DISPONIBLE" // 👈 Cargar estado
                 });
                 setPreviewImagen(productoAEditar.imagen || "");
             } else {
                 limpiarFormulario();
             }
+            setError("");
         }
     }, [abierto, productoAEditar]);
 
     const cargarCategorias = async () => {
         try {
             const data = await obtenerCategorias();
-            setCategorias(data);
+
+            // Filtramos solo las categorías ACTIVAS
+            const categoriasActivas = data.filter(
+                (cat) => cat.estado === "ACTIVO" || cat.estado === null || cat.estado === undefined
+            );
+
+            // Si estamos editando un producto cuya categoría está inactiva,
+            // también la agregamos al array para que no se pierda el valor actual.
+            if (productoAEditar?.id_categoria) {
+                const categoriaActual = data.find(
+                    (cat) => String(cat.id_categoria) === String(productoAEditar.id_categoria)
+                );
+                if (categoriaActual && !categoriasActivas.some(c => c.id_categoria === categoriaActual.id_categoria)) {
+                    categoriasActivas.unshift(categoriaActual);
+                }
+            }
+
+            setCategorias(categoriasActivas);
         } catch (error) {
             console.error("Error al cargar categorías:", error);
         }
@@ -81,6 +101,42 @@ export default function ModalProductos({ abierto, onClose, idNegocio, productoAE
     };
 
     const guardar = async () => {
+        setError("");
+
+        // Validaciones
+        if (!formulario.id_categoria) {
+            setError("Selecciona una categoría.");
+            return;
+        }
+        if (!formulario.nombre_producto.trim()) {
+            setError("El nombre del producto es obligatorio.");
+            return;
+        }
+        if (formulario.nombre_producto.trim().length > 200) {
+            setError("El nombre no puede superar los 200 caracteres.");
+            return;
+        }
+        if (!formulario.descripcion.trim()) {
+            setError("La descripción es obligatoria.");
+            return;
+        }
+        if (formulario.descripcion.trim().length < 10 || formulario.descripcion.trim().length > 1000) {
+            setError("La descripción debe tener entre 10 y 1000 caracteres.");
+            return;
+        }
+        if (formulario.stock === "" || isNaN(formulario.stock) || Number(formulario.stock) < 0) {
+            setError("El stock debe ser un número mayor o igual a 0.");
+            return;
+        }
+        if (formulario.precio === "" || isNaN(formulario.precio) || Number(formulario.precio) < 0) {
+            setError("El precio debe ser un número mayor o igual a 0.");
+            return;
+        }
+        if (!formulario.imagen) {
+            setError("Debes subir una imagen del producto.");
+            return;
+        }
+
         try {
             if (productoAEditar) {
                 await actualizarProducto(productoAEditar.id_producto, formulario);
@@ -90,10 +146,10 @@ export default function ModalProductos({ abierto, onClose, idNegocio, productoAE
                     id_negocio: idNegocio
                 });
             }
-            onClose(); // Cierra y actualiza la tabla en el componente padre
+            onClose();
         } catch (error) {
             console.error("Error al guardar producto:", error);
-            alert("Ocurrió un error al guardar el producto.");
+            setError(error.response?.data?.mensaje || "Ocurrió un error al guardar el producto.");
         }
     };
 
@@ -105,7 +161,8 @@ export default function ModalProductos({ abierto, onClose, idNegocio, productoAE
             caracteristicas: "",
             stock: "",
             precio: "",
-            imagen: ""
+            imagen: "",
+            estado_producto: "DISPONIBLE"
         });
         setPreviewImagen("");
     };
@@ -121,7 +178,27 @@ export default function ModalProductos({ abierto, onClose, idNegocio, productoAE
                 </div>
 
                 <div className="modal-body">
-                    {/* Sección del Formulario */}
+                    {error && (
+                        <div className="error-banner" style={{ marginBottom: "15px" }}>
+                            {error}
+                        </div>
+                    )}
+
+                    {/* Aviso si el producto está inactivo */}
+                    {productoAEditar?.estado_producto === "INACTIVO" && (
+                        <div style={{
+                            background: "#fff8e1",
+                            border: "1px solid #f39c12",
+                            borderRadius: "8px",
+                            padding: "10px 15px",
+                            marginBottom: "15px",
+                            fontSize: "13px",
+                            color: "#8c6d1f"
+                        }}>
+                            ⚠️ <strong>Aviso:</strong> Este producto está INACTIVO. Puedes cambiar su estado a "Disponible" para que vuelva a aparecer en el catálogo.
+                        </div>
+                    )}
+
                     <div className="form-seccion">
                         <div className="form-group">
                             <label>Imagen del producto</label>
@@ -169,6 +246,7 @@ export default function ModalProductos({ abierto, onClose, idNegocio, productoAE
                                 {categorias.map((categoria) => (
                                     <option key={categoria.id_categoria} value={categoria.id_categoria}>
                                         {categoria.nombre_categoria}
+                                        {categoria.estado === "INACTIVO" && " (INACTIVA)"}
                                     </option>
                                 ))}
                             </select>
@@ -181,6 +259,7 @@ export default function ModalProductos({ abierto, onClose, idNegocio, productoAE
                                 placeholder="Nombre del producto"
                                 value={formulario.nombre_producto}
                                 onChange={(e) => setFormulario({ ...formulario, nombre_producto: e.target.value })}
+                                maxLength={200}
                             />
                         </div>
 
@@ -188,9 +267,10 @@ export default function ModalProductos({ abierto, onClose, idNegocio, productoAE
                             <label>Descripción</label>
                             <textarea
                                 rows="3"
-                                placeholder="Descripción detallada..."
+                                placeholder="Descripción detallada (mínimo 10 caracteres)..."
                                 value={formulario.descripcion}
                                 onChange={(e) => setFormulario({ ...formulario, descripcion: e.target.value })}
+                                maxLength={1000}
                             />
                         </div>
 
@@ -201,6 +281,7 @@ export default function ModalProductos({ abierto, onClose, idNegocio, productoAE
                                 placeholder="Características principales..."
                                 value={formulario.caracteristicas}
                                 onChange={(e) => setFormulario({ ...formulario, caracteristicas: e.target.value })}
+                                maxLength={1000}
                             />
                         </div>
 
@@ -232,6 +313,21 @@ export default function ModalProductos({ abierto, onClose, idNegocio, productoAE
                                 />
                             </div>
                         </div>
+
+                        {/* campo para activar/desactivar */}
+                        {productoAEditar && (
+                            <div className="form-group">
+                                <label>Estado del producto</label>
+                                <select
+                                    value={formulario.estado_producto}
+                                    onChange={(e) => setFormulario({ ...formulario, estado_producto: e.target.value })}
+                                >
+                                    <option value="DISPONIBLE">Disponible (visible en el catálogo)</option>
+                                    <option value="INACTIVO">Inactivo (oculto en el catálogo)</option>
+                                    <option value="AGOTADO">Agotado (sin stock)</option>
+                                </select>
+                            </div>
+                        )}
 
                         <div className="acciones-formulario" style={{ marginTop: "1.5rem", display: "flex", gap: "10px" }}>
                             <button

@@ -1,10 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { obtenerMiPerfil } from "../../api/perfilApi";
 import { registrarNegocio } from "../../api/negocioApi";
 import { subirLogo as subirLogoApi } from "../../api/uploadApi";
-import { getAvailableStands } from "../../api/mapaApis";
+import { getAvailableStands } from "../../api/puestoApi";
 
 import "../../styles/RegistrarNegocio.css"; 
 
@@ -14,9 +14,6 @@ function RegistrarNegocio() {
 
     const [cargandoPerfil, setCargandoPerfil] = useState(true);
 
-    // ============================================
-    // ESTADOS
-    // ============================================
     const [datos, setDatos] = useState({
         nombre_negocio: "",
         descripcion_negocio: "",
@@ -32,9 +29,11 @@ function RegistrarNegocio() {
     const [cargandoPuestos, setCargandoPuestos] = useState(false);
     const [error, setError] = useState("");
 
-    // ============================================
-    // VALIDAR PERFIL
-    // ============================================
+    // Estados para el dropdown con buscador integrado
+    const [busquedaPuesto, setBusquedaPuesto] = useState("");
+    const [dropdownAbierto, setDropdownAbierto] = useState(false);
+    const dropdownRef = useRef(null);
+
     useEffect(() => {
         const verificarPerfil = async () => {
             try {
@@ -47,9 +46,7 @@ function RegistrarNegocio() {
                     !perfil.numero_documento;
 
                 if (perfilIncompleto) {
-                    alert(
-                        "Por favor, completa la información de tu perfil personal antes de registrar un negocio."
-                    );
+                    alert("Por favor, completa la información de tu perfil personal antes de registrar un negocio.");
                     navigate("/perfil");
                     return;
                 }
@@ -64,9 +61,6 @@ function RegistrarNegocio() {
         verificarPerfil();
     }, [navigate]);
 
-    // ============================================
-    // CARGAR PUESTOS DISPONIBLES
-    // ============================================
     const loadAvailableStands = async () => {
         try {
             setCargandoPuestos(true);
@@ -84,9 +78,17 @@ function RegistrarNegocio() {
         loadAvailableStands();
     }, []);
 
-    // ============================================
-    // MANEJADOR DE CAMBIOS
-    // ============================================
+    // Cerrar dropdown al hacer clic afuera
+    useEffect(() => {
+        const handleClickFuera = (e) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+                setDropdownAbierto(false);
+            }
+        };
+        document.addEventListener("mousedown", handleClickFuera);
+        return () => document.removeEventListener("mousedown", handleClickFuera);
+    }, []);
+
     const handleChange = (e) => {
         const { name, value } = e.target;
         setDatos((prev) => ({
@@ -95,9 +97,6 @@ function RegistrarNegocio() {
         }));
     };
 
-    // ============================================
-    // SUBIR LOGO
-    // ============================================
     const subirLogo = async (e) => {
         if (!e || !e.target) return;
 
@@ -153,37 +152,16 @@ function RegistrarNegocio() {
         }
     };
 
-    // ============================================
-    // GUARDAR SOLICITUD
-    // ============================================
     const guardarSolicitud = async (e) => {
         e.preventDefault();
         setError("");
 
-        if (!datos.logo) {
-            setError("Debes subir el logo del negocio.");
-            return;
-        }
-
-        if (!datos.nombre_negocio.trim()) {
-            setError("Ingresa el nombre del negocio.");
-            return;
-        }
-
-        if (!datos.descripcion_negocio.trim()) {
-            setError("Ingresa una descripción para tu negocio.");
-            return;
-        }
-
-        if (!datos.telefono_negocio.trim()) {
-            setError("Ingresa el teléfono de contacto.");
-            return;
-        }
-
-        if (!datos.numero_puesto) {
-            setError("Selecciona un número de puesto disponible.");
-            return;
-        }
+        if (!datos.logo) { setError("Debes subir el logo del negocio."); return; }
+        if (!datos.nombre_negocio.trim()) { setError("Ingresa el nombre del negocio."); return; }
+        if (!datos.descripcion_negocio.trim()) { setError("Ingresa una descripción para tu negocio."); return; }
+        if (!datos.telefono_negocio.trim()) { setError("Ingresa el teléfono de contacto."); return; }
+        if (datos.telefono_negocio.length !== 10) { setError("El teléfono debe tener exactamente 10 números."); return; }
+        if (!datos.numero_puesto) { setError("Selecciona un número de puesto disponible."); return; }
 
         const standSeleccionado = availableStands.find(
             (stand) => Number(stand.number) === Number(datos.numero_puesto)
@@ -216,6 +194,7 @@ function RegistrarNegocio() {
                 logo: "",
             });
             setPreviewLogo("");
+            setBusquedaPuesto("");
             await loadAvailableStands();
         } catch (err) {
             console.error("Error al registrar negocio:", err);
@@ -238,6 +217,21 @@ function RegistrarNegocio() {
         }));
     };
 
+    // Filtramos los puestos según la búsqueda (por número)
+    const puestosFiltrados = availableStands.filter((stand) => {
+        if (!busquedaPuesto.trim()) return true;
+        return String(stand.number).includes(busquedaPuesto.trim());
+    });
+
+    // Texto que se muestra en la "caja" del select
+    const standSeleccionadoObj = availableStands.find(
+        (s) => Number(s.number) === Number(datos.numero_puesto)
+    );
+    
+    const textoMostrado = standSeleccionadoObj 
+        ? `Puesto #${standSeleccionadoObj.number} - ${standSeleccionadoObj.section}`
+        : "";
+
     if (cargandoPerfil) {
         return (
             <main className="registro-container">
@@ -252,7 +246,6 @@ function RegistrarNegocio() {
         <main className="registro-container">
             <div className="registro-card registro-card-wide">
                 
-                {/* ENCABEZADO UNIFICADO */}
                 <div className="auth-header">
                     <div className="auth-icon-badge">
                         <i className="fas fa-store"></i>
@@ -267,7 +260,7 @@ function RegistrarNegocio() {
 
                 <form onSubmit={guardarSolicitud} className="registro-form">
                     
-                    {/* ÁREA DEL LOGO */}
+                    {/* LOGO */}
                     <div className="form-group" style={{ alignItems: "center" }}>
                         <label style={{ width: "100%", justifyContent: "flex-start" }}>
                             <i className="fas fa-image label-icon"></i> Logo del negocio
@@ -275,11 +268,7 @@ function RegistrarNegocio() {
                         
                         <label className="logo-upload">
                             {previewLogo ? (
-                                <img
-                                    src={previewLogo}
-                                    alt="Logo del negocio"
-                                    className="preview-logo"
-                                />
+                                <img src={previewLogo} alt="Logo del negocio" className="preview-logo" />
                             ) : (
                                 <>
                                     <div className="logo-icon">🏪</div>
@@ -287,28 +276,19 @@ function RegistrarNegocio() {
                                     <small>PNG, JPG o WEBP (máx. 5 MB)</small>
                                 </>
                             )}
-                            <input
-                                type="file"
-                                hidden
-                                accept="image/png,image/jpeg,image/webp"
-                                onChange={subirLogo}
-                            />
+                            <input type="file" hidden accept="image/png,image/jpeg,image/webp" onChange={subirLogo} />
                         </label>
 
                         {subiendoLogo && <div className="uploading">⏳ Subiendo logo...</div>}
 
                         {previewLogo && !subiendoLogo && (
-                            <button
-                                type="button"
-                                className="btn-eliminar-logo"
-                                onClick={eliminarLogo}
-                            >
+                            <button type="button" className="btn-eliminar-logo" onClick={eliminarLogo}>
                                 🗑 Cambiar logo
                             </button>
                         )}
                     </div>
 
-                    {/* NOMBRE DEL NEGOCIO */}
+                    {/* NOMBRE */}
                     <div className="form-group">
                         <label>
                             <i className="fas fa-store label-icon"></i> Nombre del negocio
@@ -319,12 +299,10 @@ function RegistrarNegocio() {
                             value={datos.nombre_negocio}
                             onChange={(e) => {
                                 const soloLetras = e.target.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, "");
-                                setDatos((prev) => ({
-                                    ...prev,
-                                    nombre_negocio: soloLetras,
-                                }));
+                                setDatos((prev) => ({ ...prev, nombre_negocio: soloLetras }));
                             }}
                             placeholder="Ej: Antigüedades San Alejo"
+                            maxLength={50}
                             required
                         />
                     </div>
@@ -339,6 +317,7 @@ function RegistrarNegocio() {
                             value={datos.descripcion_negocio}
                             onChange={handleChange}
                             placeholder="Describe tu negocio y productos"
+                            maxLength={200}
                             required
                         />
                     </div>
@@ -355,45 +334,94 @@ function RegistrarNegocio() {
                             value={datos.telefono_negocio}
                             onChange={(e) => {
                                 const soloNumeros = e.target.value.replace(/\D/g, "");
-                                setDatos((prev) => ({
-                                    ...prev,
-                                    telefono_negocio: soloNumeros,
-                                }));
+                                const limitado = soloNumeros.slice(0, 10); 
+                                setDatos((prev) => ({ ...prev, telefono_negocio: limitado }));
                             }}
                             placeholder="Ej: 3012345678"
+                            maxLength={10}
                             required
                         />
                     </div>
 
-                    {/* SELECCIÓN DE PUESTO */}
+                    {/* SELECTOR CON BUSCADOR INTEGRADO */}
                     <div className="form-group">
                         <label>
                             <i className="fas fa-map-marker-alt label-icon"></i> Número del puesto
                         </label>
-                        <select
-                            name="numero_puesto"
-                            value={datos.numero_puesto}
-                            onChange={handleChange}
-                            className="stand-select"
-                            disabled={cargandoPuestos}
-                            required
-                        >
-                            <option value="">-- Selecciona un puesto disponible --</option>
-                            {availableStands.map((stand) => (
-                                <option key={stand.id} value={stand.number}>
-                                    Puesto #{stand.number} - {stand.section}
-                                    {stand.size ? ` - ${stand.size}` : ""}
-                                    {stand.price ? ` ($${Number(stand.price).toLocaleString()}/mes)` : ""}
-                                </option>
-                            ))}
-                        </select>
 
-                        {cargandoPuestos && <div className="cargando-puestos">⏳ Cargando puestos disponibles...</div>}
+                        <div className="custom-select-wrapper" ref={dropdownRef}>
+                            {/* Caja que se ve igual que un select normal */}
+                            <div 
+                                className={`custom-select-trigger ${dropdownAbierto ? "open" : ""}`}
+                                onClick={() => setDropdownAbierto(!dropdownAbierto)}
+                            >
+                                <span className={textoMostrado ? "texto-seleccionado" : "texto-placeholder"}>
+                                    {textoMostrado || "-- Selecciona un puesto disponible --"}
+                                </span>
+                                <i className={`fas fa-chevron-${dropdownAbierto ? "up" : "down"} custom-select-arrow`}></i>
+                            </div>
+
+                            {/* Panel desplegable con el buscador dentro */}
+                            {dropdownAbierto && (
+                                <div className="custom-select-panel">
+                                    
+                                    {/* Buscador (por número) dentro del panel */}
+                                    <div className="custom-select-search">
+                                        <i className="fas fa-search"></i>
+                                        <input
+                                            type="text"
+                                            placeholder="Buscar por número de puesto..."
+                                            value={busquedaPuesto}
+                                            onChange={(e) => setBusquedaPuesto(e.target.value.replace(/\D/g, ""))}
+                                            inputMode="numeric"
+                                            autoFocus
+                                        />
+                                        {busquedaPuesto && (
+                                            <button 
+                                                type="button" 
+                                                onClick={() => setBusquedaPuesto("")}
+                                                className="btn-clear-search"
+                                            >
+                                                ×
+                                            </button>
+                                        )}
+                                    </div>
+
+                                    {/* Lista de puestos */}
+                                    <div className="custom-select-options">
+                                        {cargandoPuestos ? (
+                                            <div className="sin-resultados">Cargando puestos...</div>
+                                        ) : puestosFiltrados.length === 0 ? (
+                                            <div className="sin-resultados">
+                                                No hay puestos con el número "{busquedaPuesto}"
+                                            </div>
+                                        ) : (
+                                            puestosFiltrados.map((stand) => (
+                                                <div
+                                                    key={stand.id}
+                                                    className={`custom-select-option ${Number(datos.numero_puesto) === Number(stand.number) ? "selected" : ""}`}
+                                                    onClick={() => {
+                                                        setDatos((prev) => ({ ...prev, numero_puesto: stand.number }));
+                                                        setDropdownAbierto(false);
+                                                        setBusquedaPuesto("");
+                                                    }}
+                                                >
+                                                    <div>
+                                                        <strong>Puesto #{stand.number}</strong>
+                                                        {stand.section && stand.section.trim() !== "" && (
+                                                            <span className="option-section"> - {stand.section}</span>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            ))
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
 
                         {availableStands.length === 0 && !cargandoPuestos && (
-                            <div className="sin-puestos">
-                                ⚠️ No hay puestos disponibles en este momento.
-                            </div>
+                            <div className="sin-puestos">⚠️ No hay puestos disponibles en este momento.</div>
                         )}
                     </div>
 
@@ -404,24 +432,18 @@ function RegistrarNegocio() {
                         </div>
                     )}
 
-                    {/* BOTÓN DE ENVÍO */}
+                    {/* BOTÓN */}
                     <button
                         type="submit"
                         className="btn-registrar"
                         disabled={subiendoLogo || loading || availableStands.length === 0}
                     >
                         {subiendoLogo ? (
-                            <>
-                                <i className="fas fa-spinner fa-spin"></i> Subiendo logo...
-                            </>
+                            <><i className="fas fa-spinner fa-spin"></i> Subiendo logo...</>
                         ) : loading ? (
-                            <>
-                                <i className="fas fa-spinner fa-spin"></i> Registrando...
-                            </>
+                            <><i className="fas fa-spinner fa-spin"></i> Registrando...</>
                         ) : (
-                            <>
-                                Enviar solicitud de registro <i className="fas fa-arrow-right"></i>
-                            </>
+                            <>Enviar solicitud de registro <i className="fas fa-arrow-right"></i></>
                         )}
                     </button>
                 </form>

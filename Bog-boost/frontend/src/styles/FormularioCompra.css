@@ -173,6 +173,72 @@
     transform:translateY(-2px);
 }
 
+.descripcion-envio {
+    font-size: 13px;
+    color: #555;
+    background: #f0f7ff;
+    padding: 8px 12px;
+    border-radius: 6px;
+    border-left: 3px solid #3b82f6;
+    margin: 6px 0 12px 0;
+    line-height: 1.4;
+}
+
+.descripcion-envio strong {
+    color: #1e40af;
+}
+
+.direccion-grid {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+}
+
+.direccion-campo {
+    min-width: 0;
+    font-size: 13px;
+    padding: 8px;
+}
+
+.direccion-hash {
+    font-size: 18px;
+    font-weight: bold;
+    color: #666;
+}
+
+.direccion-preview {
+    font-size: 13px;
+    color: #444;
+    background: #f9f9f9;
+    padding: 8px 12px;
+    border-radius: 6px;
+    border-left: 3px solid #f5b952;
+    margin: 10px 0;
+    word-break: break-word;
+}
+
+.direccion-preview strong {
+    color: #111;
+}
+
+/* Responsive: en pantallas pequeñas se apilan */
+@media (max-width: 500px) {
+    .direccion-grid {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .direccion-grid select,
+    .direccion-grid input {
+        flex: 1 !important;
+        width: 100%;
+    }
+    .direccion-hash {
+        display: none;
+    }
+}
+
 @media (max-width:900px){
 
     .modal-compra{

@@ -13,6 +13,13 @@ export const confirmarCarrito = async (payload) => {
     return data;
 };
 
+export const obtenerDatosUltimaCompra = async () => {
+  const { data } = await axiosClient.get(
+    "/ventas/ultima-compra");
+    
+  return data;
+};
+
 export const obtenerMisCompras = async () => {
     const { data } = await axiosClient.get(
         "/ventas/mis-compras"
