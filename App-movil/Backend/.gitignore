@@ -1,0 +1,7 @@
+/node_modules/
+
+*.rar
+
+.env
+.env.*
+!.env.example
