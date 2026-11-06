@@ -1,0 +1,544 @@
+import supabase from "../services/supabase.js";
+
+const calcularEstadoProducto = (stock) => {
+  return stock === 0
+    ? "AGOTADO"
+    : "DISPONIBLE";
+};
+
+export const listarProductos = async (req, res) => {
+  try {
+    // 1. Traer categorías activas
+    const { data: categoriasActivas, error: errorCat } = await supabase
+      .schema("catalogo")
+      .from("categoria")
+      .select("id_categoria")
+      .eq("estado", "ACTIVO");
+
+    if (errorCat) return res.status(400).json(errorCat);
+
+    const idsCategoriasActivas = categoriasActivas.map((c) => c.id_categoria);
+
+    // 2. Traer productos disponibles de categorías activas
+    const { data: productos, error } = await supabase
+      .schema("catalogo")
+      .from("producto")
+      .select("*")
+      .eq("estado_producto", "DISPONIBLE")
+      .in("id_categoria", idsCategoriasActivas);
+
+    if (error) return res.status(400).json(error);
+
+    // 3. Agregar categoría y negocio
+    const productosCompletos = await Promise.all(
+      productos.map(async (producto) => {
+        const { data: categoria } = await supabase
+          .schema("catalogo")
+          .from("categoria")
+          .select("id_categoria, nombre_categoria")
+          .eq("id_categoria", producto.id_categoria)
+          .single();
+
+        const { data: negocio } = await supabase
+          .schema("negocio")
+          .from("negocio")
+          .select("id_negocio, nombre_negocio, logo")
+          .eq("id_negocio", producto.id_negocio)
+          .single();
+
+        return {
+          ...producto,
+          categoria,
+          nombre_negocio: negocio?.nombre_negocio,
+          logo: negocio?.logo,
+          negocio
+        };
+      })
+    );
+
+    res.json(productosCompletos);
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json(error);
+  }
+};
+
+export const obtenerProductoPorId = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        // ==========================
+        // PRODUCTO
+        // ==========================
+        const { data: producto, error } = await supabase
+            .schema("catalogo")
+            .from("producto")
+            .select("*")
+            .eq("id_producto", id)
+            .single();
+
+        if (error || !producto) {
+            return res.status(404).json({
+                mensaje: "Producto no encontrado"
+            });
+        }
+
+        // ==========================
+        // CATEGORIA
+        // ==========================
+        const { data: categoria } = await supabase
+            .schema("catalogo")
+            .from("categoria")
+            .select(`
+                id_categoria,
+                nombre_categoria
+            `)
+            .eq("id_categoria", producto.id_categoria)
+            .single();
+
+        // ==========================
+        // NEGOCIO
+        // ==========================
+        const { data: negocio } = await supabase
+            .schema("negocio")
+            .from("negocio")
+            .select(`
+                id_negocio,
+                nombre_negocio,
+                logo
+            `)
+            .eq("id_negocio", producto.id_negocio)
+            .single();
+
+        res.json({
+            ...producto,
+            categoria,
+            negocio
+        });
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json(error);
+    }
+};
+
+export const obtenerMisProductos = async (req, res) => {
+  try {
+    const { data: negocio } = await supabase
+      .schema("negocio")
+      .from("negocio")
+      .select("id_negocio")
+      .eq("id_perfil", req.user.id)
+      .single();
+
+    if (!negocio) {
+      return res.status(404).json({
+        mensaje: "No tienes un negocio registrado."
+      });
+    }
+
+    const { data, error } = await supabase
+      .schema("catalogo")
+      .from("producto")
+      .select(`
+        *,
+        categoria(*)
+      `)
+      .eq(
+        "id_negocio",
+        negocio.id_negocio
+      );
+
+    if (error) {
+      return res.status(400).json(error);
+    }
+
+    res.json(data);
+
+  } catch (error) {
+    res.status(500).json(error);
+  }
+};
+
+export const crearProducto = async (req, res) => {
+  try {
+    const {
+      id_negocio,
+      id_categoria,
+      nombre_producto,
+      descripcion,
+      caracteristicas,
+      stock,
+      precio,
+      imagen
+    } = req.body;
+
+    const stockInicial = stock || 0;
+
+    if (stockInicial < 0) {
+      return res.status(400).json({
+        mensaje: "El stock no puede ser negativo"
+      });
+    }
+
+    const { data: negocio } = await supabase
+      .schema("negocio")
+      .from("negocio")
+      .select("id_negocio")
+      .eq("id_negocio", id_negocio)
+      .eq("id_perfil", req.user.id)
+      .single();
+
+    if (!negocio) {
+      return res.status(403).json({
+        mensaje: "No puedes crear productos para este negocio."
+      });
+    }
+
+    const estado_producto = calcularEstadoProducto(stockInicial);
+
+    // 1. Crear el producto
+    const { data, error } = await supabase
+      .schema("catalogo")
+      .from("producto")
+      .insert([
+        {
+          id_negocio,
+          id_categoria,
+          nombre_producto,
+          descripcion,
+          caracteristicas,
+          stock: stockInicial,
+          precio,
+          imagen,
+          estado_producto
+        }
+      ])
+      .select()
+      .single();
+
+    if (error) {
+      return res.status(400).json(error);
+    }
+
+    // 2. Si el stock inicial es mayor a 0, registrar la ENTRADA automática
+    if (data.stock > 0) {
+      await supabase
+        .schema("catalogo")
+        .from("movimiento_stock")
+        .insert([
+          {
+            id_producto: data.id_producto,
+            tipo_movimiento: "ENTRADA",
+            cantidad_productos: data.stock,
+            motivo: "Stock inicial por creación de producto"
+          }
+        ]);
+    }
+
+    res.status(201).json([data]);
+
+  } catch (error) {
+    res.status(500).json(error);
+  }
+};
+
+export const actualizarProducto = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const {
+      id_categoria,
+      nombre_producto,
+      descripcion,
+      caracteristicas,
+      stock,
+      precio,
+      imagen,
+      estado_producto
+    } = req.body;
+
+    if (stock < 0) {
+      return res.status(400).json({ mensaje: "El stock no puede ser negativo" });
+    }
+
+    const { data: productoViejo } = await supabase
+      .schema("catalogo")
+      .from("producto")
+      .select("id_producto, id_negocio, stock, estado_producto")
+      .eq("id_producto", id)
+      .single();
+
+    if (!productoViejo) {
+      return res.status(404).json({ mensaje: "Producto no encontrado" });
+    }
+
+    const { data: negocio } = await supabase
+      .schema("negocio")
+      .from("negocio")
+      .select("id_negocio")
+      .eq("id_negocio", productoViejo.id_negocio)
+      .eq("id_perfil", req.user.id)
+      .single();
+
+    if (!negocio) {
+      return res.status(403).json({ mensaje: "No puedes modificar este producto" });
+    }
+
+    let nuevoEstado = estado_producto;
+    if (!nuevoEstado) {
+      nuevoEstado = calcularEstadoProducto(stock);
+    }
+
+    const { error } = await supabase
+      .schema("catalogo")
+      .from("producto")
+      .update({
+        id_categoria,
+        nombre_producto,
+        descripcion,
+        caracteristicas,
+        stock,
+        precio,
+        imagen,
+        estado_producto: nuevoEstado
+      })
+      .eq("id_producto", id);
+
+    if (error) return res.status(400).json(error);
+
+    // Registrar entrada si el stock aumentó
+    if (stock > productoViejo.stock) {
+      const diferencia = stock - productoViejo.stock;
+      await supabase
+        .schema("catalogo")
+        .from("movimiento_stock")
+        .insert([{
+          id_producto: id,
+          tipo_movimiento: "ENTRADA",
+          cantidad_productos: diferencia,
+          motivo: "Actualización de stock (Ingreso de mercancía)"
+        }]);
+    }
+
+    res.json({ mensaje: "Producto actualizado" });
+
+  } catch (error) {
+    res.status(500).json(error);
+  }
+};
+
+export const eliminarProducto = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // ============================
+    // BUSCAR EL PRODUCTO
+    // ============================
+    const { data: producto } = await supabase
+      .schema("catalogo")
+      .from("producto")
+      .select(`
+        id_producto,
+        id_negocio,
+        nombre_producto
+      `)
+      .eq("id_producto", id)
+      .single();
+
+    if (!producto) {
+      return res.status(404).json({
+        mensaje: "Producto no encontrado"
+      });
+    }
+
+    // ============================
+    // VALIDAR QUE EL NEGOCIO ES DEL VENDEDOR
+    // ============================
+    const { data: negocio } = await supabase
+      .schema("negocio")
+      .from("negocio")
+      .select("id_negocio")
+      .eq("id_negocio", producto.id_negocio)
+      .eq("id_perfil", req.user.id)
+      .single();
+
+    if (!negocio) {
+      return res.status(403).json({
+        mensaje: "No puedes eliminar este producto"
+      });
+    }
+
+    // ============================
+    // VERIFICAR SI EL PRODUCTO TIENE VENTAS
+    // ============================
+    const { data: ventasAsociadas, error: errorVentas } = await supabase
+      .schema("ventas")
+      .from("detalle_venta")
+      .select("id_detalle")
+      .eq("id_producto", id)
+      .limit(1);
+
+    if (errorVentas) {
+      return res.status(400).json(errorVentas);
+    }
+
+    // ============================
+    // LÓGICA: SI TIENE VENTAS -> INACTIVAR, SI NO -> BORRAR
+    // ============================
+    if (ventasAsociadas && ventasAsociadas.length > 0) {
+      // Tiene ventas asociadas: se inactiva para no romper el historial
+      const { error: errorUpdate } = await supabase
+        .schema("catalogo")
+        .from("producto")
+        .update({ estado_producto: "INACTIVO" })
+        .eq("id_producto", id);
+
+      if (errorUpdate) return res.status(400).json(errorUpdate);
+
+      return res.json({
+        mensaje: `El producto "${producto.nombre_producto}" tiene ventas registradas y no se puede eliminar. Ha sido INACTIVADO y ya no aparecerá en el catálogo.`,
+        accion: "inactivado"
+      });
+    } else {
+      // No tiene ventas: se elimina de la base de datos
+      const { error: errorDelete } = await supabase
+        .schema("catalogo")
+        .from("producto")
+        .delete()
+        .eq("id_producto", id);
+
+      if (errorDelete) return res.status(400).json(errorDelete);
+
+      return res.json({
+        mensaje: `El producto "${producto.nombre_producto}" ha sido eliminado correctamente.`,
+        accion: "eliminado"
+      });
+    }
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json(error);
+  }
+};
+
+export const obtenerProductosPorNegocioId = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // 1. Categorías activas
+    const { data: categoriasActivas } = await supabase
+      .schema("catalogo")
+      .from("categoria")
+      .select("id_categoria")
+      .eq("estado", "ACTIVO");
+
+    const idsCategoriasActivas = (categoriasActivas || []).map((c) => c.id_categoria);
+
+    // 2. Productos disponibles de categorías activas
+    const { data, error } = await supabase
+      .schema("catalogo")
+      .from("producto")
+      .select(`
+        *,
+        categoria(nombre_categoria)
+      `)
+      .eq("id_negocio", id)
+      .eq("estado_producto", "DISPONIBLE") 
+      .in("id_categoria", idsCategoriasActivas);
+
+    if (error) return res.status(400).json(error);
+
+    res.json(data);
+  } catch (error) {
+    res.status(500).json({ mensaje: "Error interno del servidor", error });
+  }
+};
+
+export const buscarProductosYNegocios = async (req, res) => {
+  const { q } = req.query;
+
+  if (!q || q.trim() === "") {
+    return res.status(400).json({ message: "El parámetro de búsqueda 'q' es obligatorio." });
+  }
+
+  const searchTerm = q.trim();
+
+  try {
+    // 1. Categorías activas
+    const { data: categoriasActivas } = await supabase
+      .schema("catalogo")
+      .from("categoria")
+      .select("id_categoria")
+      .eq("estado", "ACTIVO");
+
+    const idsCategoriasActivas = (categoriasActivas || []).map((c) => c.id_categoria);
+
+    // 2. Buscar productos disponibles de categorías activas
+    const { data: productos, error: errorProductos } = await supabase
+      .schema("catalogo")
+      .from("producto")
+      .select("*, categoria:id_categoria(nombre_categoria)")
+      .eq("estado_producto", "DISPONIBLE")
+      .in("id_categoria", idsCategoriasActivas)
+      .or(`nombre_producto.ilike.%${searchTerm}%,descripcion.ilike.%${searchTerm}%`);
+
+    if (errorProductos) throw errorProductos;
+
+    // 3. Buscar negocios aprobados
+    const { data: negocios, error: errorNegocios } = await supabase
+      .schema("negocio")
+      .from("negocio")
+      .select("*")
+      .eq("estado_negocio", "APROBADO")
+      .or(`nombre_negocio.ilike.%${searchTerm}%,descripcion_negocio.ilike.%${searchTerm}%`);
+
+    if (errorNegocios) throw errorNegocios;
+
+    return res.json({
+      productos: productos || [],
+      negocios: negocios || [],
+    });
+
+  } catch (error) {
+    console.error("Error en la búsqueda:", error);
+    return res.status(500).json({ message: "Error interno del servidor al buscar." });
+  }
+};
+
+export const obtenerMasVendidos = async (req, res) => {
+  try {
+    // 1. Traemos todos los detalles de ventas
+    const { data: detalles, error } = await supabase
+      .schema("ventas")
+      .from("detalle_venta")
+      .select("id_producto, cantidad");
+
+    if (error) {
+      return res.status(400).json(error);
+    }
+
+    // 2. Agrupamos y sumamos las cantidades por producto
+    const conteoProductos = {};
+    detalles.forEach((detalle) => {
+      const id = detalle.id_producto;
+      if (!conteoProductos[id]) {
+        conteoProductos[id] = 0;
+      }
+      conteoProductos[id] += Number(detalle.cantidad);
+    });
+
+    // 3. Ordenamos de mayor a menor y tomamos los 10 primeros IDs
+    const topMasVendidos = Object.keys(conteoProductos)
+      .map((id) => ({ id_producto: Number(id), total_vendidos: conteoProductos[id] }))
+      .sort((a, b) => b.total_vendidos - a.total_vendidos)
+      .slice(0, 24)
+      .map((item) => item.id_producto);
+
+    return res.json(topMasVendidos);
+  } catch (error) {
+    console.error("Error al obtener más vendidos:", error);
+    return res.status(500).json({ mensaje: "Error interno del servidor" });
+  }
+};
