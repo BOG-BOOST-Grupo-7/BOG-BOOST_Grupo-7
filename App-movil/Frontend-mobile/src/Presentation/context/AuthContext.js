@@ -1,12 +1,14 @@
 // src/Presentation/context/AuthContext.jsx
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { obtenerMiPerfil } from "../../Data/sources/remote/api/perfilApi";
-import { me } from "../../Data/sources/remote/api/auth";
+import { AuthRepository } from "../../Data/repositories/AuthRepository";
 
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
+  // user → Instancia de Usuario (camelCase)
+  // perfil → JSON crudo del perfil (compatibilidad)
+  // rol → string ('CLIENTE', 'VENDEDOR', 'ADMIN'...)
   const [user, setUser] = useState(null);
   const [perfil, setPerfil] = useState(null);
   const [rol, setRol] = useState(null);
@@ -16,6 +18,9 @@ export function AuthProvider({ children }) {
     restaurarSesion();
   }, []);
 
+  // ============================================
+  // RESTAURAR SESIÓN AL INICIAR LA APP
+  // ============================================
   const restaurarSesion = async () => {
     try {
       // 1. Leer de AsyncStorage
@@ -23,33 +28,31 @@ export function AuthProvider({ children }) {
       const perfilStorage = await AsyncStorage.getItem("perfil");
       const rolStorage = await AsyncStorage.getItem("rol");
 
-      // ✅ Si NO hay sesión guardada, no llamar a la API
+      // Si no hay sesión guardada, salir silenciosamente
       if (!userStorage || !perfilStorage) {
         setLoading(false);
         return;
       }
 
-      // 2. Hidratar el estado con datos cacheados
+      // 2. Hidratar estado con datos cacheados (para UI instantánea)
       setUser(JSON.parse(userStorage));
       setPerfil(JSON.parse(perfilStorage));
       setRol(rolStorage);
 
-      // 3. Validar con el backend (solo si hay sesión)
+      // 3. Validar contra el backend (solo si hay sesión)
       try {
-        const [userData, perfilData] = await Promise.all([
-          me(),
-          obtenerMiPerfil(),
-        ]);
+        const { usuario, perfil: perfilData } =
+          await AuthRepository.obtenerSesionActual();
 
-        setUser(userData.data.user);
+        setUser(usuario);
         setPerfil(perfilData);
-        setRol(perfilData?.rol?.nombre_rol || null);
+        setRol(usuario.nombreRol || null);
 
-        await AsyncStorage.setItem("user", JSON.stringify(userData.data.user));
+        await AsyncStorage.setItem("user", JSON.stringify(usuario));
         await AsyncStorage.setItem("perfil", JSON.stringify(perfilData));
-        await AsyncStorage.setItem("rol", perfilData?.rol?.nombre_rol || "");
+        await AsyncStorage.setItem("rol", usuario.nombreRol || "");
       } catch (apiError) {
-        // ⚠️ El backend rechazó la sesión (token expirado, usuario eliminado, etc.)
+        // El backend rechazó la sesión (token expirado, usuario eliminado, etc.)
         console.warn("Sesión expirada o inválida. Limpiando...");
         await AsyncStorage.multiRemove(["user", "perfil", "rol"]);
         setUser(null);
@@ -67,51 +70,70 @@ export function AuthProvider({ children }) {
     }
   };
 
-  const login = async (userData, perfilData) => {
-    const rolNombre = perfilData?.rol?.nombre_rol ?? null;
+  // ============================================
+  // LOGIN
+  // ============================================
+  /**
+   * Inicia sesión con email y password.
+   * Devuelve { success, rol } para que la vista decida a dónde navegar.
+   */
+  const login = async (email, password) => {
+    const { usuario, perfil: perfilData } = await AuthRepository.login({
+      email,
+      password,
+    });
 
-    setUser(userData);
+    setUser(usuario);
     setPerfil(perfilData);
-    setRol(rolNombre);
+    setRol(usuario.nombreRol || null);
 
-    await AsyncStorage.setItem("user", JSON.stringify(userData));
+    await AsyncStorage.setItem("user", JSON.stringify(usuario));
     await AsyncStorage.setItem("perfil", JSON.stringify(perfilData));
-    await AsyncStorage.setItem("rol", rolNombre || "");
+    await AsyncStorage.setItem("rol", usuario.nombreRol || "");
 
-    // Refrescar perfil tras login
-    setTimeout(async () => {
-      try {
-        const perfilFresh = await obtenerMiPerfil();
-        if (perfilFresh) {
-          setPerfil(perfilFresh);
-          await AsyncStorage.setItem("perfil", JSON.stringify(perfilFresh));
-
-          if (perfilFresh?.rol?.nombre_rol) {
-            setRol(perfilFresh.rol.nombre_rol);
-            await AsyncStorage.setItem("rol", perfilFresh.rol.nombre_rol);
-          }
-        }
-      } catch (error) {
-        console.error("Error actualizando perfil tras login:", error);
-      }
-    }, 500);
+    return { success: true, rol: usuario.nombreRol };
   };
 
+  // ============================================
+  // LOGOUT
+  // ============================================
   const logout = async () => {
+    try {
+      await AuthRepository.logout();
+    } catch (error) {
+      console.error("Error en logout remoto:", error);
+    }
     setUser(null);
     setPerfil(null);
     setRol(null);
     await AsyncStorage.multiRemove(["user", "perfil", "rol"]);
   };
 
+  // ============================================
+  // ACTUALIZAR PERFIL DESDE OTRA VISTA
+  // ============================================
+  /**
+   * Actualiza el perfil y el usuario en el contexto (y en AsyncStorage).
+   * Útil cuando el usuario edita su perfil y quieres reflejar los cambios.
+   */
   const actualizarPerfilContexto = async (nuevosDatos) => {
     setPerfil((prev) => {
-      const perfilActualizado = { ...prev, ...nuevosDatos };
-      AsyncStorage.setItem("perfil", JSON.stringify(perfilActualizado));
-      return perfilActualizado;
+      const actualizado = { ...prev, ...nuevosDatos };
+      AsyncStorage.setItem("perfil", JSON.stringify(actualizado));
+      return actualizado;
+    });
+
+    setUser((prev) => {
+      if (!prev) return prev;
+      const actualizado = { ...prev, ...nuevosDatos };
+      AsyncStorage.setItem("user", JSON.stringify(actualizado));
+      return actualizado;
     });
   };
 
+  // ============================================
+  // VALUE
+  // ============================================
   const value = useMemo(
     () => ({
       user,
