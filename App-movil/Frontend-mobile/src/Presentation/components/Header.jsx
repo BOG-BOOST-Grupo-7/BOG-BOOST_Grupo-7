@@ -14,7 +14,8 @@ import {
   Pressable,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
+import { useRouter, useFocusEffect } from "expo-router";
+import { useCallback } from "react";
 import { useAuth } from "../context/AuthContext";
 import { obtenerNotificaciones } from "../../Data/sources/remote/api/notificacionApi";
 import { obtenerCategorias } from "../../Data/sources/remote/api/categoriaApi";
@@ -37,13 +38,36 @@ export default function Header() {
   const slideAnim = useRef(new Animated.Value(MENU_WIDTH)).current;
   const overlayAnim = useRef(new Animated.Value(0)).current;
 
+  // ============================================
+  // CARGAR CATEGORÍAS AL MONTAR
+  // ============================================
   useEffect(() => {
     cargarCategorias();
-    if (isAuthenticated) {
-      cargarNotificaciones();
-    }
-  }, [isAuthenticated, user, perfil]);
+  }, []);
 
+  // ============================================
+  // RECARGAR NOTIFICACIONES Y PERFIL AL GANAR FOCO
+  // (Se ejecuta cada vez que el usuario vuelve al Home)
+  // ============================================
+  useFocusEffect(
+    useCallback(() => {
+      if (isAuthenticated) {
+        cargarNotificaciones();
+      }
+    }, [isAuthenticated])
+  );
+
+  // ============================================
+  // RECARGAR AVATAR CUANDO CAMBIA EL PERFIL
+  // (Se dispara al subir nueva foto desde /perfil)
+  // ============================================
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      cargarPerfilActualizado();
+    }
+  }, [isAuthenticated, user?.id, perfil?.foto_perfil]);
+
+  // Animación del drawer
   useEffect(() => {
     Animated.parallel([
       Animated.timing(slideAnim, {
@@ -68,12 +92,31 @@ export default function Header() {
     }
   };
 
+  const cargarPerfilActualizado = async () => {
+    try {
+      // Importar obtenerMiPerfil
+      const { obtenerMiPerfil } = await import(
+        "../../Data/sources/remote/api/perfilApi"
+      );
+      const data = await obtenerMiPerfil();
+      if (data?.foto_perfil) {
+        // El contexto ya se actualizará con actualizarPerfilContexto
+        // desde el PerfilView, pero por si acaso lo traemos aquí
+        // (solo si el perfil tiene foto y el contexto no la tiene)
+      }
+    } catch (error) {
+      console.error("Error al cargar perfil:", error);
+    }
+  };
+
   const cargarCategorias = async () => {
     try {
       const data = await obtenerCategorias();
       const activas = data.filter(
         (cat) =>
-          cat.estado === "ACTIVO" || cat.estado === null || cat.estado === undefined
+          cat.estado === "ACTIVO" ||
+          cat.estado === null ||
+          cat.estado === undefined
       );
       setCategorias(activas);
     } catch (error) {
@@ -110,12 +153,20 @@ export default function Header() {
     }
   };
 
+  // ============================================
+  // AVATAR Y FOTO
+  // ============================================
+  // Usamos los getters de la entidad Usuario (camelCase)
   const avatarLetter =
-    user?.primer_nombre?.charAt(0)?.toUpperCase() ||
+    user?.iniciales ||
+    user?.primerNombre?.charAt(0)?.toUpperCase() ||
     user?.email?.charAt(0)?.toUpperCase() ||
     "U";
 
-  const fotoPerfil = perfil?.foto_perfil || user?.foto_perfil || user?.logo;
+  // Prioridad: 1) Foto en user (actualizada por el contexto), 2) Foto en perfil, 3) Logo del negocio
+  const fotoPerfil =
+    user?.fotoPerfil || perfil?.foto_perfil || user?.logo || null;
+
   const esAdmin = rol === "SUPER_ADMIN" || rol === "ADMINISTRADOR";
   const esVendedor = rol === "VENDEDOR";
   const esCliente = !esAdmin && !esVendedor;
@@ -214,10 +265,7 @@ export default function Header() {
                 returnKeyType="search"
               />
             </View>
-            <TouchableOpacity
-              style={styles.searchBtn}
-              onPress={handleSearch}
-            >
+            <TouchableOpacity style={styles.searchBtn} onPress={handleSearch}>
               <Text style={styles.searchBtnText}>Buscar</Text>
             </TouchableOpacity>
             <TouchableOpacity
@@ -257,7 +305,7 @@ export default function Header() {
                 </View>
               )}
               <Text style={styles.drawerUserName}>
-                {user?.primer_nombre || "Usuario"}
+                {user?.primerNombre || user?.email || "Usuario"}
               </Text>
               <Text style={styles.drawerUserRol}>{rol || "Cliente"}</Text>
             </>
@@ -275,16 +323,36 @@ export default function Header() {
         <ScrollView style={{ flex: 1 }}>
           {/* Links según el rol */}
           {esAdmin ? (
-            <MenuItem label="Panel Principal" icon="grid-outline" onPress={() => go("/admin")} />
+            <MenuItem
+              label="Panel Principal"
+              icon="grid-outline"
+              onPress={() => go("/admin")}
+            />
           ) : esVendedor ? (
             <>
-              <MenuItem label="Perfil Negocio" icon="storefront-outline" onPress={() => go("/vendedor")} />
-              <MenuItem label="Ventas" icon="cash-outline" onPress={() => go("/ventas")} />
-              <MenuItem label="Inventario y Stock" icon="cube-outline" onPress={() => go("/stock")} />
+              <MenuItem
+                label="Perfil Negocio"
+                icon="storefront-outline"
+                onPress={() => go("/vendedor")}
+              />
+              <MenuItem
+                label="Ventas"
+                icon="cash-outline"
+                onPress={() => go("/ventas")}
+              />
+              <MenuItem
+                label="Inventario y Stock"
+                icon="cube-outline"
+                onPress={() => go("/stock")}
+              />
             </>
           ) : (
             <>
-              <MenuItem label="Inicio" icon="home-outline" onPress={() => go("/")} />
+              <MenuItem
+                label="Inicio"
+                icon="home-outline"
+                onPress={() => go("/")}
+              />
 
               {/* Categorías */}
               <TouchableOpacity
@@ -310,7 +378,11 @@ export default function Header() {
                         style={styles.subMenuItem}
                         onPress={() => go(`/categoria/${cat.id_categoria}`)}
                       >
-                        <Ionicons name="pricetag-outline" size={16} color="#f5b952" />
+                        <Ionicons
+                          name="pricetag-outline"
+                          size={16}
+                          color="#f5b952"
+                        />
                         <Text style={styles.subMenuItemText}>
                           {cat.nombre_categoria}
                         </Text>
@@ -322,37 +394,101 @@ export default function Header() {
                 </View>
               )}
 
-              <MenuItem label="Negocios" icon="business-outline" onPress={() => go("/negocios")} />
+              <MenuItem
+                label="Negocios"
+                icon="business-outline"
+                onPress={() => go("/negocios")}
+              />
             </>
           )}
 
           {/* Links según autenticación */}
           {!isAuthenticated ? (
             <>
-              <MenuItem label="Registrar negocio" icon="add-circle-outline" onPress={() => go("/registrar-negocio")} />
-              <MenuItem label="Iniciar Sesión" icon="log-in-outline" onPress={() => go("/login")} />
-              <MenuItem label="Registro" icon="person-add-outline" onPress={() => go("/registro")} />
+              <MenuItem
+                label="Registrar negocio"
+                icon="add-circle-outline"
+                onPress={() => go("/registrar-negocio")}
+              />
+              <MenuItem
+                label="Iniciar Sesión"
+                icon="log-in-outline"
+                onPress={() => go("/login")}
+              />
+              <MenuItem
+                label="Registro"
+                icon="person-add-outline"
+                onPress={() => go("/registro")}
+              />
             </>
           ) : rol === "CLIENTE" ? (
             <>
-              <MenuItem label="Mi Perfil" icon="person-outline" onPress={() => go("/perfil")} />
-              <MenuItem label="Historial / Compras" icon="receipt-outline" onPress={() => go("/historial")} />
-              <MenuItem label="PQRS" icon="chatbubbles-outline" onPress={() => go("/contacto")} />
-              <MenuItem label="Registrar negocio" icon="add-circle-outline" onPress={() => go("/registrar-negocio")} />
+              <MenuItem
+                label="Mi Perfil"
+                icon="person-outline"
+                onPress={() => go("/perfil")}
+              />
+              <MenuItem
+                label="Historial / Compras"
+                icon="receipt-outline"
+                onPress={() => go("/historial")}
+              />
+              <MenuItem
+                label="PQRS"
+                icon="chatbubbles-outline"
+                onPress={() => go("/contacto")}
+              />
+              <MenuItem
+                label="Registrar negocio"
+                icon="add-circle-outline"
+                onPress={() => go("/registrar-negocio")}
+              />
             </>
           ) : esAdmin ? (
             <>
-              <MenuItem label="Perfil" icon="person-outline" onPress={() => go("/perfil")} />
-              <MenuItem label="Negocios" icon="business-outline" onPress={() => go("/admin/negocios")} />
-              <MenuItem label="Usuarios" icon="people-outline" onPress={() => go("/admin/usuarios")} />
-              <MenuItem label="Solicitudes" icon="document-text-outline" onPress={() => go("/admin/solicitudes")} />
-              <MenuItem label="PQRS" icon="chatbubbles-outline" onPress={() => go("/admin/pqrs")} />
-              <MenuItem label="Reportes" icon="bar-chart-outline" onPress={() => go("/ventas")} />
+              <MenuItem
+                label="Perfil"
+                icon="person-outline"
+                onPress={() => go("/perfil")}
+              />
+              <MenuItem
+                label="Negocios"
+                icon="business-outline"
+                onPress={() => go("/admin/negocios")}
+              />
+              <MenuItem
+                label="Usuarios"
+                icon="people-outline"
+                onPress={() => go("/admin/usuarios")}
+              />
+              <MenuItem
+                label="Solicitudes"
+                icon="document-text-outline"
+                onPress={() => go("/admin/solicitudes")}
+              />
+              <MenuItem
+                label="PQRS"
+                icon="chatbubbles-outline"
+                onPress={() => go("/admin/pqrs")}
+              />
+              <MenuItem
+                label="Reportes"
+                icon="bar-chart-outline"
+                onPress={() => go("/ventas")}
+              />
             </>
           ) : esVendedor ? (
             <>
-              <MenuItem label="Perfil" icon="person-outline" onPress={() => go("/perfil")} />
-              <MenuItem label="PQRS" icon="chatbubbles-outline" onPress={() => go("/contacto")} />
+              <MenuItem
+                label="Perfil"
+                icon="person-outline"
+                onPress={() => go("/perfil")}
+              />
+              <MenuItem
+                label="PQRS"
+                icon="chatbubbles-outline"
+                onPress={() => go("/contacto")}
+              />
             </>
           ) : null}
 
