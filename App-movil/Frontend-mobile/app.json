@@ -20,6 +20,21 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "usesCleartextTraffic": true
+          }
+        }
+      ]
+    ],
+    "extra": {
+      "supabaseUrl": "https://conhkkkqfqshgafjpaes.supabase.co",
+      "supabaseAnonKey": "sb_publishable_QM6E5dteO3OCTeYlGws2Mg_ukpS0jaN"
     }
   }
 }
