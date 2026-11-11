@@ -20,7 +20,6 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-<<<<<<< HEAD
     },
     "plugins": [
       "expo-router",
@@ -39,8 +38,3 @@
     }
   }
 }
-=======
-    }
-  }
-}
->>>>>>> f54dc4fc38e2f64d94b691d9de44701fbd40ed71
