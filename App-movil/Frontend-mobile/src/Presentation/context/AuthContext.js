@@ -1,14 +1,11 @@
 // src/Presentation/context/AuthContext.jsx
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useState, useCallback } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { AuthRepository } from "../../Data/repositories/AuthRepository";
 
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
-  // user → Instancia de Usuario (camelCase)
-  // perfil → JSON crudo del perfil (compatibilidad)
-  // rol → string ('CLIENTE', 'VENDEDOR', 'ADMIN'...)
   const [user, setUser] = useState(null);
   const [perfil, setPerfil] = useState(null);
   const [rol, setRol] = useState(null);
@@ -21,25 +18,30 @@ export function AuthProvider({ children }) {
   // ============================================
   // RESTAURAR SESIÓN AL INICIAR LA APP
   // ============================================
-  const restaurarSesion = async () => {
+  const restaurarSesion = useCallback(async () => {
     try {
-      // 1. Leer de AsyncStorage
       const userStorage = await AsyncStorage.getItem("user");
       const perfilStorage = await AsyncStorage.getItem("perfil");
       const rolStorage = await AsyncStorage.getItem("rol");
 
-      // Si no hay sesión guardada, salir silenciosamente
       if (!userStorage || !perfilStorage) {
         setLoading(false);
         return;
       }
 
-      // 2. Hidratar estado con datos cacheados (para UI instantánea)
-      setUser(JSON.parse(userStorage));
-      setPerfil(JSON.parse(perfilStorage));
-      setRol(rolStorage);
+      // Hidratar rápido desde cache
+      try {
+        setUser(JSON.parse(userStorage));
+        setPerfil(JSON.parse(perfilStorage));
+        setRol(rolStorage);
+      } catch (parseError) {
+        console.warn("Error parsing cache, limpiando...");
+        await AsyncStorage.multiRemove(["user", "perfil", "rol"]);
+        setLoading(false);
+        return;
+      }
 
-      // 3. Validar contra el backend (solo si hay sesión)
+      // Validar contra el backend
       try {
         const { usuario, perfil: perfilData } =
           await AuthRepository.obtenerSesionActual();
@@ -52,15 +54,13 @@ export function AuthProvider({ children }) {
         await AsyncStorage.setItem("perfil", JSON.stringify(perfilData));
         await AsyncStorage.setItem("rol", usuario.nombreRol || "");
       } catch (apiError) {
-        // El backend rechazó la sesión (token expirado, usuario eliminado, etc.)
-        console.warn("Sesión expirada o inválida. Limpiando...");
+        console.warn("Sesión expirada. Limpiando...");
         await AsyncStorage.multiRemove(["user", "perfil", "rol"]);
         setUser(null);
         setPerfil(null);
         setRol(null);
       }
     } catch (error) {
-      // Error inesperado (lectura de storage, parsing, etc.)
       console.error("Error inesperado restaurando sesión:", error);
       setUser(null);
       setPerfil(null);
@@ -68,16 +68,12 @@ export function AuthProvider({ children }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   // ============================================
   // LOGIN
   // ============================================
-  /**
-   * Inicia sesión con email y password.
-   * Devuelve { success, rol } para que la vista decida a dónde navegar.
-   */
-  const login = async (email, password) => {
+  const login = useCallback(async (email, password) => {
     const { usuario, perfil: perfilData } = await AuthRepository.login({
       email,
       password,
@@ -92,31 +88,37 @@ export function AuthProvider({ children }) {
     await AsyncStorage.setItem("rol", usuario.nombreRol || "");
 
     return { success: true, rol: usuario.nombreRol };
-  };
+  }, []);
 
   // ============================================
-  // LOGOUT
+  // LOGOUT (con finally para garantizar limpieza)
   // ============================================
-  const logout = async () => {
+  const logout = useCallback(async () => {
+    // 1. Intentar cerrar sesión en el backend (no bloqueante)
     try {
       await AuthRepository.logout();
     } catch (error) {
-      console.error("Error en logout remoto:", error);
+      // No importa si el backend falla: limpiamos localmente igual
+      console.warn("Logout remoto falló (no crítico):", error?.message);
     }
+
+    // 2. Limpiar SIEMPRE el estado local
     setUser(null);
     setPerfil(null);
     setRol(null);
-    await AsyncStorage.multiRemove(["user", "perfil", "rol"]);
-  };
+
+    // 3. Limpiar AsyncStorage
+    try {
+      await AsyncStorage.multiRemove(["user", "perfil", "rol"]);
+    } catch (error) {
+      console.error("Error limpiando AsyncStorage:", error);
+    }
+  }, []);
 
   // ============================================
   // ACTUALIZAR PERFIL DESDE OTRA VISTA
   // ============================================
-  /**
-   * Actualiza el perfil y el usuario en el contexto (y en AsyncStorage).
-   * Útil cuando el usuario edita su perfil y quieres reflejar los cambios.
-   */
-  const actualizarPerfilContexto = async (nuevosDatos) => {
+  const actualizarPerfilContexto = useCallback(async (nuevosDatos) => {
     setPerfil((prev) => {
       const actualizado = { ...prev, ...nuevosDatos };
       AsyncStorage.setItem("perfil", JSON.stringify(actualizado));
@@ -129,10 +131,10 @@ export function AuthProvider({ children }) {
       AsyncStorage.setItem("user", JSON.stringify(actualizado));
       return actualizado;
     });
-  };
+  }, []);
 
   // ============================================
-  // VALUE
+  // VALUE (memoizado correctamente)
   // ============================================
   const value = useMemo(
     () => ({
@@ -140,12 +142,12 @@ export function AuthProvider({ children }) {
       perfil,
       rol,
       loading,
-      isAuthenticated: !!user,
+      isAuthenticated: !!user && !!user.id, // ✅ Verifica id del usuario
       login,
       logout,
       actualizarPerfilContexto,
     }),
-    [user, perfil, rol, loading]
+    [user, perfil, rol, loading, login, logout, actualizarPerfilContexto]
   );
 
   return (

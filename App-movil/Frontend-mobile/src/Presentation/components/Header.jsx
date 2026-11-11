@@ -1,5 +1,5 @@
 // src/Presentation/components/Header.jsx
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import {
   View,
   Text,
@@ -12,14 +12,13 @@ import {
   Dimensions,
   ScrollView,
   Pressable,
+  Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter, useFocusEffect } from "expo-router";
-import { useCallback } from "react";
 import { useAuth } from "../context/AuthContext";
 import { obtenerNotificaciones } from "../../Data/sources/remote/api/notificacionApi";
 import { obtenerCategorias } from "../../Data/sources/remote/api/categoriaApi";
-import { logoutUser } from "../../Data/sources/remote/api/auth";
 
 const { width } = Dimensions.get("window");
 const MENU_WIDTH = width * 0.78;
@@ -34,6 +33,7 @@ export default function Header() {
   const [searchTerm, setSearchTerm] = useState("");
   const [pendientes, setPendientes] = useState(0);
   const [categorias, setCategorias] = useState([]);
+  const [cerrando, setCerrando] = useState(false);
 
   const slideAnim = useRef(new Animated.Value(MENU_WIDTH)).current;
   const overlayAnim = useRef(new Animated.Value(0)).current;
@@ -46,26 +46,27 @@ export default function Header() {
   }, []);
 
   // ============================================
-  // RECARGAR NOTIFICACIONES Y PERFIL AL GANAR FOCO
-  // (Se ejecuta cada vez que el usuario vuelve al Home)
+  // RECARGAR NOTIFICACIONES AL GANAR FOCO
   // ============================================
   useFocusEffect(
     useCallback(() => {
-      if (isAuthenticated) {
+      if (isAuthenticated && !cerrando) {
         cargarNotificaciones();
       }
-    }, [isAuthenticated])
+    }, [isAuthenticated, cerrando])
   );
 
   // ============================================
-  // RECARGAR AVATAR CUANDO CAMBIA EL PERFIL
-  // (Se dispara al subir nueva foto desde /perfil)
+  // LIMPIAR PENDIENTES AL CERRAR SESIÓN
   // ============================================
   useEffect(() => {
-    if (isAuthenticated && user) {
-      cargarPerfilActualizado();
+    if (!isAuthenticated) {
+      setPendientes(0);
+      setMenuOpen(false);
+      setCategoriasOpen(false);
+      setSearchOpen(false);
     }
-  }, [isAuthenticated, user?.id, perfil?.foto_perfil]);
+  }, [isAuthenticated]);
 
   // Animación del drawer
   useEffect(() => {
@@ -86,33 +87,20 @@ export default function Header() {
   const cargarNotificaciones = async () => {
     try {
       const data = await obtenerNotificaciones();
-      setPendientes(data.filter((n) => !n.estado_notificacion).length);
+      const noLeidas = Array.isArray(data)
+        ? data.filter((n) => !n.estado_notificacion).length
+        : 0;
+      setPendientes(noLeidas);
     } catch (error) {
-      console.error(error);
-    }
-  };
-
-  const cargarPerfilActualizado = async () => {
-    try {
-      // Importar obtenerMiPerfil
-      const { obtenerMiPerfil } = await import(
-        "../../Data/sources/remote/api/perfilApi"
-      );
-      const data = await obtenerMiPerfil();
-      if (data?.foto_perfil) {
-        // El contexto ya se actualizará con actualizarPerfilContexto
-        // desde el PerfilView, pero por si acaso lo traemos aquí
-        // (solo si el perfil tiene foto y el contexto no la tiene)
-      }
-    } catch (error) {
-      console.error("Error al cargar perfil:", error);
+      // Silencioso: si falla, no es crítico
+      console.log("No se pudieron cargar notificaciones:", error?.message);
     }
   };
 
   const cargarCategorias = async () => {
     try {
       const data = await obtenerCategorias();
-      const activas = data.filter(
+      const activas = (data || []).filter(
         (cat) =>
           cat.estado === "ACTIVO" ||
           cat.estado === null ||
@@ -120,7 +108,7 @@ export default function Header() {
       );
       setCategorias(activas);
     } catch (error) {
-      console.error(error);
+      console.log("No se pudieron cargar categorías:", error?.message);
     }
   };
 
@@ -142,28 +130,63 @@ export default function Header() {
     }
   };
 
-  const handleLogout = async () => {
+  // ============================================
+  // LOGOUT CORREGIDO
+  // ============================================
+  const handleLogout = () => {
+    Alert.alert(
+      "Cerrar sesión",
+      "¿Estás seguro de que deseas cerrar sesión?",
+      [
+        { text: "Cancelar", style: "cancel" },
+        {
+          text: "Cerrar sesión",
+          style: "destructive",
+          onPress: ejecutarLogout,
+        },
+      ]
+    );
+  };
+
+  const ejecutarLogout = async () => {
+    if (cerrando) return;
+    setCerrando(true);
+
     try {
-      await logoutUser();
-      logout();
+      // 1. Cerrar el menú primero
       setMenuOpen(false);
-      router.replace("/");
+      setCategoriasOpen(false);
+      setSearchOpen(false);
+
+      // 2. Limpiar estado local ANTES del logout
+      setPendientes(0);
+
+      // 3. Llamar logout del contexto (limpia AsyncStorage + estado global)
+      //    El AuthContext ya maneja el logoutUser() del backend internamente.
+      //    Si falla el backend, igual limpia el estado local.
+      await logout();
+
+      // 4. Navegar al Home
+      setTimeout(() => {
+        router.replace("/");
+      }, 100);
     } catch (error) {
-      console.error(error);
+      console.error("Error al cerrar sesión:", error);
+      Alert.alert("Error", "No se pudo cerrar sesión. Intenta de nuevo.");
+    } finally {
+      setCerrando(false);
     }
   };
 
   // ============================================
   // AVATAR Y FOTO
   // ============================================
-  // Usamos los getters de la entidad Usuario (camelCase)
   const avatarLetter =
     user?.iniciales ||
     user?.primerNombre?.charAt(0)?.toUpperCase() ||
     user?.email?.charAt(0)?.toUpperCase() ||
     "U";
 
-  // Prioridad: 1) Foto en user (actualizada por el contexto), 2) Foto en perfil, 3) Logo del negocio
   const fotoPerfil =
     user?.fotoPerfil || perfil?.foto_perfil || user?.logo || null;
 
@@ -175,7 +198,6 @@ export default function Header() {
     <>
       {/* ==================== BARRA SUPERIOR ==================== */}
       <View style={styles.navbar}>
-        {/* Logo con imagen */}
         <TouchableOpacity onPress={() => go("/")} style={styles.logoContainer}>
           <Image
             source={require("../../../assets/logo.png")}
@@ -184,9 +206,7 @@ export default function Header() {
           />
         </TouchableOpacity>
 
-        {/* Íconos derecha */}
         <View style={styles.userIcons}>
-          {/* Buscador (solo cliente) */}
           {esCliente && (
             <TouchableOpacity
               style={styles.iconBtn}
@@ -196,7 +216,6 @@ export default function Header() {
             </TouchableOpacity>
           )}
 
-          {/* Carrito (solo cliente) */}
           {esCliente && (
             <TouchableOpacity
               style={styles.iconBtn}
@@ -206,7 +225,6 @@ export default function Header() {
             </TouchableOpacity>
           )}
 
-          {/* Campana (autenticado) */}
           {isAuthenticated && (
             <TouchableOpacity
               style={styles.iconBtn}
@@ -221,7 +239,6 @@ export default function Header() {
             </TouchableOpacity>
           )}
 
-          {/* Avatar (autenticado) */}
           {isAuthenticated && (
             <TouchableOpacity onPress={() => go("/perfil")}>
               {fotoPerfil ? (
@@ -234,7 +251,6 @@ export default function Header() {
             </TouchableOpacity>
           )}
 
-          {/* Botón menú */}
           <TouchableOpacity
             style={styles.iconBtn}
             onPress={() => setMenuOpen(true)}
@@ -288,7 +304,6 @@ export default function Header() {
       <Animated.View
         style={[styles.drawer, { transform: [{ translateX: slideAnim }] }]}
       >
-        {/* Header del drawer */}
         <View style={styles.drawerHeader}>
           {isAuthenticated ? (
             <>
@@ -321,7 +336,6 @@ export default function Header() {
         </View>
 
         <ScrollView style={{ flex: 1 }}>
-          {/* Links según el rol */}
           {esAdmin ? (
             <MenuItem
               label="Panel Principal"
@@ -354,7 +368,6 @@ export default function Header() {
                 onPress={() => go("/")}
               />
 
-              {/* Categorías */}
               <TouchableOpacity
                 style={styles.menuItem}
                 onPress={() => setCategoriasOpen(!categoriasOpen)}
@@ -402,7 +415,6 @@ export default function Header() {
             </>
           )}
 
-          {/* Links según autenticación */}
           {!isAuthenticated ? (
             <>
               <MenuItem
@@ -492,11 +504,16 @@ export default function Header() {
             </>
           ) : null}
 
-          {/* Logout */}
           {isAuthenticated && (
-            <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
+            <TouchableOpacity
+              style={styles.logoutBtn}
+              onPress={handleLogout}
+              disabled={cerrando}
+            >
               <Ionicons name="log-out-outline" size={20} color="#c62828" />
-              <Text style={styles.logoutText}>Cerrar Sesión</Text>
+              <Text style={styles.logoutText}>
+                {cerrando ? "Cerrando sesión..." : "Cerrar Sesión"}
+              </Text>
             </TouchableOpacity>
           )}
         </ScrollView>
@@ -505,7 +522,6 @@ export default function Header() {
   );
 }
 
-// Componente auxiliar para los links del menú
 function MenuItem({ label, icon, onPress }) {
   return (
     <TouchableOpacity style={styles.menuItem} onPress={onPress}>
@@ -516,7 +532,6 @@ function MenuItem({ label, icon, onPress }) {
 }
 
 const styles = StyleSheet.create({
-  // NAVBAR
   navbar: {
     backgroundColor: "#f8b94e",
     height: 70,
@@ -536,19 +551,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "flex-start",
   },
-  logoImage: {
-    width: 110,
-    height: 45,
-  },
-  userIcons: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-  },
-  iconBtn: {
-    padding: 4,
-    position: "relative",
-  },
+  logoImage: { width: 110, height: 45 },
+  userIcons: { flexDirection: "row", alignItems: "center", gap: 12 },
+  iconBtn: { padding: 4, position: "relative" },
   badge: {
     position: "absolute",
     top: -2,
@@ -563,11 +568,7 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: "#f8b94e",
   },
-  badgeText: {
-    color: "#fff",
-    fontSize: 10,
-    fontWeight: "bold",
-  },
+  badgeText: { color: "#fff", fontSize: 10, fontWeight: "bold" },
   avatarImg: {
     width: 36,
     height: 36,
@@ -585,13 +586,8 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: "#fff",
   },
-  avatarLetterText: {
-    color: "#fff",
-    fontWeight: "bold",
-    fontSize: 15,
-  },
+  avatarLetterText: { color: "#fff", fontWeight: "bold", fontSize: 15 },
 
-  // DRAWER
   overlayAbsolute: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: "rgba(0,0,0,0.4)",
@@ -638,30 +634,16 @@ const styles = StyleSheet.create({
     borderWidth: 3,
     borderColor: "#fff",
   },
-  drawerAvatarLetterText: {
-    color: "#fff",
-    fontSize: 26,
-    fontWeight: "bold",
-  },
-  drawerUserName: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#2c1810",
-  },
+  drawerAvatarLetterText: { color: "#fff", fontSize: 26, fontWeight: "bold" },
+  drawerUserName: { fontSize: 18, fontWeight: "bold", color: "#2c1810" },
   drawerUserRol: {
     fontSize: 13,
     color: "#5a3a20",
     textTransform: "capitalize",
     marginTop: 2,
   },
-  drawerCloseBtn: {
-    position: "absolute",
-    top: 48,
-    right: 16,
-    padding: 4,
-  },
+  drawerCloseBtn: { position: "absolute", top: 48, right: 16, padding: 4 },
 
-  // MENU ITEMS
   menuItem: {
     flexDirection: "row",
     alignItems: "center",
@@ -671,15 +653,8 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: "#f0f0f0",
   },
-  menuItemText: {
-    fontSize: 15,
-    color: "#222",
-    fontWeight: "500",
-  },
-  subMenu: {
-    backgroundColor: "#fafafa",
-    paddingVertical: 4,
-  },
+  menuItemText: { fontSize: 15, color: "#222", fontWeight: "500" },
+  subMenu: { backgroundColor: "#fafafa", paddingVertical: 4 },
   subMenuItem: {
     flexDirection: "row",
     alignItems: "center",
@@ -689,10 +664,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: "#f0f0f0",
   },
-  subMenuItemText: {
-    fontSize: 14,
-    color: "#444",
-  },
+  subMenuItemText: { fontSize: 14, color: "#444" },
   subMenuEmpty: {
     padding: 14,
     color: "#888",
@@ -710,13 +682,8 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: "#fce4e4",
   },
-  logoutText: {
-    fontSize: 15,
-    color: "#c62828",
-    fontWeight: "bold",
-  },
+  logoutText: { fontSize: 15, color: "#c62828", fontWeight: "bold" },
 
-  // SEARCH MODAL
   searchModalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.5)",
@@ -739,28 +706,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     height: 48,
   },
-  searchInput: {
-    flex: 1,
-    fontSize: 15,
-    color: "#000",
-  },
+  searchInput: { flex: 1, fontSize: 15, color: "#000" },
   searchBtn: {
     backgroundColor: "#f5b952",
     borderRadius: 30,
     paddingVertical: 12,
     alignItems: "center",
   },
-  searchBtnText: {
-    color: "#000",
-    fontWeight: "bold",
-    fontSize: 15,
-  },
-  cancelBtn: {
-    alignItems: "center",
-    paddingVertical: 6,
-  },
-  cancelBtnText: {
-    color: "#666",
-    fontSize: 14,
-  },
+  searchBtnText: { color: "#000", fontWeight: "bold", fontSize: 15 },
+  cancelBtn: { alignItems: "center", paddingVertical: 6 },
+  cancelBtnText: { color: "#666", fontSize: 14 },
 });
