@@ -7,16 +7,21 @@ import {
   StyleSheet, 
   ActivityIndicator, 
   TouchableOpacity,
-  Image 
+  Image,
+  Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { Link, useRouter } from "expo-router"; // ✅ Agregado useRouter
+import { Link, useRouter } from "expo-router";
 import { useHomeViewModel } from "./HomeViewModel";
 import RegistrarNegocioCard from "./components/RegistrarNegocioCard";
 import Footer from "../../components/Footer";
+import { useCarrito } from "../../context/CarritoContext";
+import { useAuth } from "../../context/AuthContext";
 
 export default function HomeView() {
-  const router = useRouter(); // ✅ Hook de navegación
+  const router = useRouter();
+  const { isAuthenticated } = useAuth();
+  const { agregarProducto } = useCarrito();
   const {
     productosPaginados,
     totalProductos,
@@ -44,6 +49,33 @@ export default function HomeView() {
     { key: "destacados", label: "Más Vendidos", icon: "star-outline" },
     { key: "ofertas", label: "Ofertas", icon: "pricetag-outline" },
   ];
+
+  const handleAgregarAlCarrito = (item) => {
+    if (!isAuthenticated) {
+      Alert.alert(
+        "Inicia sesión",
+        "Debes iniciar sesión para agregar productos al carrito.",
+        [
+          { text: "Cancelar", style: "cancel" },
+          { text: "Iniciar sesión", onPress: () => router.push("/login") },
+        ]
+      );
+      return;
+    }
+
+    agregarProducto({
+      idProducto: item.idProducto,
+      idNegocio: item.idNegocio,
+      nombre: item.nombre,
+      precio: item.precio,
+      imagen: item.imagen,
+      nombreNegocio: item.negocio?.nombre_negocio || item.nombreNegocio,
+      stock: item.stock,
+      cantidad: 1,
+    });
+
+    Alert.alert("¡Listo!", `"${item.nombre}" fue agregado al carrito.`);
+  };
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
@@ -115,36 +147,47 @@ export default function HomeView() {
         ) : (
           <View style={styles.productosGrid}>
             {productosPaginados.map((item) => (
-              // ✅ CAMBIO: View → TouchableOpacity con onPress
-              <TouchableOpacity
-                key={item.idProducto.toString()}
-                style={styles.productCard}
-                onPress={() => router.push(`/producto/${item.idProducto}`)}
-                activeOpacity={0.85}
-              >
+              <View key={item.idProducto.toString()} style={styles.productCard}>
                 {filtroActivo === "ofertas" && (
                   <View style={styles.badgeOferta}>
                     <Text style={styles.badgeText}>¡Oferta!</Text>
                   </View>
                 )}
-                <View style={styles.imageContainer}>
-                  {item.imagen ? (
-                    <Image
-                      source={{ uri: item.imagen }}
-                      style={styles.productImage}
-                      resizeMode="cover"
-                    />
-                  ) : (
-                    <Ionicons name="basket-outline" size={32} color="#ccc" />
-                  )}
+
+                <TouchableOpacity
+                  onPress={() => router.push(`/producto/${item.idProducto}`)}
+                  activeOpacity={0.85}
+                >
+                  <View style={styles.imageContainer}>
+                    {item.imagen ? (
+                      <Image
+                        source={{ uri: item.imagen }}
+                        style={styles.productImage}
+                        resizeMode="cover"
+                      />
+                    ) : (
+                      <Ionicons name="basket-outline" size={32} color="#ccc" />
+                    )}
+                  </View>
+                  <Text style={styles.productName} numberOfLines={1}>
+                    {item.nombre}
+                  </Text>
+                </TouchableOpacity>
+
+                {/* FILA INFERIOR: PRECIO + BOTÓN CARRITO */}
+                <View style={styles.precioCarritoRow}>
+                  <Text style={styles.productPrice}>
+                    ${item.precio.toLocaleString()}
+                  </Text>
+                  <TouchableOpacity
+                    style={styles.btnAddCarrito}
+                    onPress={() => handleAgregarAlCarrito(item)}
+                    activeOpacity={0.7}
+                  >
+                    <Ionicons name="cart" size={16} color="#000" />
+                  </TouchableOpacity>
                 </View>
-                <Text style={styles.productName} numberOfLines={1}>
-                  {item.nombre}
-                </Text>
-                <Text style={styles.productPrice}>
-                  ${item.precio.toLocaleString()}
-                </Text>
-              </TouchableOpacity>
+              </View>
             ))}
           </View>
         )}
@@ -238,12 +281,36 @@ const styles = StyleSheet.create({
   sectionTitle: { fontSize: 18, fontWeight: "bold", color: "#222", marginBottom: 12 },
   productosGrid: { flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between" },
   productCard: { backgroundColor: "#fff", borderRadius: 12, padding: 10, marginBottom: 12, width: "48%", borderWidth: 1, borderColor: "#eee", shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 2, elevation: 2, position: "relative" },
+
   badgeOferta: { position: "absolute", top: 8, right: 8, backgroundColor: "#f5b952", paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6, zIndex: 1 },
   badgeText: { fontSize: 10, fontWeight: "bold", color: "#000" },
   imageContainer: { height: 100, backgroundColor: "#f4f4f4", borderRadius: 8, justifyContent: "center", alignItems: "center", marginBottom: 8, overflow: "hidden" },
   productImage: { width: "100%", height: "100%" },
-  productName: { fontSize: 13, fontWeight: "500", color: "#333", marginBottom: 4 },
-  productPrice: { fontSize: 14, fontWeight: "bold", color: "#d99a36" },
+  productName: { fontSize: 13, fontWeight: "500", color: "#333", marginBottom: 6 },
+
+  // Fila precio + carrito
+  precioCarritoRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginTop: "auto",
+  },
+  productPrice: { fontSize: 14, fontWeight: "bold", color: "#d99a36", flex: 1 },
+
+  // Botón carrito (esquina inferior derecha)
+  btnAddCarrito: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: "#f5b952",
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 3,
+    elevation: 4,
+  },
 
   // Paginación
   paginationContainer: { flexDirection: "row", justifyContent: "center", alignItems: "center", gap: 15, marginTop: 20, paddingTop: 20, borderTopWidth: 1, borderTopColor: "#eee" },

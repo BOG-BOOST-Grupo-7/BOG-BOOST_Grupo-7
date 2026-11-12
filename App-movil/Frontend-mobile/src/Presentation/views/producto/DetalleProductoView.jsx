@@ -10,7 +10,6 @@ import {
   ActivityIndicator,
   Modal,
   Alert,
-  FlatList,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -61,8 +60,19 @@ export default function DetalleProductoView() {
   }
 
   const agregarAlCarrito = () => {
+    // 🔐 Si no está autenticado, redirigir al login
     if (!isAuthenticated) {
-      router.push("/login");
+      Alert.alert(
+        "Inicia sesión",
+        "Debes iniciar sesión para agregar productos al carrito.",
+        [
+          { text: "Cancelar", style: "cancel" },
+          {
+            text: "Iniciar sesión",
+            onPress: () => router.push("/login"),
+          },
+        ]
+      );
       return;
     }
 
@@ -73,6 +83,7 @@ export default function DetalleProductoView() {
       precio: producto.precio,
       imagen: producto.imagen,
       nombreNegocio: producto.negocio?.nombre_negocio,
+      stock: producto.stock, // 👈 Necesario para validar stock
       cantidad,
     });
 

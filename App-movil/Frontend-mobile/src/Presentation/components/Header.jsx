@@ -17,6 +17,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter, useFocusEffect } from "expo-router";
 import { useAuth } from "../context/AuthContext";
+import { useCarrito } from "../context/CarritoContext";
 import { obtenerNotificaciones } from "../../Data/sources/remote/api/notificacionApi";
 import { obtenerCategorias } from "../../Data/sources/remote/api/categoriaApi";
 
@@ -26,6 +27,7 @@ const MENU_WIDTH = width * 0.78;
 export default function Header() {
   const router = useRouter();
   const { user, perfil, rol, logout, isAuthenticated } = useAuth();
+  const { carrito, limpiarCarrito } = useCarrito();
 
   const [menuOpen, setMenuOpen] = useState(false);
   const [categoriasOpen, setCategoriasOpen] = useState(false);
@@ -57,7 +59,7 @@ export default function Header() {
   );
 
   // ============================================
-  // LIMPIAR PENDIENTES AL CERRAR SESIÓN
+  // LIMPIAR AL CERRAR SESIÓN
   // ============================================
   useEffect(() => {
     if (!isAuthenticated) {
@@ -68,7 +70,9 @@ export default function Header() {
     }
   }, [isAuthenticated]);
 
-  // Animación del drawer
+  // ============================================
+  // ANIMACIÓN DEL DRAWER
+  // ============================================
   useEffect(() => {
     Animated.parallel([
       Animated.timing(slideAnim, {
@@ -84,6 +88,9 @@ export default function Header() {
     ]).start();
   }, [menuOpen]);
 
+  // ============================================
+  // CARGAR NOTIFICACIONES
+  // ============================================
   const cargarNotificaciones = async () => {
     try {
       const data = await obtenerNotificaciones();
@@ -92,11 +99,13 @@ export default function Header() {
         : 0;
       setPendientes(noLeidas);
     } catch (error) {
-      // Silencioso: si falla, no es crítico
       console.log("No se pudieron cargar notificaciones:", error?.message);
     }
   };
 
+  // ============================================
+  // CARGAR CATEGORÍAS
+  // ============================================
   const cargarCategorias = async () => {
     try {
       const data = await obtenerCategorias();
@@ -112,6 +121,9 @@ export default function Header() {
     }
   };
 
+  // ============================================
+  // NAVEGACIÓN
+  // ============================================
   const go = (path) => {
     setMenuOpen(false);
     setCategoriasOpen(false);
@@ -131,7 +143,7 @@ export default function Header() {
   };
 
   // ============================================
-  // LOGOUT CORREGIDO
+  // LOGOUT
   // ============================================
   const handleLogout = () => {
     Alert.alert(
@@ -153,20 +165,16 @@ export default function Header() {
     setCerrando(true);
 
     try {
-      // 1. Cerrar el menú primero
       setMenuOpen(false);
       setCategoriasOpen(false);
       setSearchOpen(false);
-
-      // 2. Limpiar estado local ANTES del logout
       setPendientes(0);
 
-      // 3. Llamar logout del contexto (limpia AsyncStorage + estado global)
-      //    El AuthContext ya maneja el logoutUser() del backend internamente.
-      //    Si falla el backend, igual limpia el estado local.
+      // 🔐 Limpiar carrito antes del logout
+      await limpiarCarrito();
+
       await logout();
 
-      // 4. Navegar al Home
       setTimeout(() => {
         router.replace("/");
       }, 100);
@@ -194,6 +202,12 @@ export default function Header() {
   const esVendedor = rol === "VENDEDOR";
   const esCliente = !esAdmin && !esVendedor;
 
+  // 🔑 Total de productos en el carrito (para el badge)
+  const cantidadCarrito = carrito.reduce(
+    (acum, p) => acum + (p.cantidad || 0),
+    0
+  );
+
   return (
     <>
       {/* ==================== BARRA SUPERIOR ==================== */}
@@ -207,6 +221,7 @@ export default function Header() {
         </TouchableOpacity>
 
         <View style={styles.userIcons}>
+          {/* Buscador (solo cliente) */}
           {esCliente && (
             <TouchableOpacity
               style={styles.iconBtn}
@@ -216,15 +231,24 @@ export default function Header() {
             </TouchableOpacity>
           )}
 
+          {/* 🛒 Carrito: siempre visible para clientes (logueados o no) */}
           {esCliente && (
             <TouchableOpacity
               style={styles.iconBtn}
               onPress={() => go("/carrito")}
             >
               <Ionicons name="cart-outline" size={24} color="#000" />
+              {cantidadCarrito > 0 && (
+                <View style={styles.badge}>
+                  <Text style={styles.badgeText}>
+                    {cantidadCarrito > 99 ? "99+" : cantidadCarrito}
+                  </Text>
+                </View>
+              )}
             </TouchableOpacity>
           )}
 
+          {/* Campana (autenticado) */}
           {isAuthenticated && (
             <TouchableOpacity
               style={styles.iconBtn}
@@ -239,6 +263,7 @@ export default function Header() {
             </TouchableOpacity>
           )}
 
+          {/* Avatar (autenticado) */}
           {isAuthenticated && (
             <TouchableOpacity onPress={() => go("/perfil")}>
               {fotoPerfil ? (
@@ -251,6 +276,7 @@ export default function Header() {
             </TouchableOpacity>
           )}
 
+          {/* Botón menú */}
           <TouchableOpacity
             style={styles.iconBtn}
             onPress={() => setMenuOpen(true)}
@@ -274,6 +300,7 @@ export default function Header() {
               <TextInput
                 style={styles.searchInput}
                 placeholder="Buscar productos o negocios..."
+                placeholderTextColor="#9ca3af"
                 value={searchTerm}
                 onChangeText={setSearchTerm}
                 onSubmitEditing={handleSearch}
@@ -304,6 +331,7 @@ export default function Header() {
       <Animated.View
         style={[styles.drawer, { transform: [{ translateX: slideAnim }] }]}
       >
+        {/* Header del drawer */}
         <View style={styles.drawerHeader}>
           {isAuthenticated ? (
             <>
@@ -336,6 +364,7 @@ export default function Header() {
         </View>
 
         <ScrollView style={{ flex: 1 }}>
+          {/* Links según rol */}
           {esAdmin ? (
             <MenuItem
               label="Panel Principal"
@@ -368,6 +397,7 @@ export default function Header() {
                 onPress={() => go("/")}
               />
 
+              {/* Categorías */}
               <TouchableOpacity
                 style={styles.menuItem}
                 onPress={() => setCategoriasOpen(!categoriasOpen)}
@@ -415,6 +445,7 @@ export default function Header() {
             </>
           )}
 
+          {/* Links según autenticación */}
           {!isAuthenticated ? (
             <>
               <MenuItem
@@ -504,6 +535,7 @@ export default function Header() {
             </>
           ) : null}
 
+          {/* Logout */}
           {isAuthenticated && (
             <TouchableOpacity
               style={styles.logoutBtn}
@@ -522,6 +554,7 @@ export default function Header() {
   );
 }
 
+// Componente auxiliar para los links del menú
 function MenuItem({ label, icon, onPress }) {
   return (
     <TouchableOpacity style={styles.menuItem} onPress={onPress}>
@@ -532,6 +565,7 @@ function MenuItem({ label, icon, onPress }) {
 }
 
 const styles = StyleSheet.create({
+  // ==================== NAVBAR ====================
   navbar: {
     backgroundColor: "#f8b94e",
     height: 70,
@@ -588,6 +622,7 @@ const styles = StyleSheet.create({
   },
   avatarLetterText: { color: "#fff", fontWeight: "bold", fontSize: 15 },
 
+  // ==================== DRAWER ====================
   overlayAbsolute: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: "rgba(0,0,0,0.4)",
@@ -634,7 +669,11 @@ const styles = StyleSheet.create({
     borderWidth: 3,
     borderColor: "#fff",
   },
-  drawerAvatarLetterText: { color: "#fff", fontSize: 26, fontWeight: "bold" },
+  drawerAvatarLetterText: {
+    color: "#fff",
+    fontSize: 26,
+    fontWeight: "bold",
+  },
   drawerUserName: { fontSize: 18, fontWeight: "bold", color: "#2c1810" },
   drawerUserRol: {
     fontSize: 13,
@@ -642,8 +681,14 @@ const styles = StyleSheet.create({
     textTransform: "capitalize",
     marginTop: 2,
   },
-  drawerCloseBtn: { position: "absolute", top: 48, right: 16, padding: 4 },
+  drawerCloseBtn: {
+    position: "absolute",
+    top: 48,
+    right: 16,
+    padding: 4,
+  },
 
+  // ==================== MENU ITEMS ====================
   menuItem: {
     flexDirection: "row",
     alignItems: "center",
@@ -684,6 +729,7 @@ const styles = StyleSheet.create({
   },
   logoutText: { fontSize: 15, color: "#c62828", fontWeight: "bold" },
 
+  // ==================== SEARCH MODAL ====================
   searchModalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.5)",
