@@ -59,47 +59,47 @@ export const listarPerfiles = async (req, res) => {
 
 export const obtenerPerfilPorId = async (req, res) => {
   try {
-
     const { id } = req.params;
 
-    const { data, error } = await supabase
+    // 1. Traemos el perfil SIN el join problemático
+    const { data: perfil, error } = await supabase
       .schema("cliente")
       .from("perfil")
       .select(`
         *,
         rol:id_rol(
           nombre_rol
-        ),
-        tipo_documento:id_tipo_documento(
-          sigla,
-          nombre_documento
         )
       `)
       .eq("id_perfil", id)
       .maybeSingle();
 
-    if (error) {
-      return res.status(400).json(error);
+    if (error) return res.status(400).json(error);
+    if (!perfil) return res.status(404).json({ mensaje: "Perfil no encontrado" });
+
+    // 2. Si el perfil tiene id_tipo_documento, buscamos sus datos en la otra tabla manualmente
+    let tipo_documento = null;
+    if (perfil.id_tipo_documento) {
+      const { data: td, error: tdError } = await supabase
+        .schema("cliente")
+        .from("tipo_documento")
+        .select("sigla, nombre_documento")
+        .eq("id_tipo_documento", perfil.id_tipo_documento)
+        .single();
+      
+      if (!tdError) {
+        tipo_documento = td;
+      }
     }
 
-    if (!data) {
-      return res.status(404).json({
-        mensaje: "Perfil no encontrado"
-      });
-    }
+    // 3. Traemos el correo de Auth
+    const { data: authUser, error: authError } = await supabase.auth.admin.getUserById(id);
+    if (authError) return res.status(400).json(authError);
 
-    // Obtener usuario de Auth
-    const {
-      data: authUser,
-      error: authError
-    } = await supabase.auth.admin.getUserById(id);
-
-    if (authError) {
-      return res.status(400).json(authError);
-    }
-
+    // 4. Enviamos todo junto y armado al frontend
     res.json({
-      ...data,
+      ...perfil,
+      tipo_documento: tipo_documento, // Aquí inyectamos el objeto { sigla, nombre_documento }
       email: authUser.user.email
     });
 
