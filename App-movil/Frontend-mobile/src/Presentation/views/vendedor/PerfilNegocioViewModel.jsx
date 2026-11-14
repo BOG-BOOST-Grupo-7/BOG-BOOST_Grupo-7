@@ -16,6 +16,7 @@ export const usePerfilNegocioViewModel = () => {
 
   const [subiendoLogo, setSubiendoLogo] = useState(false);
   const [desactivando, setDesactivando] = useState(false);
+  const [actualizando, setActualizando] = useState(false);
 
   const [paginaActual, setPaginaActual] = useState(1);
   const productosPorPagina = 6;
@@ -46,7 +47,7 @@ export const usePerfilNegocioViewModel = () => {
     try {
       setSubiendoLogo(true);
 
-      const res = await subirLogo(archivo); // Devuelve { url }
+      const res = await subirLogo(archivo);
       await actualizarNegocio(negocio.id_negocio, { logo: res.url });
       await cargarNegocio();
 
@@ -59,6 +60,26 @@ export const usePerfilNegocioViewModel = () => {
     }
   };
 
+  // ============ ACTUALIZAR DATOS ============
+  const actualizarDatosNegocio = async (datos) => {
+    try {
+      setActualizando(true);
+      await actualizarNegocio(negocio.id_negocio, datos);
+      await cargarNegocio();
+      return { success: true };
+    } catch (err) {
+      console.error("Error al actualizar negocio:", err);
+      return {
+        success: false,
+        error:
+          err.response?.data?.mensaje ||
+          "No fue posible actualizar el negocio.",
+      };
+    } finally {
+      setActualizando(false);
+    }
+  };
+
   // ============ DESACTIVAR NEGOCIO ============
   const handleDesactivarNegocio = async () => {
     try {
@@ -67,7 +88,12 @@ export const usePerfilNegocioViewModel = () => {
       return { success: true };
     } catch (err) {
       console.error("Error al desactivar negocio:", err);
-      return { success: false, error: "No se pudo desactivar el negocio." };
+      return {
+        success: false,
+        error:
+          err.response?.data?.mensaje ||
+          "No se pudo desactivar el negocio.",
+      };
     } finally {
       setDesactivando(false);
     }
@@ -87,11 +113,13 @@ export const usePerfilNegocioViewModel = () => {
     error,
     subiendoLogo,
     desactivando,
+    actualizando,
     paginaActual,
     totalPaginas,
     siguientePagina: () => setPaginaActual((p) => Math.min(p + 1, totalPaginas)),
     anteriorPagina: () => setPaginaActual((p) => Math.max(p - 1, 1)),
     actualizarLogo,
+    actualizarDatosNegocio,
     handleDesactivarNegocio,
     recargar: cargarNegocio,
   };
