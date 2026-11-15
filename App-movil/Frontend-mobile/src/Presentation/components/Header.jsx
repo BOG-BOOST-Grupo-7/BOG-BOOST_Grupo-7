@@ -231,7 +231,7 @@ export default function Header() {
             </TouchableOpacity>
           )}
 
-          {/* 🛒 Carrito: siempre visible para clientes (logueados o no) */}
+          {/* 🛒 Carrito: siempre visible para clientes */}
           {esCliente && (
             <TouchableOpacity
               style={styles.iconBtn}
@@ -387,6 +387,11 @@ export default function Header() {
                 label="Inventario y Stock"
                 icon="cube-outline"
                 onPress={() => go("/stock")}
+              />
+              <MenuItem
+                label="Movimientos de Stock"
+                icon="list-outline"
+                onPress={() => go("/movimientos-stock")}
               />
             </>
           ) : (

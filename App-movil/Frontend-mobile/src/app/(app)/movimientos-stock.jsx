@@ -1,0 +1,1 @@
+export { default } from "../../Presentation/views/vendedor/MovimientosStockView";
