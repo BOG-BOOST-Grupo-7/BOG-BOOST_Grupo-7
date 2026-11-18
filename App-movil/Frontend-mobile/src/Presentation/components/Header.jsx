@@ -131,6 +131,24 @@ export default function Header() {
     router.push(path);
   };
 
+  // ============================================
+  // 🏠 NAVEGAR AL HOME SEGÚN EL ROL
+  // ============================================
+  const goHome = () => {
+    setMenuOpen(false);
+    setCategoriasOpen(false);
+    setSearchOpen(false);
+
+    if (rol === "VENDEDOR") {
+      router.push("/vendedor");
+    } else if (rol === "SUPER_ADMIN" || rol === "ADMINISTRADOR") {
+      router.push("/admin");
+    } else {
+      // Cliente o sin sesión
+      router.push("/");
+    }
+  };
+
   const handleSearch = () => {
     if (searchTerm.trim() !== "") {
       const term = searchTerm.trim();
@@ -212,7 +230,8 @@ export default function Header() {
     <>
       {/* ==================== BARRA SUPERIOR ==================== */}
       <View style={styles.navbar}>
-        <TouchableOpacity onPress={() => go("/")} style={styles.logoContainer}>
+        {/* ✅ Logo → home según rol */}
+        <TouchableOpacity onPress={goHome} style={styles.logoContainer}>
           <Image
             source={require("../../../assets/logo.png")}
             style={styles.logoImage}
